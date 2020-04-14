@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">COVID-ID</string>
+    <string name="welcome"><u>Welcome!</u></string>
+</resources>

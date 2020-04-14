@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+app:cardCornerRadius="16sp">
+
+<RelativeLayout
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:id="@+id/titleHolder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#793ED8"
+        >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_margin="7sp"
+            android:fontFamily="@font/ralewaybold"
+            android:text="About This App"
+            android:textColor="#fff"
+            android:textSize="30sp" />
+
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/titleHolder"
+        android:layout_margin="8sp"
+        android:layout_marginTop="15sp"
+        android:id="@+id/text"
+        android:fontFamily="@font/regular"
+        android:text="With the outbreak of COVID-19, it is important to maintain social distancing. This app provides users with a means of verifying their status regarding the virus.
+        \nUsers' doctors can specify whether the patient has at any point had COVID-19."
+        android:textSize="20sp" />
+
+    <Button
+        android:id="@+id/back"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/text"
+        android:background="#793ED8"
+        android:text="OK"
+        android:textSize="24sp"
+        android:textColor="#E5E2FF" />
+</RelativeLayout>
+</androidx.cardview.widget.CardView>
