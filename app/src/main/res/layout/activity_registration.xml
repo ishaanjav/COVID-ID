@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#E4CBF4"
+    tools:context=".Registration">
+
+    <RelativeLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="24sp"
+        android:background="#fff">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="25sp"
+            android:layout_marginTop="18sp"
+            android:layout_marginBottom="18sp"
+            android:fontFamily="@font/caviarbold"
+            android:text="@string/register"
+            android:textColor="#4D3ED8"
+            android:textSize="35sp"
+            android:visibility="visible" />
+    </RelativeLayout>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/container"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="10sp"
+        android:layout_marginTop="79sp"
+        android:layout_marginRight="10sp"
+        app:cardCornerRadius="15sp"
+        app:cardElevation="10sp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/existingusertext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="27sp"
+                android:layout_marginTop="17sp"
+                android:fontFamily="@font/remedium"
+                android:text="I am a:"
+                android:textColor="#393939"
+                android:textSize="27sp" />
+
+
+            <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/userType"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/existingusertext"
+                android:layout_marginLeft="50sp"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/medical"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5sp"
+                    android:buttonTint="#3A9A10"
+                    android:text="Medical Professional"
+                    android:textSize="20sp" />
+
+                <RadioButton
+                    android:id="@+id/patient"
+                    android:layout_width="wrap_content"
+                    android:buttonTint="#3A9A10"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7sp"
+                    android:text="Patient"
+                    android:textSize="20sp" />
+            </RadioGroup>
+
+            <Button
+                android:id="@+id/next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/userType"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="35sp"
+                android:layout_marginBottom="21sp"
+                android:background="@drawable/greybutton"
+                android:paddingLeft="63sp"
+                android:paddingTop="6sp"
+                android:paddingRight="63sp"
+                android:paddingBottom="8sp"
+                android:text="Continue"
+                android:textAllCaps="false"
+                android:textColor="#fff"
+                android:textSize="25sp"
+                android:visibility="visible" />
+
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+
+    <include
+        android:id="@+id/card2"
+        layout="@layout/patient_register1"
+        android:layout_width="match_parent"
+        android:layout_below="@+id/container"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="10sp"
+        android:layout_marginTop="79sp"
+        android:layout_marginRight="10sp"
+        android:layout_height="wrap_content" />
+
+
+</RelativeLayout>

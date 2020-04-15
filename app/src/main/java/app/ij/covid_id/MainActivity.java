@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
     TextView error;
     CardView card1, card2;
 
-    GoogleSignInClient mGoogleSignInClient;
+    boolean firstTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
         card2 = findViewById(R.id.card2);
         error = findViewById(R.id.error);
         holder.setVisibility(View.INVISIBLE);
+        firstTime = true;
 
         int color = Color.parseColor("#FFF9FF");
         toggle.setColorFilter(color);
@@ -87,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 visible = !visible;
             }
         });
+        startActivity(new Intent(MainActivity.this, Registration.class));
 
 
         //holder.setVisibility(View.VISIBLE);
@@ -111,6 +114,13 @@ public class MainActivity extends AppCompatActivity {
                 } else {
 
                 }
+            }
+        });
+
+        signup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(MainActivity.this, Registration.class));
             }
         });
 
@@ -204,6 +214,34 @@ public class MainActivity extends AppCompatActivity {
                 MenuItem item2 = menuOptions.findItem(R.id.about);
                 item2.setVisible(true);
                 holder.setVisibility(View.VISIBLE);
+                if (firstTime) {
+                    card1.setVisibility(View.INVISIBLE);
+                  Animation fadeIn = new AlphaAnimation(0, 1);
+                    fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
+                    fadeIn.setDuration(2100);
+                    card1.setAnimation(fadeIn);
+                    Animation animZoomin = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom_in);
+
+                    card1.startAnimation(animZoomin);
+                    card1.setVisibility(View.VISIBLE);
+                    card2.setVisibility(View.INVISIBLE);
+                    Runnable r2 = new Runnable() {
+                        @Override
+                        public void run() {
+                            Animation fadeIn = new AlphaAnimation(0, 1);
+                            fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
+                            fadeIn.setDuration(2000);
+                            card2.setAnimation(fadeIn);
+                            Animation animZoomin = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom_in);
+
+                            card2.startAnimation(animZoomin);
+                            card2.setVisibility(View.VISIBLE);
+                        }
+                    };
+                    Handler h = new Handler();
+                    h.postDelayed(r2, 1220);
+                }
+                firstTime = false;
             }
         });
 
@@ -211,10 +249,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void longToast(String s) {
-        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG);
+        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
     }
 
     public void makeToast(String s) {
-        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT);
+        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
     }
 }

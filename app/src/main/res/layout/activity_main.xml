@@ -16,7 +16,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="30sp"
+            android:layout_marginTop="23sp"
             android:fontFamily="@font/caviarbold"
             android:text="@string/welcome"
             android:textColor="#4D3ED8"
@@ -148,7 +148,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/card1"
-                android:layout_marginTop="56sp">
+                android:layout_marginTop="52sp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -181,7 +181,7 @@
                 android:layout_below="@+id/bar"
                 android:layout_centerHorizontal="true"
                 android:layout_marginLeft="10sp"
-                android:layout_marginTop="30sp"
+                android:layout_marginTop="42sp"
                 android:layout_marginRight="10sp"
                 app:cardCornerRadius="15sp"
                 android:layout_marginBottom="20sp"
@@ -196,7 +196,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="27sp"
-                        android:layout_marginTop="19sp"
+                        android:layout_marginTop="10sp"
                         android:fontFamily="@font/remedium"
                         android:text="New User?"
                         android:textColor="#393939"
