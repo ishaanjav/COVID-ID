@@ -2,4 +2,5 @@
     <string name="app_name">COVID-ID</string>
     <string name="welcome"><u>Welcome!</u></string>
     <string name="register"><u>Registration</u></string>
+    <string name="city"><i>City *</i></string>
 </resources>
