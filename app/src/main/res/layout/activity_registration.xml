@@ -119,9 +119,9 @@
         android:layout_marginRight="10sp"
         android:layout_height="wrap_content" />
 
-   <!-- <include
+    <include
         android:id="@+id/card3"
-        layout="@layout/patient_register1"
+        layout="@layout/doctor_register1"
         android:layout_width="match_parent"
         android:layout_below="@+id/container"
         android:layout_centerHorizontal="true"
@@ -129,5 +129,5 @@
         android:layout_marginTop="21sp"
         android:layout_marginBottom="15sp"
         android:layout_marginRight="10sp"
-        android:layout_height="wrap_content" />-->
+        android:layout_height="wrap_content" />
 </RelativeLayout>

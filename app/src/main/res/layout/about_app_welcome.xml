@@ -40,11 +40,24 @@ app:cardCornerRadius="16sp">
         \nUsers' doctors can specify whether the patient has at any point had COVID-19."
         android:textSize="20sp" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/text"
+        android:layout_margin="8sp"
+        android:layout_marginTop="15sp"
+        android:id="@+id/text2"
+        android:textColor="#000"
+        android:textStyle="bold"
+        android:fontFamily="@font/regular"
+        android:text="Contact covid.ijapps@gmail.com for support or questions."
+        android:textSize="20sp" />
+
     <Button
         android:id="@+id/back"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/text"
+        android:layout_below="@+id/text2"
         android:background="#793ED8"
         android:text="OK"
         android:textSize="24sp"

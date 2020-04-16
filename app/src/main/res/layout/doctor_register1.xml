@@ -120,7 +120,7 @@
                 android:layout_marginLeft="32sp"
                 android:layout_marginTop="15sp"
                 android:fontFamily="@font/remedium"
-                android:text="Phone *"
+                android:text="Medical Center Phone *"
                 android:textSize="22sp" />
 
             <EditText
@@ -144,7 +144,7 @@
                 android:layout_marginLeft="30sp"
                 android:layout_marginTop="15sp"
                 android:fontFamily="@font/remedium"
-                android:text="Email"
+                android:text="Medical Center Email"
                 android:textSize="22sp" />
 
             <EditText
@@ -222,23 +222,16 @@
                 android:layout_below="@id/country"
                 android:layout_marginLeft="35dp"
                 android:layout_marginTop="20dp"
-
-
-
                 app:cardBackgroundColor="#B870FF"
                 app:cardCornerRadius="50dp">
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
                 <ImageView
                     android:id="@+id/photoholder"
-                    android:layout_width="200sp"
-                    android:layout_centerInParent="true"
-                    android:layout_height="200sp"
-                    android:background="@drawable/usericon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/dbadge"
                     />
-                </RelativeLayout>
+
             </androidx.cardview.widget.CardView>
 
             <androidx.cardview.widget.CardView
@@ -329,7 +322,7 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/patientPrevious1"
+                    android:id="@+id/doctorPrevious1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="20sp"
@@ -346,7 +339,7 @@
                     android:visibility="visible" />
 
                 <Button
-                    android:id="@+id/patientContinue"
+                    android:id="@+id/doctorContinue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginRight="20sp"

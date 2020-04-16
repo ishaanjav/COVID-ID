@@ -10,7 +10,6 @@ import android.Manifest;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -43,7 +42,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.SimpleAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -56,15 +54,9 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.regex.Pattern;
-
-import static java.lang.System.out;
 
 public class Registration extends AppCompatActivity {
 
@@ -82,12 +74,13 @@ public class Registration extends AppCompatActivity {
 
     ImageView phoneHelp, locationHelp, photoHelp;
     CardView takePicture, deletePicture;
-    Button patientContinue, patientFinish, doctorContinue, doctorFinish, patientPrevious1, patientPrevious2;
+    Button patientContinue, patientFinish, doctorContinue, doctorFinish;
     Button patientBack1, patientBack2, doctorBack1, doctorBack2;
     ImageView photo;
     boolean userGood, passGood, nameGood, phoneGood, emailGood, cityGood, stateGood, countryGood;
     EditText user, pass, name, phone, email, city;
     String sUser, sPass, sName, sPhone, sEmail, sCity, sState, sCountry;
+    int backCounter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,26 +92,26 @@ public class Registration extends AppCompatActivity {
         next = findViewById(R.id.next);
         firstCard = findViewById(R.id.card1);
         patientCard1 = findViewById(R.id.card2);
+        doctorCard1 = findViewById(R.id.card3);
+        doctorCard1.setVisibility(View.INVISIBLE);
         firstCard.setBackgroundResource(R.drawable.card_white);
         patientCard1.setBackgroundResource(R.drawable.card_white);
+        doctorCard1.setBackgroundResource(R.drawable.card_white);
         page = Page.PAGE1;
         updated = false;
         doctor = false;
         pictureGood = false;
         patientCard1.setVisibility(View.INVISIBLE);
+        doctorCard1.setVisibility(View.INVISIBLE);
         countryGood = true;
+        backCounter = 0;
 
-        user = findViewById(R.id.user);
+        /*user = findViewById(R.id.user);
         pass = findViewById(R.id.pass);
         name = findViewById(R.id.name);
         phone = findViewById(R.id.phone);
         email = findViewById(R.id.email);
         city = findViewById(R.id.city);
-
-        WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-        Display display = wm.getDefaultDisplay();
-        DisplayMetrics metrics = new DisplayMetrics();
-        display.getMetrics(metrics);
         state = findViewById(R.id.state);
         country = findViewById(R.id.country);
         phoneHelp = findViewById(R.id.phoneHelp);
@@ -128,18 +121,26 @@ public class Registration extends AppCompatActivity {
         photo = findViewById(R.id.photoholder);
         photoHelp = findViewById(R.id.photohelp);
         patientContinue = patientCard1.findViewById(R.id.patientContinue);
-        patientPrevious1 = findViewById(R.id.patientPrevious1);
-        patientBack1 = findViewById(R.id.patientPrevious1);
+        patientPrevious1 = patientCard1.findViewById(R.id.patientPrevious1);
+        patientBack1 = findViewById(R.id.patientPrevious1);*/
+
+
+        WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+        DisplayMetrics metrics = new DisplayMetrics();
+        display.getMetrics(metrics);
 
         screenW = metrics.widthPixels;
         screenH = metrics.heightPixels;
-        test();
+
+        doctorContinue = doctorCard1.findViewById(R.id.doctorContinue);
+        doctorBack1 = doctorCard1.findViewById(R.id.doctorPrevious1);
+        patientContinue = patientCard1.findViewById(R.id.patientContinue);
+        patientBack1 = patientCard1.findViewById(R.id.patientPrevious1);
+        //test();
         //test2();
         //patientCard1.setVisibility(View.INVISIBLE);
-        spinners();
-        helpers();
-        allGood();
-        previousClickers();
+
         //textWatcher();
         RadioGroup.OnCheckedChangeListener changeListener = new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -161,13 +162,107 @@ public class Registration extends AppCompatActivity {
                 if (!updated)
                     makeToast("Please choose one of the options above.");
                 else {
-                    //TODO Based on doctor or not, dispaly different things.
+                    //DONE Based on doctor or not, dispaly different things.
                     if (doctor) {
                         page = Page.DOCTOR1;
-
+                        initializeDoctor();
+                        doctorRegister();
                     } else {
+                        initializePatient();
                         patientRegister();
                     }
+                }
+            }
+        });
+    }
+
+    private void initializePatient() {
+        user = patientCard1.findViewById(R.id.user);
+        pass = patientCard1.findViewById(R.id.pass);
+        name = patientCard1.findViewById(R.id.name);
+        phone = patientCard1.findViewById(R.id.phone);
+        email = patientCard1.findViewById(R.id.email);
+        city = patientCard1.findViewById(R.id.city);
+        state = patientCard1.findViewById(R.id.state);
+        country = patientCard1.findViewById(R.id.country);
+        phoneHelp = patientCard1.findViewById(R.id.phoneHelp);
+        locationHelp = patientCard1.findViewById(R.id.locationHelp);
+        takePicture = patientCard1.findViewById(R.id.cardholder);
+        deletePicture = patientCard1.findViewById(R.id.removeholder);
+        photo = patientCard1.findViewById(R.id.photoholder);
+        photoHelp = patientCard1.findViewById(R.id.photohelp);
+        patientContinue = patientCard1.findViewById(R.id.patientContinue);
+        patientBack1 = patientCard1.findViewById(R.id.patientPrevious1);
+        spinners();
+        helpers();
+        allGood();
+        previousClickers();
+        test();
+    }
+
+    private void initializeDoctor() {
+        user = doctorCard1.findViewById(R.id.user);
+        pass = doctorCard1.findViewById(R.id.pass);
+        name = doctorCard1.findViewById(R.id.name);
+        phone = doctorCard1.findViewById(R.id.phone);
+        email = doctorCard1.findViewById(R.id.email);
+        city = doctorCard1.findViewById(R.id.city);
+        state = doctorCard1.findViewById(R.id.state);
+        country = doctorCard1.findViewById(R.id.country);
+        phoneHelp = doctorCard1.findViewById(R.id.phoneHelp);
+        locationHelp = doctorCard1.findViewById(R.id.locationHelp);
+        takePicture = doctorCard1.findViewById(R.id.cardholder);
+        deletePicture = doctorCard1.findViewById(R.id.removeholder);
+        photo = doctorCard1.findViewById(R.id.photoholder);
+        photoHelp = doctorCard1.findViewById(R.id.photohelp);
+        doctorContinue = doctorCard1.findViewById(R.id.doctorContinue);
+        doctorBack1 = doctorCard1.findViewById(R.id.doctorPrevious1);
+        spinners();
+        helpers();
+        allGood();
+        previousClickers();
+        test();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (backCounter < 3)
+            makeSnackBar(5500, "Going back will delete your progress. Instead, use the buttons or swipe to navigate between pages.\nIf you want to return to the Welcome Page, continue the same motion " + (3 - backCounter) + " times.");
+        else super.onBackPressed();
+        backCounter++;
+    }
+
+    private void doctorRegister() {
+        animateCards(firstCard, doctorCard1, R.anim.slide_out_left, R.anim.slide_in_left);
+        doctorContinue.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sUser = user.getText().toString();
+                sPass = pass.getText().toString();
+                sName = name.getText().toString();
+                sPhone = phone.getText().toString();
+                sEmail = email.getText().toString();
+                sCity = city.getText().toString();
+                sState = state.getSelectedItem().toString();
+                sCountry = state.getSelectedItem().toString();
+                if (sUser.length() < 6)
+                    makeSnackBar(2000, "Please make your username longer.");
+                else if (!uniqueUsername())
+                    makeSnackBar(2600, "This username already exists. Please choose another.");
+                else if (sPass.length() < 6)
+                    makeSnackBar(2000, "Please make your password longer.");
+                else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
+                    makeSnackBar(2000, "Please enter your full name.");
+                else if (sPhone.length() < 10)
+                    makeSnackBar(2000, "Please enter a valid phone #.");
+                else if (sEmail.length() > 0 && !isValid(sEmail))
+                    makeSnackBar(2000, "Please enter a valid email.");
+                else if (sCity.length() <= 2)
+                    makeSnackBar(2000, "Please enter a valid city.");
+                else if (!pictureGood)
+                    makeSnackBar(2000, "Please take a picture.");
+                else {
+                    animateCards(doctorCard1, doctorCard2, R.anim.slide_out_left, R.anim.slide_in_left);
                 }
             }
         });
@@ -187,23 +282,23 @@ public class Registration extends AppCompatActivity {
                 sCity = city.getText().toString();
                 sState = state.getSelectedItem().toString();
                 sCountry = state.getSelectedItem().toString();
-                if(sUser.length() < 6)
-                    makeSnackBar(2000,"Please make your username longer.");
-                else if(!uniqueUsername())
-                    makeSnackBar(2600,"This username already exists. Please choose another.");
-                else if(sPass.length() < 6)
-                    makeSnackBar(2000,"Please make your password longer.");
-                else if(sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
-                    makeSnackBar(2000,"Please enter your full name.");
-                else if(sPhone.length() < 10)
-                    makeSnackBar(2000,"Please enter a valid phone #.");
-                else if(!isValid(sEmail))
-                    makeSnackBar(2000,"Please enter a valid email.");
-                else if(sCity.length() <=2)
-                    makeSnackBar(2000,"Please enter a valid city.");
-                else if(!pictureGood)
-                    makeSnackBar(2000,"Please take a picture.");
-                else{
+                if (sUser.length() < 6)
+                    makeSnackBar(2000, "Please make your username longer.");
+                else if (!uniqueUsername())
+                    makeSnackBar(2600, "This username already exists. Please choose another.");
+                else if (sPass.length() < 6)
+                    makeSnackBar(2000, "Please make your password longer.");
+                else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
+                    makeSnackBar(2000, "Please enter your full name.");
+                else if (sPhone.length() < 10)
+                    makeSnackBar(2000, "Please enter a valid phone #.");
+                else if (sEmail.length() > 0 && !isValid(sEmail))
+                    makeSnackBar(2000, "Please enter a valid email.");
+                else if (sCity.length() <= 2)
+                    makeSnackBar(2000, "Please enter a valid city.");
+                else if (!pictureGood)
+                    makeSnackBar(2000, "Please take a picture.");
+                else {
                     animateCards(patientCard1, patientCard2, R.anim.slide_out_left, R.anim.slide_in_left);
                 }
             }
@@ -215,9 +310,8 @@ public class Registration extends AppCompatActivity {
         return true;
     }
 
-    public static boolean isValid(String email)
-    {
-        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\."+
+    public static boolean isValid(String email) {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\." +
                 "[a-zA-Z0-9_+&*-]+)*@" +
                 "(?:[a-zA-Z0-9-]+\\.)+[a-z" +
                 "A-Z]{2,7}$";
@@ -230,7 +324,7 @@ public class Registration extends AppCompatActivity {
 
 
     private void textWatcher() {
-        //TODO If you want to then make this where it makes the button purple if they can continue.
+        //FUTURE If you want to then make this where it makes the button green from grey if they can continue.
         TextWatcher user1 = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -312,15 +406,29 @@ public class Registration extends AppCompatActivity {
     boolean pictureGood;
 
     private void previousClickers() {
-        //TODO Deal with previous button click.
+        //DONE Deal with previous button click.
         View.OnClickListener back = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (view.getId() == patientPrevious1.getId())
+                if (view.getId() == patientBack1.getId()) {
                     animateCards(patientCard1, firstCard, R.anim.slide_out_right, R.anim.slide_in_right);
+                    page = Page.PAGE1;
+                } else if (view.getId() == doctorBack1.getId()) {
+                    animateCards(doctorCard1, firstCard, R.anim.slide_out_right, R.anim.slide_in_right);
+                    page = Page.PAGE1;
+                } else if (view.getId() == doctorBack2.getId()) {
+                    animateCards(doctorCard2, doctorCard1, R.anim.slide_out_right, R.anim.slide_in_right);
+                    page = Page.DOCTOR1;
+                } else if (view.getId() == patientBack2.getId()) {
+                    animateCards(patientCard2, patientCard1, R.anim.slide_out_right, R.anim.slide_in_right);
+                    page = Page.PATIENT1;
+                }
             }
         };
-        patientPrevious1.setOnClickListener(back);
+        patientBack1.setOnClickListener(back);
+        //patientBack2.setOnClickListener(back);
+        //doctorBack2.setOnClickListener(back);
+        doctorBack1.setOnClickListener(back);
     }
 
     Uri extra;
@@ -350,13 +458,24 @@ public class Registration extends AppCompatActivity {
         deletePicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                photo.setImageResource(R.drawable.usericon);
+                if (doctor)
+                    photo.setImageResource(R.drawable.dbadge);
+                else
+                    photo.setImageResource(R.drawable.usericon);
                 pictureGood = false;
                 allGood();
                 patientContinue.setBackgroundResource(R.drawable.greybutton);
             }
         });
     }
+
+    boolean swapped = false;
+
+    /*@Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        this.onTouchEvent(event);
+        return super.dispatchTouchEvent(event);
+    }*/
 
     int count = 0;
 
@@ -429,12 +548,21 @@ public class Registration extends AppCompatActivity {
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (view.getId() == R.id.phoneHelp)
-                    makeSnackBar(3500, "Your phone # is required for doctors to contact you.");
-                if (view.getId() == R.id.locationHelp)
-                    makeSnackBar(6000, "Your location is visible only by medical professionals to monitor COVID statuses in a particular area.");
-                if (view.getId() == R.id.photohelp)
-                    makeSnackBar(9000, "Please take a close picture of only your face. Your photo is only visible to doctors and can be used as verification (if allowed).");
+                if (doctor) {
+                    if (view.getId() == R.id.phoneHelp)
+                        makeSnackBar(3000, "The phone # is used to authenticate your account.");
+                    if (view.getId() == R.id.locationHelp)
+                        makeSnackBar(3000, "The location is used to authenticate your account.");
+                    if (view.getId() == R.id.photohelp)
+                        makeSnackBar(4000, "Please take a picture of your ID as verification of your profession.");
+                } else {
+                    if (view.getId() == R.id.phoneHelp)
+                        makeSnackBar(3500, "Your phone # is required for doctors to contact you.");
+                    if (view.getId() == R.id.locationHelp)
+                        makeSnackBar(6000, "Your location is visible only by medical professionals to monitor COVID statuses in a particular area.");
+                    if (view.getId() == R.id.photohelp)
+                        makeSnackBar(9000, "Please take a close picture of only your face. Your photo is only visible to doctors and can be used as verification (if allowed).");
+                }
             }
         };
         photoHelp.setOnClickListener(listener);
@@ -445,8 +573,8 @@ public class Registration extends AppCompatActivity {
     private void makeSnackBar(int duration, String s) {
         Snackbar mySnackbar = Snackbar.make(findViewById(R.id.registration), s, duration);
         View snackbarView = mySnackbar.getView();
-        TextView tv= (TextView) snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
-        tv.setMaxLines(3);
+        TextView tv = (TextView) snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
+        tv.setMaxLines(4);
         mySnackbar.show();
     }
 
@@ -473,13 +601,12 @@ public class Registration extends AppCompatActivity {
                 ((TextView) adapterView.getChildAt(0)).setTextColor(0xFFA456DC);
                 TextView text = (TextView) country.getSelectedView();
                 String result = text.getText().toString();
-                makeToast("RESULT: " + result);
                 if (result.contains("United States")) {
                     state.setEnabled(true);
                     ((TextView) state.getChildAt(0)).setTextColor(0xFFA456DC);
                 } else {
                     state.setEnabled(false);
-                    ((TextView) state.getChildAt(0)).setTextColor(0xFF454545);
+                    ((TextView) state.getChildAt(0)).setTextColor(0xFF8C8C8C);
                 }
                 countryGood = true;
                 allGood();
@@ -493,9 +620,10 @@ public class Registration extends AppCompatActivity {
     }
 
     private void allGood() {
-        //TODO Uncomment if you decide to use this where it changes button color based on whether they can move ahead.
+        //FUTURE Uncomment if you decide to use this where it changes button color based on whether they can move ahead.
         //if(userGood && passGood && nameGood && phoneGood && emailGood && cityGood && countryGood && pictureGood)
         patientContinue.setBackgroundResource(R.drawable.green_button);
+        doctorContinue.setBackgroundResource(R.drawable.green_button);
         /*else
             patientContinue.setBackgroundResource(R.drawable.greybutton);*/
     }
@@ -781,8 +909,7 @@ public class Registration extends AppCompatActivity {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        float MIN_DISTANCE = screenW / 4.1f;
-
+        float MIN_DISTANCE = screenW / 4.8f;
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 x1 = event.getX();
@@ -886,7 +1013,7 @@ public class Registration extends AppCompatActivity {
     public void showAboutApp() {
         final Dialog dialog = new Dialog(Registration.this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setCancelable(true);
+        dialog.setCancelable(false);
         dialog.setContentView(R.layout.about_app_welcome);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
 
