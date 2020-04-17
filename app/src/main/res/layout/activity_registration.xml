@@ -130,4 +130,26 @@
         android:layout_marginBottom="15sp"
         android:layout_marginRight="10sp"
         android:layout_height="wrap_content" />
+    <include
+        android:id="@+id/card4"
+        layout="@layout/patient_register2"
+        android:layout_width="match_parent"
+        android:layout_below="@+id/container"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="10sp"
+        android:layout_marginTop="56sp"
+        android:layout_marginBottom="15sp"
+        android:layout_marginRight="10sp"
+        android:layout_height="wrap_content" />
+    <include
+        android:id="@+id/card5"
+        layout="@layout/doctor_register2"
+        android:layout_width="match_parent"
+        android:layout_below="@+id/container"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="10sp"
+        android:layout_marginTop="70sp"
+        android:layout_marginBottom="15sp"
+        android:layout_marginRight="10sp"
+        android:layout_height="wrap_content" />
 </RelativeLayout>

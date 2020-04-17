@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card2"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="15sp"
+    app:cardElevation="10sp">
+
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_marginBottom="3sp"
+        android:layout_marginTop="3sp"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/existingusertext2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="27sp"
+                android:layout_marginTop="17sp"
+                android:fontFamily="@font/remedium"
+                android:text="Your COVID Status"
+                android:textColor="#393939"
+                android:textSize="30sp" />
+
+            <ImageView
+                android:id="@+id/statusHelp"
+                android:layout_width="30dp"
+                android:layout_height="30sp"
+                android:layout_alignParentLeft="true"
+                android:layout_below="@id/existingusertext2"
+                android:layout_marginLeft="6dp"
+                android:layout_marginTop="23dp"
+                app:srcCompat="@drawable/helpicon" />
+
+            <TextView
+                android:id="@+id/covidtestingstatustext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="35sp"
+                android:layout_marginTop="23sp"
+                android:fontFamily="@font/remedium"
+                android:layout_below="@id/existingusertext2"
+                android:text="COVID-19 Testing Status:"
+                android:textColor="#393939"
+                android:textSize="23sp" />
+
+
+            <!--For The Other 2 Radiogroups, set orientation to horizontal.
+            Also change the color to they grey used for "Unknown or Untested" instead of red and green.-->
+            <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/covidStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/covidtestingstatustext"
+                android:layout_marginLeft="50sp"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/unknown"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5sp"
+                    android:buttonTint="#818181"
+                    android:textColor="#505050"
+                    android:text="Unknown or Untested"
+                    android:textSize="20sp" />
+
+                <RadioButton
+                    android:id="@+id/covidpositive"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7sp"
+                    android:buttonTint="#F62E2E"
+                    android:textColor="#505050"
+                    android:text="Positive for COVID"
+                    android:textSize="20sp" />
+                <RadioButton
+                    android:id="@+id/covidnegative"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7sp"
+                    android:buttonTint="#26D61F"
+                    android:textColor="#505050"
+                    android:text="Recovered from COVID"
+                    android:textSize="20sp" />
+            </RadioGroup>
+
+            <!--Plasme Donated-->
+
+            <TextView
+                android:id="@+id/donatedplasmatext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="35sp"
+                android:layout_marginTop="23sp"
+                android:fontFamily="@font/remedium"
+                android:layout_below="@id/covidStatus"
+                android:text="Donated plasma:"
+                android:textColor="#393939"
+                android:textSize="23sp" />
+            <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/donationgroupStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/donatedplasmatext"
+                android:layout_marginLeft="50sp"
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/plasmayes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7sp"
+                    android:buttonTint="#26D61F"
+                    android:textColor="#505050"
+                    android:text="Yes"
+                    android:textSize="20sp" />
+                <RadioButton
+                    android:id="@+id/plasmano"
+                    android:layout_width="wrap_content"
+                    android:layout_marginLeft="35sp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7sp"
+                    android:buttonTint="#F62E2E"
+                    android:textColor="#505050"
+                    android:text="No"
+                    android:textSize="20sp" />
+            </RadioGroup>
+
+
+            <!--Plasma - will donate!-->
+
+            <TextView
+                android:id="@+id/willdonateplasmatext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="35sp"
+                android:layout_marginTop="23sp"
+                android:fontFamily="@font/remedium"
+                android:layout_below="@id/donationgroupStatus"
+                android:text="Willing to donate plasma:"
+                android:textColor="#393939"
+                android:textSize="23sp" />
+            <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/willdonategroupstatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/willdonateplasmatext"
+                android:layout_marginLeft="50sp"
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/willingyes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7sp"
+                    android:buttonTint="#26D61F"
+                    android:textColor="#505050"
+                    android:text="Yes"
+                    android:textSize="20sp" />
+                <RadioButton
+                    android:id="@+id/willingno"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7sp"
+                    android:buttonTint="#F62E2E"
+                    android:layout_marginLeft="35sp"
+                    android:textColor="#505050"
+                    android:text="No"
+                    android:textSize="20sp" />
+            </RadioGroup>
+
+
+
+            <!--When you have created the last Multiple Choice Question, set Linear Layout to below that id.-->
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/willdonategroupstatus"
+                android:layout_marginTop="15sp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/patientPrevious2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20sp"
+                    android:layout_marginRight="20sp"
+                    android:layout_marginBottom="13sp"
+                    android:layout_weight="55"
+                    android:background="@drawable/red_button"
+                    android:paddingTop="6sp"
+                    android:paddingBottom="8sp"
+                    android:text="Back"
+                    android:textAllCaps="false"
+                    android:textColor="#fff"
+                    android:textSize="22sp"
+                    android:visibility="visible" />
+
+                <Button
+                    android:id="@+id/patientFinish"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="20sp"
+                    android:layout_marginBottom="13sp"
+                    android:layout_weight="100"
+                    android:background="@drawable/green_button"
+                    android:paddingTop="6sp"
+                    android:paddingBottom="8sp"
+                    android:text="Done"
+                    android:textAllCaps="false"
+                    android:textColor="#fff"
+                    android:textSize="22sp"
+                    android:visibility="visible" />
+            </LinearLayout>
+
+        </RelativeLayout>
+    </ScrollView>
+</androidx.cardview.widget.CardView>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="16sp">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <!--<RelativeLayout
+            android:id="@+id/titleHolder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#A761C5"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_margin="7sp"
+                android:fontFamily="@font/ralewaybold"
+                android:text="A"
+                android:textColor="#fff"
+                android:textSize="30sp" />
+
+        </RelativeLayout>-->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="13sp"
+            android:layout_marginTop="15sp"
+            android:id="@+id/text"
+            android:fontFamily="@font/regular"
+            android:text="Before you register, have you saved your username and password?"
+            android:textSize="21sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/text"
+            android:layout_marginLeft="12sp"
+            android:layout_marginRight="12sp"
+            android:layout_marginTop="11sp"
+            android:id="@+id/text2"
+            android:textColor="#000"
+            android:fontFamily="@font/regular"
+            android:text="If you ever forget your login credentials, contact covid.ijapps@gmail.com for support."
+            android:textSize="21sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/text2"
+            android:layout_marginTop="15sp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="98"
+                android:background="#DD6262"
+                android:paddingTop="6sp"
+                android:paddingBottom="8sp"
+                android:text="Back"
+                android:textAllCaps="false"
+                android:textColor="#fff"
+                android:textSize="22sp"
+                android:visibility="visible" />
+
+            <Button
+                android:id="@+id/yes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="100"
+                android:background="#7BC871"
+                android:paddingTop="6sp"
+                android:paddingBottom="8sp"
+                android:text="Finish"
+                android:textAllCaps="false"
+                android:textColor="#fff"
+                android:textSize="22sp"
+                android:visibility="visible" />
+        </LinearLayout>
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>

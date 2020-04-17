@@ -13,7 +13,7 @@ app:cardCornerRadius="16sp">
         android:id="@+id/titleHolder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#793ED8"
+        android:background="#A761C5"
         >
 
         <TextView
@@ -58,7 +58,7 @@ app:cardCornerRadius="16sp">
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/text2"
-        android:background="#793ED8"
+        android:background="#A761C5"
         android:text="OK"
         android:textSize="24sp"
         android:textColor="#E5E2FF" />
