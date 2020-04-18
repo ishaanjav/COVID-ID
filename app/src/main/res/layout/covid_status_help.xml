@@ -4,7 +4,9 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     app:cardCornerRadius="16sp">
-
+<ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
@@ -70,6 +72,18 @@
             android:layout_below="@id/text3"
             android:layout_margin="8sp"
             android:layout_marginTop="15sp"
+            android:id="@+id/text5"
+            android:textColor="#424242"
+            android:fontFamily="@font/regular"
+            android:text="&quot;Negative for COVID&quot;: Select this if you have tested negative for COVID at a medical center."
+            android:textSize="20sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/text5"
+            android:layout_margin="8sp"
+            android:layout_marginTop="15sp"
             android:id="@+id/text4"
             android:textColor="#424242"
             android:fontFamily="@font/regular"
@@ -86,4 +100,5 @@
             android:textSize="24sp"
             android:textColor="#E5E2FF" />
     </RelativeLayout>
+</ScrollView>
 </androidx.cardview.widget.CardView>

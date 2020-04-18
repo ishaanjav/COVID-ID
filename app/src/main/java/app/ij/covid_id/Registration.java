@@ -1,6 +1,7 @@
 package app.ij.covid_id;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
@@ -8,18 +9,28 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.SpannableString;
@@ -29,6 +40,8 @@ import android.text.style.StyleSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.GestureDetector;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -50,16 +63,32 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public class Registration extends AppCompatActivity {
@@ -85,7 +114,7 @@ public class Registration extends AppCompatActivity {
     EditText user, pass, name, phone, email, city;
     String sUser, sPass, sName, sPhone, sEmail, sCity, sState, sCountry;
     int backCounter;
-    RadioButton unknown, covidPositive, covidNegative;
+    RadioButton unknown, covidPositive, covidRecovered, covidNegative;
     RadioGroup covidStatus;
     Button patientPrevious2;
     RadioButton plasmaYes, plasmaNo, willingYes, willingNo;
@@ -105,13 +134,15 @@ public class Registration extends AppCompatActivity {
         patientCard2 = findViewById(R.id.card4);
         doctorCard1 = findViewById(R.id.card3);
         doctorCard2 = findViewById(R.id.card5);
+        db = FirebaseFirestore.getInstance();
+        firstAsk = 0;
 
         firstCard.setBackgroundResource(R.drawable.card_white);
         patientCard1.setBackgroundResource(R.drawable.card_white);
         patientCard2.setBackgroundResource(R.drawable.card_white);
         doctorCard1.setBackgroundResource(R.drawable.card_white);
         doctorCard2.setBackgroundResource(R.drawable.card_white);
-
+        makeToast("It is recommended that you have a good internet connection when signing up.");
         patientCard1.setVisibility(View.INVISIBLE);
         patientCard2.setVisibility(View.INVISIBLE);
         doctorCard1.setVisibility(View.INVISIBLE);
@@ -138,7 +169,7 @@ public class Registration extends AppCompatActivity {
         doctorBack2 = doctorCard2.findViewById(R.id.doctorPrevious2);
         patientContinue = patientCard1.findViewById(R.id.patientContinue);
         patientBack1 = patientCard1.findViewById(R.id.patientPrevious1);
-        patientBack2= patientCard2.findViewById(R.id.patientPrevious2);
+        patientBack2 = patientCard2.findViewById(R.id.patientPrevious2);
         //test();
         //test2();
         //patientCard1.setVisibility(View.INVISIBLE);
@@ -178,6 +209,8 @@ public class Registration extends AppCompatActivity {
         });
     }
 
+    Button take, delete;
+
     private void initializePatient() {
         user = patientCard1.findViewById(R.id.user);
         pass = patientCard1.findViewById(R.id.pass);
@@ -190,6 +223,8 @@ public class Registration extends AppCompatActivity {
         phoneHelp = patientCard1.findViewById(R.id.phoneHelp);
         locationHelp = patientCard1.findViewById(R.id.locationHelp);
         takePicture = patientCard1.findViewById(R.id.cardholder);
+        take = patientCard1.findViewById(R.id.takepicture);
+        delete = patientCard1.findViewById(R.id.removepicture);
         deletePicture = patientCard1.findViewById(R.id.removeholder);
         photo = patientCard1.findViewById(R.id.photoholder);
         photoHelp = patientCard1.findViewById(R.id.photohelp);
@@ -214,6 +249,8 @@ public class Registration extends AppCompatActivity {
         phoneHelp = doctorCard1.findViewById(R.id.phoneHelp);
         locationHelp = doctorCard1.findViewById(R.id.locationHelp);
         takePicture = doctorCard1.findViewById(R.id.cardholder);
+        take = doctorCard1.findViewById(R.id.takepicture);
+        delete = doctorCard1.findViewById(R.id.removepicture);
         deletePicture = doctorCard1.findViewById(R.id.removeholder);
         photo = doctorCard1.findViewById(R.id.photoholder);
         photoHelp = doctorCard1.findViewById(R.id.photohelp);
@@ -234,40 +271,214 @@ public class Registration extends AppCompatActivity {
         backCounter++;
     }
 
+    FirebaseFirestore db;
+
+    private void saveInformation() {
+        final String reference = (doctor) ? "Doctors" : "Patients";
+        final Map<String, Object> map = new HashMap<>();
+        map.put("Username", user.getText().toString().trim());
+        map.put("Original Username", user.getText().toString().trim());
+        map.put("Password", pass.getText().toString().trim());
+        map.put("Name", name.getText().toString().trim());
+        map.put("Phone", phone.getText().toString().trim());
+        map.put("Email", email.getText().toString().trim());
+        map.put("City", city.getText().toString().trim());
+        map.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
+        map.put("Country", (country.getSelectedItem().toString()));
+        String status;
+        if (u) status = "Unknown";
+        else if (covidR) status = "Recovered";
+        else if (covidN) status = "Negative";
+        else status = "Positive";
+        map.put("Covid Status", status);
+        if (doctor) {
+            map.put("Account Verified", false);
+        } else {
+            map.put("Donated Plasma", (haveDonatedPlasma));
+            map.put("Will Donate Plasma", (willDonatePlasma));
+        }
+
+        final ProgressDialog dialog = ProgressDialog.show(Registration.this, "Creating Account",
+                "Loading. Please wait...", true);
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                dialog.setMessage("Loading. Please wait..." + "\nMake sure you have a good internet connection.");
+            }
+        }, 5000);
+        final Map<String, String> userPass = new HashMap<>();
+        userPass.put("Username", user.getText().toString().trim());
+        userPass.put("Password", pass.getText().toString().trim());
+        db.collection("userPass")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            boolean unique = true;
+                            String curUser = user.getText().toString().trim();
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                String r = document.get("Username").toString();
+                                Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("Username").toString());
+                                if (r.equals(curUser)) {
+                                    makeSnackBar(2600, "Your username was just taken. Please choose another.");
+                                    unique = false;
+                                    break;
+                                }
+                            }
+                            if (unique) {
+                                //INFO Username is unique.
+                                db.collection("userPass")
+                                        .add(userPass)
+                                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                            @Override
+                                            public void onSuccess(DocumentReference documentReference) {
+                                                String s = reference + "/" + user.getText().toString().trim().trim() + ".jpg";
+                                                StorageReference storageReference2 = FirebaseStorage.getInstance().getReference(s);
+
+                                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                                                byte[] data2 = baos.toByteArray();
+
+                                                UploadTask uploadTask = storageReference2.putBytes(data2);
+                                                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                                    @Override
+                                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                                        FirebaseFirestore db = FirebaseFirestore.getInstance();
+                                                        db.collection(reference)
+                                                                .add(map)
+                                                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                                                    @Override
+                                                                    public void onSuccess(DocumentReference documentReference) {
+                                                                        makeToast("Account created");
+                                                                        dialog.cancel();
+                                                                        //IMPORTANT Account has successfully been created.
+                                                                        startActivity(new Intent(Registration.this, MainActivity.class));
+                                                                        Log.wtf("TESTING", "DocumentSnapshot added with ID: " + documentReference.getId());
+                                                                    }
+                                                                })
+                                                                .addOnFailureListener(new OnFailureListener() {
+                                                                    @Override
+                                                                    public void onFailure(@NonNull Exception e) {
+                                                                        dialog.cancel();
+                                                                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                                        makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
+                                                                    }
+                                                                });
+                                                    }
+                                                }).addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception exception) {
+                                                        dialog.cancel();
+                                                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document" + exception.toString());
+                                                        makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
+                                                    }
+                                                });
+
+
+                                                Log.wtf("TESTING", "DocumentSnapshot added with ID: " + documentReference.getId());
+                                            }
+                                        })
+                                        .addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                dialog.cancel();
+                                                Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
+                                            }
+                                        });
+                            } else {
+                                dialog.cancel();
+                            }
+                        } else {
+                            dialog.cancel();
+                            Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                        }
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                dialog.cancel();
+                makeSnackBar(6000, "Could not process whether your username is unique. Please have a stable internet connection.");
+            }
+        });
+
+
+        //TODO Have a DB called userPassword that stores just username and password,
+        // Even later on if you add a change username/password function, do not delete the original, just add it again to user password.
+        // First ask dad if someone deletes account or changes account whether new users can use their username or not.
+        // IF they can't use (that is easier a lot).
+
+       /* db.collection("Patients").document("Patient1")
+                .set(user)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.wtf("TESTING", "DocumentSnapshot added with ID: ");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                    }
+                });
+
+        db.collection("Patients")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.wtf("READING: READING:  ", document.getId() + " => " + document.getData());
+                                makeToast("Document ID: " + document.getId() + " =>  " + document.getData());
+                            }
+                        } else {
+                            Log.w("FAILED TO READ ---", "Error getting documents.", task.getException());
+                        }
+                    }
+                });*/
+// Add a new document with a generated ID
+        /*db.collection("Patients")
+                .add(user)
+                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        Log.wtf("TESTING", "DocumentSnapshot added with ID: " + documentReference.getId());
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                    }
+                });
+
+        db.collection("Patients")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.wtf("READING: READING:  ", document.getId() + " => " + document.getData());
+                                makeToast("Document ID: " + document.getId() + " =>  " + document.getData());
+                            }
+                        } else {
+                            Log.w("FAILED TO READ ---", "Error getting documents.", task.getException());
+                        }
+                    }
+                });*/
+
+    }
+
     private void doctorRegister() {
         animateCards(firstCard, doctorCard1, R.anim.slide_out_left, R.anim.slide_in_left);
         doctorContinue.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                /*sUser = user.getText().toString();
-                sPass = pass.getText().toString();
-                sName = name.getText().toString();
-                sPhone = phone.getText().toString();
-                sEmail = email.getText().toString();
-                sCity = city.getText().toString();
-                sState = state.getSelectedItem().toString();
-                sCountry = state.getSelectedItem().toString();
-                if (sUser.length() < 6)
-                    makeSnackBar(2000, "Please make your username longer.");
-                else if (!uniqueUsername())
-                    makeSnackBar(2600, "This username already exists. Please choose another.");
-                else if (sPass.length() < 6)
-                    makeSnackBar(2000, "Please make your password longer.");
-                else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
-                    makeSnackBar(2000, "Please enter your full name.");
-                else if (sPhone.length() < 10)
-                    makeSnackBar(2000, "Please enter a valid phone #.");
-                else if (sEmail.length() > 0 && !isValid(sEmail))
-                    makeSnackBar(2000, "Please enter a valid email.");
-                else if (sCity.length() <= 2)
-                    makeSnackBar(2000, "Please enter a valid city.");
-                else if (!pictureGood)
-                    makeSnackBar(2000, "Please take a picture.");
-                else {*/
-                animateCards(doctorCard1, doctorCard2, R.anim.slide_out_left, R.anim.slide_in_left);
-                page = Page.DOCTOR2;
-                initializeDoctor2();
-                // }
+                goToDoctor2();
             }
         });
     }
@@ -279,37 +490,247 @@ public class Registration extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //TODO Uncomment below verification
-                /*sUser = user.getText().toString();
-                sPass = pass.getText().toString();
-                sName = name.getText().toString();
-                sPhone = phone.getText().toString();
-                sEmail = email.getText().toString();
-                sCity = city.getText().toString();
-                sState = state.getSelectedItem().toString();
-                sCountry = state.getSelectedItem().toString();
-                if (sUser.length() < 6)
-                    makeSnackBar(2000, "Please make your username longer.");
-                else if (!uniqueUsername())
-                    makeSnackBar(2600, "This username already exists. Please choose another.");
-                else if (sPass.length() < 6)
-                    makeSnackBar(2000, "Please make your password longer.");
-                else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
-                    makeSnackBar(2000, "Please enter your full name.");
-                else if (sPhone.length() < 10)
-                    makeSnackBar(2000, "Please enter a valid phone #.");
-                else if (sEmail.length() > 0 && !isValid(sEmail))
-                    makeSnackBar(2000, "Please enter a valid email.");
-                else if (sCity.length() <= 2)
-                    makeSnackBar(2000, "Please enter a valid city.");
-                else if (!pictureGood)
-                    makeSnackBar(2000, "Please take a picture.");
-                else {*/
-                animateCards(patientCard1, patientCard2, R.anim.slide_out_left, R.anim.slide_in_left);
-                page = Page.PATIENT2;
-                initializePatient2();
-                //}
+                goToPatient2();
+                /*if (checkPatientContinue()) {
+                    animateCards(patientCard1, patientCard2, R.anim.slide_out_left, R.anim.slide_in_left);
+                    page = Page.PATIENT2;
+                    initializePatient2();
+                }*/
             }
         });
+    }
+
+    private void goToDoctor2() {
+        sUser = user.getText().toString().trim();
+        sPass = pass.getText().toString().trim();
+        sName = name.getText().toString().trim();
+        sPhone = phone.getText().toString().trim();
+        sEmail = email.getText().toString().trim();
+        sCity = city.getText().toString().trim();
+        sState = state.getSelectedItem().toString();
+        sCountry = state.getSelectedItem().toString();
+        if (sUser.length() < 6)
+            makeSnackBar(2000, "Please make your username longer.");
+        else if (!uniqueUsername())
+            makeSnackBar(2600, "This username already exists. Please choose another.");
+        else if (sPass.length() < 6)
+            makeSnackBar(2000, "Please make your password longer.");
+        else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
+            makeSnackBar(2000, "Please enter your full name.");
+        else if (sPhone.length() < 10)
+            makeSnackBar(2000, "Please enter a valid phone #.");
+        else if (sEmail.length() > 0 && !isValid(sEmail))
+            makeSnackBar(2000, "Please enter a valid email.");
+        else if (sCity.length() <= 2)
+            makeSnackBar(2000, "Please enter a valid city.");
+        else if (!pictureGood)
+            makeSnackBar(2000, "Please take a picture of your face.");
+        else {
+            final ProgressDialog dialog = ProgressDialog.show(Registration.this, null,
+                    "Checking username uniqueness...", true);
+            dialog.setCancelable(true);
+            db.collection("userPass")
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                boolean unique = true;
+                                String curUser = user.getText().toString().trim();
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    String r = document.get("Username").toString();
+                                    Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("Username").toString());
+                                    if (r.equals(curUser)) {
+                                        makeSnackBar(2400, "This username is taken. Please choose another.");
+                                        dialog.cancel();
+                                        unique = false;
+                                        break;
+                                    } else {
+
+                                    }
+                                }
+                                if (unique) {
+                                    //INFO Username is unique.
+                                    animateCards(doctorCard1, doctorCard2, R.anim.slide_out_left, R.anim.slide_in_left);
+                                    page = Page.DOCTOR2;
+                                    initializeDoctor2();
+                                    dialog.cancel();
+                                }
+                            } else {
+                                dialog.cancel();
+                                Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                                makeSnackBar(7000, "Could not process whether your username is unique. Please have a stable internet connection and try again.");
+                            }
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    dialog.cancel();
+                    makeSnackBar(7000, "Could not process whether your username is unique. Please have a stable internet connection and try again.");
+                }
+            });
+        }
+    }
+
+    private void goToPatient2() {
+        sUser = user.getText().toString().trim();
+        sPass = pass.getText().toString().trim();
+        sName = name.getText().toString().trim();
+        sPhone = phone.getText().toString().trim();
+        sEmail = email.getText().toString().trim();
+        sCity = city.getText().toString().trim();
+        sState = state.getSelectedItem().toString();
+        sCountry = state.getSelectedItem().toString();
+        if (sUser.length() < 6)
+            makeSnackBar(2000, "Please make your username longer.");
+        else if (!uniqueUsername())
+            makeSnackBar(2600, "This username already exists. Please choose another.");
+        else if (sPass.length() < 6)
+            makeSnackBar(2000, "Please make your password longer.");
+        else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
+            makeSnackBar(2000, "Please enter your full name.");
+        else if (sPhone.length() < 10)
+            makeSnackBar(2000, "Please enter a valid phone #.");
+        else if (sEmail.length() > 0 && !isValid(sEmail))
+            makeSnackBar(2000, "Please enter a valid email.");
+        else if (sCity.length() <= 2)
+            makeSnackBar(2000, "Please enter a valid city.");
+        else if (!pictureGood)
+            makeSnackBar(2000, "Please take a picture of your face.");
+        else {
+            final ProgressDialog dialog = ProgressDialog.show(Registration.this, null,
+                    "Checking username uniqueness...", true);
+            dialog.setCancelable(true);
+            db.collection("userPass")
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                boolean unique = true;
+                                String curUser = user.getText().toString().trim();
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    String r = document.get("Username").toString();
+                                    Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("Username").toString());
+                                    if (r.equals(curUser)) {
+                                        makeSnackBar(2400, "This username is taken. Please choose another.");
+                                        unique = false;
+                                        dialog.cancel();
+                                        break;
+                                    } else {
+
+                                    }
+                                }
+                                if (unique) {
+                                    //INFO Username is unique.
+                                    animateCards(patientCard1, patientCard2, R.anim.slide_out_left, R.anim.slide_in_left);
+                                    page = Page.PATIENT2;
+                                    initializePatient2();
+                                    dialog.cancel();
+                                }
+                            } else {
+                                dialog.cancel();
+                                Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                                makeSnackBar(7000, "Could not process whether your username is unique. Please have a stable internet connection and try again.");
+                            }
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    dialog.cancel();
+                    makeSnackBar(7000, "Could not process whether your username is unique. Please have a stable internet connection and try again.");
+                }
+            });
+        }
+    }
+
+    public boolean checkDoctorContinue() {
+        //return true;
+        sUser = user.getText().toString().trim();
+        sPass = pass.getText().toString().trim();
+        sName = name.getText().toString().trim();
+        sPhone = phone.getText().toString().trim();
+        sEmail = email.getText().toString().trim();
+        sCity = city.getText().toString().trim();
+        sState = state.getSelectedItem().toString();
+        sCountry = state.getSelectedItem().toString();
+        if (sUser.length() < 6)
+            makeSnackBar(2000, "Please make your username longer.");
+        else if (!uniqueUsername())
+            makeSnackBar(2600, "This username already exists. Please choose another.");
+        else if (sPass.length() < 6)
+            makeSnackBar(2000, "Please make your password longer.");
+        else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
+            makeSnackBar(2000, "Please enter your full name.");
+        else if (sPhone.length() < 10)
+            makeSnackBar(2000, "Please enter a valid phone #.");
+        else if (sEmail.length() > 0 && !isValid(sEmail))
+            makeSnackBar(2000, "Please enter a valid email.");
+        else if (sCity.length() <= 2)
+            makeSnackBar(2000, "Please enter a valid city.");
+        else if (!pictureGood)
+            makeSnackBar(2000, "Please take a picture of your face.");
+        else {
+            db.collection("cities")
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                boolean unique = true;
+                                String curUser = user.getText().toString().trim();
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    String r = (String) document.get("Username");
+                                    if (r.equals(curUser)) {
+                                        makeSnackBar(2400, "This username is taken. Please choose another.");
+                                        unique = false;
+                                        break;
+                                    } else {
+                                    }
+                                }
+                                if (unique) {
+
+                                }
+                            } else {
+                                Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                            }
+                        }
+                    });
+            return true;
+        }
+        return false;
+    }
+
+    public boolean checkPatientContinue() {
+        //return true;
+        sUser = user.getText().toString().trim();
+        sPass = pass.getText().toString().trim();
+        sName = name.getText().toString().trim();
+        sPhone = phone.getText().toString().trim();
+        sEmail = email.getText().toString().trim();
+        sCity = city.getText().toString().trim();
+        sState = state.getSelectedItem().toString();
+        sCountry = state.getSelectedItem().toString();
+        if (sUser.length() < 6)
+            makeSnackBar(2000, "Please make your username longer.");
+        else if (!uniqueUsername())
+            makeSnackBar(2600, "This username already exists. Please choose another.");
+        else if (sPass.length() < 6)
+            makeSnackBar(2000, "Please make your password longer.");
+        else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
+            makeSnackBar(2000, "Please enter your full name.");
+        else if (sPhone.length() < 10)
+            makeSnackBar(2000, "Please enter a valid phone #.");
+        else if (sEmail.length() > 0 && !isValid(sEmail))
+            makeSnackBar(2000, "Please enter a valid email.");
+        else if (sCity.length() <= 2)
+            makeSnackBar(2000, "Please enter a valid city.");
+        else if (!pictureGood)
+            makeSnackBar(2000, "Please take a picture.");
+        else {
+            return true;
+        }
+        return false;
     }
 
     ImageView statusHelp;
@@ -320,7 +741,8 @@ public class Registration extends AppCompatActivity {
         doctorFinish = doctorCard2.findViewById(R.id.doctorFinish);
         unknown = doctorCard2.findViewById(R.id.unknown);
         covidPositive = doctorCard2.findViewById(R.id.covidpositive);
-        covidNegative = doctorCard2.findViewById(R.id.covidnegative);
+        covidRecovered = doctorCard2.findViewById(R.id.covidnegative);
+        covidNegative = doctorCard2.findViewById(R.id.covidn);
         doctor2Helpers();
         doctorDone();
     }
@@ -331,7 +753,8 @@ public class Registration extends AppCompatActivity {
         patientFinish = patientCard2.findViewById(R.id.patientFinish);
         unknown = patientCard2.findViewById(R.id.unknown);
         covidPositive = patientCard2.findViewById(R.id.covidpositive);
-        covidNegative = patientCard2.findViewById(R.id.covidnegative);
+        covidRecovered = patientCard2.findViewById(R.id.covidnegative);
+        covidNegative = patientCard2.findViewById(R.id.covidn);
         plasmaYes = patientCard2.findViewById(R.id.plasmayes);
         plasmaNo = patientCard2.findViewById(R.id.plasmano);
         willingYes = patientCard2.findViewById(R.id.willingyes);
@@ -343,7 +766,7 @@ public class Registration extends AppCompatActivity {
         patientDone();
     }
 
-    boolean u, covidP, covidN, haveDonatedPlasma, willDonatePlasma;
+    boolean u, covidP, covidR, covidN, haveDonatedPlasma, willDonatePlasma;
 
     private void doctorDone() {
         doctorFinish.setOnClickListener(new View.OnClickListener() {
@@ -351,12 +774,15 @@ public class Registration extends AppCompatActivity {
             public void onClick(View view) {
                 //TODO Check if they have selected one of the 3 options from RadioGroup
                 // Then ask if sure
-                u = unknown.isSelected();
-                covidP = covidPositive.isSelected();
-                covidN = covidNegative.isSelected();
+                u = unknown.isChecked();
+                covidP = covidPositive.isChecked();
+                covidR = covidRecovered.isChecked();
+                covidN = covidNegative.isChecked();
 
-                if (u || covidP || covidN)
+                if (u || covidP || covidR || covidN)
                     showRegister();
+                else
+                    makeSnackBar(1900, "Select an option above");
             }
         });
     }
@@ -368,6 +794,22 @@ public class Registration extends AppCompatActivity {
                 //TODO Check if they have selected something from each RadioGroup.
                 // Then ask if sure
 
+                // unknown.setChecked(true);
+                haveDonatedPlasma = plasmaYes.isChecked();
+                boolean noDonate = plasmaNo.isChecked();
+                willDonatePlasma = willingYes.isChecked();
+                boolean noWilling = willingNo.isChecked();
+
+                u = unknown.isChecked();
+                covidP = covidPositive.isChecked();
+                covidR = covidRecovered.isChecked();
+                covidN = covidNegative.isChecked();
+
+                if ((unknown.isChecked() || covidPositive.isChecked() || covidRecovered.isChecked() || covidN) &&
+                        (plasmaYes.isChecked() || plasmaNo.isChecked()) && (willingYes.isChecked() || willingNo.isChecked()))
+                    showRegister();
+                else
+                    makeSnackBar(1900, "Select the options above.");
             }
         });
     }
@@ -393,6 +835,25 @@ public class Registration extends AppCompatActivity {
 
     private boolean uniqueUsername() {
         //TODO Write code to determine if username is unique.
+        /*db.collection("cities")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            boolean unique = true;
+                            String curUser = user.getText().toString().trim();
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                String r = (String) document.get("Username");
+                                if(r.equals(curUser))
+                                    return false;
+                                //Log.wtf("SUCCESSS", document.getId() + " => " + document.getData());
+                            }
+                        } else {
+                            Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                        }
+                    }
+                });*/
         return true;
     }
 
@@ -424,7 +885,7 @@ public class Registration extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                String s = user.getText().toString();
+                String s = user.getText().toString().trim();
                 //if(s.length()> 4)
 
             }
@@ -518,9 +979,13 @@ public class Registration extends AppCompatActivity {
     }
 
     Uri extra;
+    ContentValues values;
+    Uri imageUri;
+
+    int firstAsk = 0;
 
     private void test() {
-        takePicture.setOnClickListener(new View.OnClickListener() {
+        View.OnClickListener clicker = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
@@ -528,10 +993,28 @@ public class Registration extends AppCompatActivity {
                             != PackageManager.PERMISSION_GRANTED) {
                         ActivityCompat.requestPermissions(Registration.this, new String[]{Manifest.permission.CAMERA}, 1034);
 
+                    } else if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            != PackageManager.PERMISSION_GRANTED) {
+
+                        showPicQuality();
+                       /* requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                3);*/
+
+                        //firstAsk++;
+                        return;
                     } else {
-                        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        values = new ContentValues();
+                        values.put(MediaStore.Images.Media.TITLE, "New Picture");
+                        values.put(MediaStore.Images.Media.DESCRIPTION, "From your Camera");
+                        imageUri = getContentResolver().insert(
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                        ;
+                        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                        startActivityForResult(intent, 100);
+                       /* Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, extra);
-                        startActivityForResult(cameraIntent, 100);
+                        startActivityForResult(cameraIntent, 100);*/
                     }
                 } catch (ActivityNotFoundException anfe) {
                     //display an error message
@@ -540,8 +1023,10 @@ public class Registration extends AppCompatActivity {
 
                 }
             }
-        });
-        deletePicture.setOnClickListener(new View.OnClickListener() {
+        };
+        takePicture.setOnClickListener(clicker);
+        take.setOnClickListener(clicker);
+        View.OnClickListener delete2 = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (doctor)
@@ -552,7 +1037,10 @@ public class Registration extends AppCompatActivity {
                 allGood();
                 patientContinue.setBackgroundResource(R.drawable.greybutton);
             }
-        });
+        };
+
+        delete.setOnClickListener(delete2);
+        deletePicture.setOnClickListener(delete2);
     }
 
     boolean swapped = false;
@@ -563,11 +1051,11 @@ public class Registration extends AppCompatActivity {
         return super.dispatchTouchEvent(event);
     }*/
 
-    int count = 0;
+    int count = 21;
 
-    private void doUpload(Bitmap bitmap, StorageReference storageReference2) {
-        String s = "Patients/" + ++count + ".jpg";
-        storageReference2 = FirebaseStorage.getInstance().getReference(s);
+    private void doUpload(Bitmap bitmap, String id, ProgressDialog dialog) {
+        String s = "Patients/" + id + ".jpg";
+        StorageReference storageReference2 = FirebaseStorage.getInstance().getReference(s);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
@@ -587,47 +1075,353 @@ public class Registration extends AppCompatActivity {
         });
     }
 
+    public void showPicQuality() {
+        final Dialog dialog = new Dialog(Registration.this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setCancelable(true);
+        dialog.setContentView(R.layout.image_quality);
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+        lp.copyFrom(dialog.getWindow().getAttributes());
+        lp.width = (int) (screenW * .85);
+
+        dialog.getWindow().setAttributes(lp);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        Window window = dialog.getWindow();
+
+        WindowManager.LayoutParams wlp = window.getAttributes();
+
+        /*wlp.gravity = Gravity.BOTTOM;
+        wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        window.setAttributes(wlp);*/
+
+        WindowManager.LayoutParams layoutParams = dialog.getWindow().getAttributes();
+        layoutParams.y = 100; // bottom margin
+        dialog.getWindow().setAttributes(layoutParams);
+
+        CardView card = dialog.findViewById(R.id.card1);
+        card.setBackgroundResource(R.drawable.card_black);
+
+        Button low = (Button) dialog.findViewById(R.id.low);
+        Button high = (Button) dialog.findViewById(R.id.high);
+        final boolean[] Idismissed = {false};
+        low.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+                Idismissed[0] = true;
+                dialog.cancel();
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                startActivityForResult(intent, 10);
+            }
+        });
+        high.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //TODO Save their info then go back to welcome page.
+                dialog.dismiss();
+                Idismissed[0] = true;
+                dialog.cancel();
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        3);
+            }
+        });
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                if (!pictureGood && !Idismissed[0])
+                    makeToast("A picture is required. Click the help icon for more info.");
+            }
+        });
+        dialog.show();
+    }
+
     Bitmap bitmap;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
-            if (requestCode == 100) {
-                extra = data.getData();
-                extra = data.getData();
 
+            if (requestCode == 10) {
+                //README They choose to take low quality image.
+               /* try {
+                    bitmap = MediaStore.Images.Media.getBitmap(
+                            getContentResolver(), imageUri);
+                } catch (IOException e) {*/
                 bitmap = (Bitmap) data.getExtras().get("data");
+            /*        e.printStackTrace();
+                }*/
+
+                Matrix matrix = new Matrix();
+                matrix.postRotate(180);
+
                 pictureGood = true;
                 allGood();
+                matrix.postRotate(90);
 
+                matrix.postRotate(0);
                 if (bitmap.getWidth() > bitmap.getHeight()) {
-
                     bitmap = Bitmap.createBitmap(
                             bitmap,
                             bitmap.getWidth() / 2 - bitmap.getHeight() / 2,
                             0,
                             bitmap.getHeight(),
-                            bitmap.getHeight()
+                            bitmap.getHeight(), matrix, true
                     );
-
                 } else if (bitmap.getHeight() > bitmap.getWidth()) {
-
                     bitmap = Bitmap.createBitmap(
                             bitmap,
                             0,
                             bitmap.getHeight() / 2 - bitmap.getWidth() / 2,
                             bitmap.getWidth(),
-                            bitmap.getWidth()
-                    );
-
+                            bitmap.getWidth(),
+                            matrix, true);
                 }
-                saveImage(getApplicationContext(), bitmap, "temp", "jpg");
+                makeToast("Double tap or long press the image to rotate it.");
+                makeSnackBar(5000, "The image is low quality. Please consider taking a higher quality image.");
+                //saveImage(getApplicationContext(), bitmap, "temp", "jpg");
+
                 photo.setImageBitmap(bitmap);
+            }
+            if (requestCode == 100) {
+                //extra = data.getData();
+                //extra = data.getData();
+                //INFO Getting high quality image
+                try {
+                    bitmap = MediaStore.Images.Media.getBitmap(
+                            getContentResolver(), imageUri);
+                } catch (IOException e) {
+                    bitmap = (Bitmap) data.getExtras().get("data");
+                    e.printStackTrace();
+                }
+
+                Matrix matrix = new Matrix();
+                matrix.postRotate(180);
+
+                pictureGood = true;
+                allGood();
+                matrix.postRotate(90);
+
+                matrix.postRotate(0);
+                if (bitmap.getWidth() > bitmap.getHeight()) {
+                    bitmap = Bitmap.createBitmap(
+                            bitmap,
+                            bitmap.getWidth() / 2 - bitmap.getHeight() / 2,
+                            0,
+                            bitmap.getHeight(),
+                            bitmap.getHeight(), matrix, true
+                    );
+                } else if (bitmap.getHeight() > bitmap.getWidth()) {
+                    bitmap = Bitmap.createBitmap(
+                            bitmap,
+                            0,
+                            bitmap.getHeight() / 2 - bitmap.getWidth() / 2,
+                            bitmap.getWidth(),
+                            bitmap.getWidth(),
+                            matrix, true);
+                }
+                makeToast("Double tap or long press the image to rotate it.");
+
+                //saveImage(getApplicationContext(), bitmap, "temp", "jpg");
+
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 70, out);
+                bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));
+                photo.setImageBitmap(bitmap);
+
 
             }
         }
 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        //INFO If they choose to take high quality image.
+        if (requestCode == 3) {
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                values = new ContentValues();
+                values.put(MediaStore.Images.Media.TITLE, "New Picture");
+                values.put(MediaStore.Images.Media.DESCRIPTION, "From your Camera");
+                imageUri = getContentResolver().insert(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                startActivityForResult(intent, 100);
+            } else {
+
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    public Uri getImageUri(Context inContext, Bitmap inImage) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
+        return Uri.parse(path);
+    }
+
+    public String compressImage(String imageUri) {
+
+        String filePath = getRealPathFromURI(imageUri);
+        Bitmap scaledBitmap = null;
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+
+//      by setting this field as true, the actual bitmap pixels are not loaded in the memory. Just the bounds are loaded. If
+//      you try the use the bitmap here, you will get null.
+        options.inJustDecodeBounds = true;
+        Bitmap bmp = BitmapFactory.decodeFile(filePath, options);
+
+        int actualHeight = options.outHeight;
+        int actualWidth = options.outWidth;
+
+//      max Height and width values of the compressed image is taken as 816x612
+
+        float maxHeight = 816.0f;
+        float maxWidth = 612.0f;
+        float imgRatio = (float) bmp.getWidth() / (float) bmp.getHeight();
+        float maxRatio = maxWidth / maxHeight;
+
+//      width and height values are set maintaining the aspect ratio of the image
+
+        if (actualHeight > maxHeight || actualWidth > maxWidth) {
+            if (imgRatio < maxRatio) {
+                imgRatio = maxHeight / actualHeight;
+                actualWidth = (int) (imgRatio * actualWidth);
+                actualHeight = (int) maxHeight;
+            } else if (imgRatio > maxRatio) {
+                imgRatio = maxWidth / actualWidth;
+                actualHeight = (int) (imgRatio * actualHeight);
+                actualWidth = (int) maxWidth;
+            } else {
+                actualHeight = (int) maxHeight;
+                actualWidth = (int) maxWidth;
+
+            }
+        }
+
+//      setting inSampleSize value allows to load a scaled down version of the original image
+
+        options.inSampleSize = calculateInSampleSize(options, actualWidth, actualHeight);
+
+//      inJustDecodeBounds set to false to load the actual bitmap
+        options.inJustDecodeBounds = false;
+
+//      this options allow android to claim the bitmap memory if it runs low on memory
+        options.inPurgeable = true;
+        options.inInputShareable = true;
+        options.inTempStorage = new byte[16 * 1024];
+
+        try {
+//          load the bitmap from its path
+            bmp = BitmapFactory.decodeFile(filePath, options);
+        } catch (OutOfMemoryError exception) {
+            exception.printStackTrace();
+
+        }
+        try {
+            scaledBitmap = Bitmap.createBitmap(actualWidth, actualHeight, Bitmap.Config.ARGB_8888);
+        } catch (OutOfMemoryError exception) {
+            exception.printStackTrace();
+        }
+
+        float ratioX = actualWidth / (float) options.outWidth;
+        float ratioY = actualHeight / (float) options.outHeight;
+        float middleX = actualWidth / 2.0f;
+        float middleY = actualHeight / 2.0f;
+
+        Matrix scaleMatrix = new Matrix();
+        scaleMatrix.setScale(ratioX, ratioY, middleX, middleY);
+
+        Canvas canvas = new Canvas(scaledBitmap);
+        canvas.setMatrix(scaleMatrix);
+        canvas.drawBitmap(bmp, middleX - bmp.getWidth() / 2, middleY - bmp.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
+
+//      check the rotation of the image and display it properly
+        ExifInterface exif;
+        try {
+            exif = new ExifInterface(filePath);
+
+            int orientation = exif.getAttributeInt(
+                    ExifInterface.TAG_ORIENTATION, 0);
+            Log.d("EXIF", "Exif: " + orientation);
+            Matrix matrix = new Matrix();
+            if (orientation == 6) {
+                matrix.postRotate(90);
+                Log.d("EXIF", "Exif: " + orientation);
+            } else if (orientation == 3) {
+                matrix.postRotate(180);
+                Log.d("EXIF", "Exif: " + orientation);
+            } else if (orientation == 8) {
+                matrix.postRotate(270);
+                Log.d("EXIF", "Exif: " + orientation);
+            }
+            scaledBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0,
+                    scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix,
+                    true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        FileOutputStream out = null;
+        String filename = getFilename();
+        try {
+            out = new FileOutputStream(filename);
+
+//          write the compressed bitmap at the destination specified by filename.
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return filename;
+
+    }
+
+    public String getFilename() {
+        File file = new File(Environment.getExternalStorageDirectory().getPath(), "MyFolder/Images");
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        String uriSting = (file.getAbsolutePath() + "/" + System.currentTimeMillis() + ".jpg");
+        return uriSting;
+
+    }
+
+    private String getRealPathFromURI(String contentURI) {
+        Uri contentUri = Uri.parse(contentURI);
+        Cursor cursor = getContentResolver().query(contentUri, null, null, null, null);
+        if (cursor == null) {
+            return contentUri.getPath();
+        } else {
+            cursor.moveToFirst();
+            int index = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            return cursor.getString(index);
+        }
+    }
+
+    public int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+            final int heightRatio = Math.round((float) height / (float) reqHeight);
+            final int widthRatio = Math.round((float) width / (float) reqWidth);
+            inSampleSize = heightRatio < widthRatio ? heightRatio : widthRatio;
+        }
+        final float totalPixels = width * height;
+        final float totalReqPixelsCap = reqWidth * reqHeight * 2;
+        while (totalPixels / (inSampleSize * inSampleSize) > totalReqPixelsCap) {
+            inSampleSize++;
+        }
+
+        return inSampleSize;
     }
 
     private void helpers() {
@@ -654,6 +1448,45 @@ public class Registration extends AppCompatActivity {
         photoHelp.setOnClickListener(listener);
         phoneHelp.setOnClickListener(listener);
         locationHelp.setOnClickListener(listener);
+
+        photo.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (bitmap != null) {
+                    bitmap = RotateBitmap(bitmap, 270f);
+                    photo.setImageBitmap(bitmap);
+                    Vibrator vibrator = (Vibrator) Registration.this.getSystemService(Context.VIBRATOR_SERVICE);
+                    vibrator.vibrate(300);
+                }
+                return false;
+            }
+        });
+        photo.setOnTouchListener(new View.OnTouchListener() {
+            GestureDetector gestureDetector = new GestureDetector(Registration.this, new GestureDetector.SimpleOnGestureListener() {
+                @Override
+                public boolean onDoubleTap(MotionEvent e) {
+                    if (bitmap != null) {
+                        bitmap = RotateBitmap(bitmap, 90f);
+                        photo.setImageBitmap(bitmap);
+                        Vibrator vibrator = (Vibrator) Registration.this.getSystemService(Context.VIBRATOR_SERVICE);
+                        vibrator.vibrate(300);
+                    }
+                    return super.onDoubleTap(e);
+                }
+            });
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                gestureDetector.onTouchEvent(event);
+                return false;
+            }
+        });
+    }
+
+    public static Bitmap RotateBitmap(Bitmap source, float angle) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
     private void makeSnackBar(int duration, String s) {
@@ -686,7 +1519,7 @@ public class Registration extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 ((TextView) adapterView.getChildAt(0)).setTextColor(0xFFA456DC);
                 TextView text = (TextView) country.getSelectedView();
-                String result = text.getText().toString();
+                String result = text.getText().toString().trim();
                 if (result.contains("United States")) {
                     state.setEnabled(true);
                     ((TextView) state.getChildAt(0)).setTextColor(0xFFA456DC);
@@ -720,7 +1553,7 @@ public class Registration extends AppCompatActivity {
         countries.add("AF: Afghanistan");
         countries.add("AL: Albania");
         countries.add("DZ: Algeria");
-        countries.add("AS: American");
+        countries.add("AS: American Samoa");
         countries.add("AD: Andorra");
         countries.add("AO: Angola");
         countries.add("AI: Anguilla");
@@ -1039,9 +1872,12 @@ public class Registration extends AppCompatActivity {
         } else {
             //Current Page - Direction B
             if (page == Page.PATIENT1) {
-                animateCards(patientCard1, patientCard2, R.anim.slide_out_left, R.anim.slide_in_left);
-                page = Page.PATIENT2;
-                initializePatient2();
+                goToPatient2();
+                /*if (checkPatientContinue()) {
+                    animateCards(patientCard1, patientCard2, R.anim.slide_out_left, R.anim.slide_in_left);
+                    page = Page.PATIENT2;
+                    initializePatient2();
+                }*/
             } else if (page == Page.PAGE1) {
                 if (updated) {
                     if (doctor) {
@@ -1057,9 +1893,12 @@ public class Registration extends AppCompatActivity {
                     }
                 } else makeToast("Please choose one of the options above.");
             } else if (page == Page.DOCTOR1) {
-                animateCards(doctorCard1, doctorCard2, R.anim.slide_out_left, R.anim.slide_in_left);
-                page = Page.DOCTOR2;
-                initializeDoctor2();
+                goToDoctor2();
+                /*if (checkDoctorContinue()) {
+                    animateCards(doctorCard1, doctorCard2, R.anim.slide_out_left, R.anim.slide_in_left);
+                    page = Page.DOCTOR2;
+                    initializeDoctor2();
+                }*/
             }
 
         }
@@ -1083,6 +1922,10 @@ public class Registration extends AppCompatActivity {
 
     public void makeToast(String s) {
         Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
+    }
+
+    public void shortToast(String s) {
+        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -1114,12 +1957,12 @@ public class Registration extends AppCompatActivity {
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
 
         TextView text1 = dialog.findViewById(R.id.text2), text2 = dialog.findViewById(R.id.text3), text3 = dialog.findViewById(R.id.text4);
-        String s1 = text1.getText().toString();
-        String s2 = text2.getText().toString();
-        String s3 = text3.getText().toString();
+        String s1 = text1.getText().toString().trim();
+        String s2 = text2.getText().toString().trim();
+        String s3 = text3.getText().toString().trim();
         SpannableString ss1 = new SpannableString(s1);
         ss1.setSpan(new StyleSpan(Typeface.BOLD), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss1.setSpan(new ForegroundColorSpan(Color.parseColor("#31B115")), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss1.setSpan(new ForegroundColorSpan(Color.parseColor("#505050")), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         text1.setText(ss1);
         SpannableString ss2 = new SpannableString(s2);
         ss2.setSpan(new StyleSpan(Typeface.BOLD), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -1127,8 +1970,13 @@ public class Registration extends AppCompatActivity {
         text2.setText(ss2);
         SpannableString ss3 = new SpannableString(s3);
         ss3.setSpan(new StyleSpan(Typeface.BOLD), 0, 24, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss3.setSpan(new ForegroundColorSpan(Color.parseColor("#505050")), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss3.setSpan(new ForegroundColorSpan(Color.parseColor("#31B115")), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         text3.setText(ss3);
+        TextView text4 = dialog.findViewById(R.id.text5);
+        SpannableString ss4 = new SpannableString(text4.getText().toString().trim());
+        ss4.setSpan(new StyleSpan(Typeface.BOLD), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss4.setSpan(new ForegroundColorSpan(Color.parseColor("#2E88F6")), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        text4.setText(ss4);
 
         Button back = (Button) dialog.findViewById(R.id.back);
         back.setOnClickListener(new View.OnClickListener() {
@@ -1153,7 +2001,7 @@ public class Registration extends AppCompatActivity {
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
 
         TextView text1 = dialog.findViewById(R.id.text2);
-        String s1 = text1.getText().toString();
+        String s1 = text1.getText().toString().trim();
         SpannableString ss1 = new SpannableString(s1);
         ss1.setSpan(new StyleSpan(Typeface.BOLD), s1.indexOf("covid"), s1.indexOf("covid") + 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         ss1.setSpan(new ForegroundColorSpan(Color.parseColor("#1599e6")), s1.indexOf("covid"), s1.indexOf("covid") + 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -1172,10 +2020,14 @@ public class Registration extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //TODO Save their info then go back to welcome page.
+                dialog.dismiss();
+                dialog.cancel();
+                saveInformation();
             }
         });
         dialog.show();
     }
+
 
     public void showAboutApp() {
         final Dialog dialog = new Dialog(Registration.this);

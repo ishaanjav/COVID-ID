@@ -97,7 +97,7 @@
                 android:layout_marginTop="-7sp"
                 android:backgroundTint="#9547CD"
                 android:ems="10"
-                android:inputType="textPersonName"
+                android:inputType="textCapWords"
                 android:textCursorDrawable="@null"
                 android:textSize="20sp" />
 
@@ -175,11 +175,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/email"
-                android:layout_marginLeft="32sp"
+                android:layout_marginLeft="31sp"
                 android:layout_marginTop="9sp"
                 android:backgroundTint="#9547CD"
-                android:ems="5"
+                android:ems="4"
                 android:hint="City *"
+                android:singleLine="true"
                 android:fontFamily="@font/remedium"
                 android:textColorHint="#956DAE"
                 android:textCursorDrawable="@null"
@@ -187,19 +188,19 @@
 
             <Spinner
                 android:id="@+id/state"
-                android:layout_width="82sp"
+                android:layout_width="99sp"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/email"
-                android:layout_marginLeft="8sp"
+                android:layout_marginLeft="6sp"
                 android:layout_marginTop="18sp"
                 android:layout_toRightOf="@id/city" />
 
             <Spinner
                 android:id="@+id/country"
-                android:layout_width="115sp"
+                android:layout_width="114sp"
                 android:layout_height="35sp"
                 android:layout_below="@id/email"
-                android:layout_marginLeft="2sp"
+                android:layout_marginLeft="0sp"
                 android:layout_marginTop="18sp"
                 android:layout_toRightOf="@id/state" />
 
@@ -211,34 +212,27 @@
                 android:layout_height="27sp"
                 android:layout_alignParentLeft="true"
                 android:layout_below="@id/country"
-                android:layout_marginLeft="6dp"
-                android:layout_marginTop="20dp"
+                android:layout_marginLeft="6sp"
+                android:layout_marginTop="20sp"
                 app:srcCompat="@drawable/helpicon" />
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/photo"
-                android:layout_width="211sp"
+                android:layout_width="210sp"
                 android:layout_height="210sp"
                 android:layout_below="@id/country"
-                android:layout_marginLeft="35dp"
-                android:layout_marginTop="20dp"
-
-
-
+                android:layout_marginLeft="32sp"
+                android:layout_marginTop="20sp"
                 app:cardBackgroundColor="#B870FF"
-                app:cardCornerRadius="50dp">
+                app:cardCornerRadius="50sp">
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
                 <ImageView
                     android:id="@+id/photoholder"
-                    android:layout_width="200sp"
-                    android:layout_centerInParent="true"
-                    android:layout_height="200sp"
-                    android:background="@drawable/usericon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/dbadge"
                     />
-                </RelativeLayout>
+
             </androidx.cardview.widget.CardView>
 
             <androidx.cardview.widget.CardView
@@ -247,10 +241,10 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
                 android:layout_below="@id/country"
-                android:layout_marginRight="20dp"
-                android:layout_marginTop="36dp"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="7dp">
+                android:layout_marginRight="16sp"
+                android:layout_marginTop="36sp"
+                app:cardCornerRadius="14sp"
+                app:cardElevation="7sp">
 
                 <RelativeLayout
                     android:id="@+id/taking"
@@ -259,22 +253,23 @@
 
                     <ImageView
                         android:id="@+id/clickimage"
-                        android:layout_width="60dp"
-                        android:layout_height="50dp"
+                        android:layout_width="60sp"
+                        android:layout_height="50sp"
                         android:layout_centerHorizontal="true"
                         android:background="#F8E7C3F8"
                         app:srcCompat="@drawable/camera" />
 
                     <Button
                         android:id="@+id/takepicture"
-                        android:layout_width="80dp"
-                        android:layout_height="35dp"
+                        android:layout_width="80sp"
+                        android:layout_height="35sp"
                         android:layout_marginTop="-3sp"
                         android:layout_below="@id/clickimage"
                         android:background="#A546D8"
+                        android:clickable="true"
                         android:text="Camera"
                         android:textColor="#FFFFFE"
-                        android:textSize="17dp" />
+                        android:textSize="17sp" />
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
 
@@ -284,10 +279,10 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
                 android:layout_below="@id/cardholder"
-                android:layout_marginRight="20dp"
-                android:layout_marginTop="27dp"
-                app:cardCornerRadius="13dp"
-                app:cardElevation="7dp">
+                android:layout_marginRight="16sp"
+                android:layout_marginTop="27sp"
+                app:cardCornerRadius="13sp"
+                app:cardElevation="7sp">
 
                 <RelativeLayout
                     android:id="@+id/deleting"
@@ -297,17 +292,17 @@
 
                     <ImageView
                         android:id="@+id/removeimage"
-                        android:layout_width="50dp"
-                        android:layout_height="40dp"
+                        android:layout_width="50sp"
+                        android:layout_height="40sp"
                         android:layout_centerHorizontal="true"
-                        android:layout_marginBottom="5dp"
-                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5sp"
+                        android:layout_marginTop="5sp"
                         android:background="#F8E7C3F8"
                         app:srcCompat="@drawable/trash" />
 
                     <Button
                         android:id="@+id/removepicture"
-                        android:layout_width="80dp"
+                        android:layout_width="80sp"
                         android:layout_height="35sp"
                         android:layout_below="@id/removeimage"
                         android:background="#A546D8"
@@ -315,7 +310,7 @@
 
                         android:text="Discard"
                         android:textColor="#FFFFFE"
-                        android:textSize="17dp" />
+                        android:textSize="17sp" />
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
 

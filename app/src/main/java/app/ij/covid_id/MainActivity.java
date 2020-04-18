@@ -99,7 +99,7 @@ double screenW;
                 visible = !visible;
             }
         });
-        startActivity(new Intent(MainActivity.this, Registration.class));
+        //startActivity(new Intent(MainActivity.this, Registration.class));
 
 
         //holder.setVisibility(View.VISIBLE);

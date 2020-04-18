@@ -137,7 +137,7 @@
         android:layout_below="@+id/container"
         android:layout_centerHorizontal="true"
         android:layout_marginLeft="10sp"
-        android:layout_marginTop="56sp"
+        android:layout_marginTop="42sp"
         android:layout_marginBottom="15sp"
         android:layout_marginRight="10sp"
         android:layout_height="wrap_content" />

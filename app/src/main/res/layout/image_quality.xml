@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:id="@+id/card1"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="16sp">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:id="@+id/titleHolder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#4C4C4C"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_margin="7sp"
+                android:fontFamily="@font/ralewaybold"
+                android:text="Picture Quality"
+                android:textColor="#fff"
+                android:textSize="30sp" />
+
+        </RelativeLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/titleHolder"
+            android:layout_margin="10sp"
+            android:layout_marginTop="15sp"
+            android:id="@+id/text"
+            android:fontFamily="@font/regular"
+            android:text="You can choose to take a high-quality or lower quality picture."
+            android:textSize="20sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/text"
+            android:layout_margin="10sp"
+            android:layout_marginTop="15sp"
+            android:id="@+id/text2"
+            android:textColor="#000"
+            android:fontFamily="@font/regular"
+            android:text="The high-quality picture requires permission to access photos from the camera. This is only used to retrieve the higher-quality picture taken by the camera."
+            android:textSize="20sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/text2"
+            android:layout_marginTop="4sp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/low"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="98"
+                android:background="#DD6262"
+                android:paddingTop="6sp"
+                android:paddingBottom="8sp"
+                android:text="Low-Quality"
+                android:textAllCaps="false"
+                android:textColor="#fff"
+                android:textSize="22sp"
+                android:visibility="visible" />
+
+            <Button
+                android:id="@+id/high"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="100"
+                android:background="#7BC871"
+                android:paddingTop="6sp"
+                android:paddingBottom="8sp"
+                android:text="High-Quality"
+                android:textAllCaps="false"
+                android:textColor="#fff"
+                android:textSize="22sp"
+                android:visibility="visible" />
+        </LinearLayout>
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>

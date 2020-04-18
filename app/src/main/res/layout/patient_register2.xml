@@ -71,21 +71,29 @@
                     android:textColor="#505050"
                     android:text="Unknown or Untested"
                     android:textSize="20sp" />
-
                 <RadioButton
                     android:id="@+id/covidpositive"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="7sp"
+                    android:layout_marginTop="6sp"
                     android:buttonTint="#F62E2E"
                     android:textColor="#505050"
                     android:text="Positive for COVID"
                     android:textSize="20sp" />
                 <RadioButton
+                    android:id="@+id/covidn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6sp"
+                    android:buttonTint="#2E88F6"
+                    android:textColor="#505050"
+                    android:text="Negative for COVID"
+                    android:textSize="20sp" />
+                <RadioButton
                     android:id="@+id/covidnegative"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="7sp"
+                    android:layout_marginTop="6sp"
                     android:buttonTint="#26D61F"
                     android:textColor="#505050"
                     android:text="Recovered from COVID"
