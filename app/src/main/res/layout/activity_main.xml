@@ -122,6 +122,17 @@
                             android:src="@drawable/hidepassword" />
                     </RelativeLayout>
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:id="@+id/forgot"
+                        android:layout_below="@id/pass"
+                        android:layout_marginTop="8sp"
+                        android:text="@string/forgot"
+                        android:textSize="17sp"
+                        android:layout_marginLeft="19sp"
+                        android:fontFamily="@font/opensansitalci"
+                        android:layout_height="wrap_content"/>
+
                     <Button
                         android:id="@+id/login"
                         android:layout_width="wrap_content"

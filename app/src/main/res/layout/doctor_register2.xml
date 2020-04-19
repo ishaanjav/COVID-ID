@@ -25,7 +25,7 @@
                 android:layout_marginLeft="27sp"
                 android:layout_marginTop="17sp"
                 android:fontFamily="@font/remedium"
-                android:text="Your Info"
+                android:text="Your COVID Status"
                 android:textColor="#393939"
                 android:textSize="30sp" />
 
@@ -36,7 +36,7 @@
                 android:layout_alignParentLeft="true"
                 android:layout_below="@id/existingusertext2"
                 android:layout_marginLeft="6dp"
-                android:layout_marginTop="23dp"
+                android:layout_marginTop="19dp"
                 app:srcCompat="@drawable/helpicon" />
 
             <TextView
@@ -44,7 +44,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="35sp"
-                android:layout_marginTop="23sp"
+                android:layout_marginTop="20sp"
                 android:fontFamily="@font/remedium"
                 android:layout_below="@id/existingusertext2"
                 android:text="COVID-19 Testing Status:"

@@ -85,9 +85,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -256,6 +261,7 @@ public class Registration extends AppCompatActivity {
         photoHelp = doctorCard1.findViewById(R.id.photohelp);
         doctorContinue = doctorCard1.findViewById(R.id.doctorContinue);
         doctorBack1 = doctorCard1.findViewById(R.id.doctorPrevious1);
+
         spinners();
         helpers();
         allGood();
@@ -285,12 +291,18 @@ public class Registration extends AppCompatActivity {
         map.put("City", city.getText().toString().trim());
         map.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
         map.put("Country", (country.getSelectedItem().toString()));
-        String status;
+        final String time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+        final String currentDate = new SimpleDateFormat("M/d/yy", Locale.getDefault()).format(new Date());
+        final String status;
         if (u) status = "Unknown";
         else if (covidR) status = "Recovered";
         else if (covidN) status = "Negative";
         else status = "Positive";
         map.put("Covid Status", status);
+
+        map.put("Num of Dates", 1);
+        map.put("Status 1", status);
+        map.put("Date 1", currentDate + " " + time);
         if (doctor) {
             map.put("Account Verified", false);
         } else {
@@ -306,9 +318,10 @@ public class Registration extends AppCompatActivity {
                 dialog.setMessage("Loading. Please wait..." + "\nMake sure you have a good internet connection.");
             }
         }, 5000);
-        final Map<String, String> userPass = new HashMap<>();
+        final Map<String, Object> userPass = new HashMap<>();
         userPass.put("Username", user.getText().toString().trim());
         userPass.put("Password", pass.getText().toString().trim());
+        userPass.put("Account Verified", !doctor);
         db.collection("userPass")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -321,7 +334,7 @@ public class Registration extends AppCompatActivity {
                                 String r = document.get("Username").toString();
                                 Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("Username").toString());
                                 if (r.equals(curUser)) {
-                                    makeSnackBar(2600, "Your username was just taken. Please choose another.");
+                                    makeSnackBar(3700, "Your username was just taken. Please choose another.");
                                     unique = false;
                                     break;
                                 }
@@ -338,23 +351,48 @@ public class Registration extends AppCompatActivity {
 
                                                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                                                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                                                byte[] data2 = baos.toByteArray();
+                                                final byte[] data2 = baos.toByteArray();
 
                                                 UploadTask uploadTask = storageReference2.putBytes(data2);
                                                 uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                                                     @Override
                                                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                                        FirebaseFirestore db = FirebaseFirestore.getInstance();
                                                         db.collection(reference)
                                                                 .add(map)
                                                                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                                                                     @Override
                                                                     public void onSuccess(DocumentReference documentReference) {
-                                                                        makeToast("Account created");
-                                                                        dialog.cancel();
-                                                                        //IMPORTANT Account has successfully been created.
-                                                                        startActivity(new Intent(Registration.this, MainActivity.class));
-                                                                        Log.wtf("TESTING", "DocumentSnapshot added with ID: " + documentReference.getId());
+                                                                        //INFO Write to "userPass/<documentId>/Dates" and put in stuff.
+                                                                        HashMap<String, Object> dates = new HashMap<>();
+                                                                        dates.put("Status", status);
+                                                                        dates.put("Previous Status", "n/a");
+                                                                        dates.put("Date", currentDate + " " + time);
+                                                                        dates.put("Doctor", (doctor) ? "You" : "n/a");
+                                                                        dates.put("Notes", "n/a");
+                                                                        final String documentID = documentReference.getId();
+                                                                        db.collection(reference + "/" + documentID + "/Updates")
+                                                                                .document("Update 1").set(dates)
+                                                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                                    @Override
+                                                                                    public void onSuccess(Void aVoid) {
+                                                                                        makeToast("Account created");
+                                                                                        dialog.cancel();
+                                                                                        writeToFile(doctor ? "Doctor" : "Patient", getApplicationContext());
+                                                                                        //IMPORTANT Account has successfully been created.
+                                                                                        Intent finish = new Intent(Registration.this, MainActivity.class);
+                                                                                        finish.putExtra("Type", doctor ? "Doctor" : "Patient");
+                                                                                        startActivity(finish);
+                                                                                        Log.wtf("TESTING", "DocumentSnapshot added with ID: " + documentID);
+                                                                                    }
+                                                                                }).addOnFailureListener(new OnFailureListener() {
+                                                                            @Override
+                                                                            public void onFailure(@NonNull Exception e) {
+                                                                                dialog.cancel();
+                                                                                makeToast(e.getMessage());
+                                                                                Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
+                                                                            }
+                                                                        });
                                                                     }
                                                                 })
                                                                 .addOnFailureListener(new OnFailureListener() {
@@ -471,6 +509,16 @@ public class Registration extends AppCompatActivity {
                     }
                 });*/
 
+    }
+
+    private void writeToFile(String data, Context context) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("firstAccountCreated.txt", Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
     }
 
     private void doctorRegister() {
@@ -1160,26 +1208,47 @@ public class Registration extends AppCompatActivity {
                 allGood();
                 matrix.postRotate(90);
 
-                matrix.postRotate(0);
-                if (bitmap.getWidth() > bitmap.getHeight()) {
-                    bitmap = Bitmap.createBitmap(
-                            bitmap,
-                            bitmap.getWidth() / 2 - bitmap.getHeight() / 2,
-                            0,
-                            bitmap.getHeight(),
-                            bitmap.getHeight(), matrix, true
-                    );
-                } else if (bitmap.getHeight() > bitmap.getWidth()) {
-                    bitmap = Bitmap.createBitmap(
-                            bitmap,
-                            0,
-                            bitmap.getHeight() / 2 - bitmap.getWidth() / 2,
-                            bitmap.getWidth(),
-                            bitmap.getWidth(),
-                            matrix, true);
+                if (!doctor) {
+                    matrix.postRotate(90);
+                    if (bitmap.getWidth() > bitmap.getHeight()) {
+                        bitmap = Bitmap.createBitmap(
+                                bitmap,
+                                bitmap.getWidth() / 2 - bitmap.getHeight() / 2,
+                                0,
+                                bitmap.getHeight(),
+                                bitmap.getHeight(), matrix, true
+                        );
+                    } else if (bitmap.getHeight() > bitmap.getWidth()) {
+                        bitmap = Bitmap.createBitmap(
+                                bitmap,
+                                0,
+                                bitmap.getHeight() / 2 - bitmap.getWidth() / 2,
+                                bitmap.getWidth(),
+                                bitmap.getWidth(),
+                                matrix, true);
+                    }
+                } else {
+                    matrix.postRotate(90);
+                    if (bitmap.getWidth() > bitmap.getHeight()) {
+                        bitmap = Bitmap.createBitmap(
+                                bitmap,
+                                bitmap.getWidth() / 2 - bitmap.getHeight() / 2,
+                                0,
+                                bitmap.getHeight(),
+                                bitmap.getHeight(), matrix, true
+                        );
+                    } else if (bitmap.getHeight() > bitmap.getWidth()) {
+                        bitmap = Bitmap.createBitmap(
+                                bitmap,
+                                0,
+                                bitmap.getHeight() / 2 - bitmap.getWidth() / 2,
+                                bitmap.getWidth(),
+                                bitmap.getWidth(),
+                                matrix, true);
+                    }
                 }
                 makeToast("Double tap or long press the image to rotate it.");
-                makeSnackBar(5000, "The image is low quality. Please consider taking a higher quality image.");
+                makeSnackBar(4300, "The image is low quality. Please consider taking a higher quality picture.");
                 //saveImage(getApplicationContext(), bitmap, "temp", "jpg");
 
                 photo.setImageBitmap(bitmap);
@@ -1204,31 +1273,57 @@ public class Registration extends AppCompatActivity {
                 matrix.postRotate(90);
 
                 matrix.postRotate(0);
-                if (bitmap.getWidth() > bitmap.getHeight()) {
-                    bitmap = Bitmap.createBitmap(
-                            bitmap,
-                            bitmap.getWidth() / 2 - bitmap.getHeight() / 2,
-                            0,
-                            bitmap.getHeight(),
-                            bitmap.getHeight(), matrix, true
-                    );
-                } else if (bitmap.getHeight() > bitmap.getWidth()) {
-                    bitmap = Bitmap.createBitmap(
-                            bitmap,
-                            0,
-                            bitmap.getHeight() / 2 - bitmap.getWidth() / 2,
-                            bitmap.getWidth(),
-                            bitmap.getWidth(),
-                            matrix, true);
+                if (!doctor) {
+                    if (bitmap.getWidth() > bitmap.getHeight()) {
+                        bitmap = Bitmap.createBitmap(
+                                bitmap,
+                                bitmap.getWidth() / 2 - bitmap.getHeight() / 2,
+                                0,
+                                bitmap.getHeight(),
+                                bitmap.getHeight(), matrix, true
+                        );
+                    } else if (bitmap.getHeight() > bitmap.getWidth()) {
+                        bitmap = Bitmap.createBitmap(
+                                bitmap,
+                                0,
+                                bitmap.getHeight() / 2 - bitmap.getWidth() / 2,
+                                bitmap.getWidth(),
+                                bitmap.getWidth(),
+                                matrix, true);
+                    }
+                } else {
+                    matrix.postRotate(180);
+                    if (bitmap.getWidth() > bitmap.getHeight()) {
+                        bitmap = Bitmap.createBitmap(
+                                bitmap,
+                                bitmap.getWidth() / 2 - bitmap.getHeight() / 2,
+                                0,
+                                bitmap.getHeight(),
+                                bitmap.getHeight(), matrix, true
+                        );
+                    } else if (bitmap.getHeight() > bitmap.getWidth()) {
+                        bitmap = Bitmap.createBitmap(
+                                bitmap,
+                                0,
+                                bitmap.getHeight() / 2 - bitmap.getWidth() / 2,
+                                bitmap.getWidth(),
+                                bitmap.getWidth(),
+                                matrix, true);
+                    }
                 }
-                makeToast("Double tap or long press the image to rotate it.");
-
+                //makeSnackBar(3700, "Double tap or long press the image to rotate it.");
+/*new Handler().postDelayed(new Runnable() {
+    @Override
+    public void run() {
+    }
+},2000);*/
                 //saveImage(getApplicationContext(), bitmap, "temp", "jpg");
 
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.PNG, 70, out);
                 bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));
                 photo.setImageBitmap(bitmap);
+                makeToast("Double tap or long press the image to rotate it.");
 
 
             }

@@ -3,4 +3,5 @@
     <string name="welcome"><u>Welcome!</u></string>
     <string name="register"><u>Registration</u></string>
     <string name="city"><i>City *</i></string>
+    <string name="forgot"><u>Forgot Login?</u></string>
 </resources>

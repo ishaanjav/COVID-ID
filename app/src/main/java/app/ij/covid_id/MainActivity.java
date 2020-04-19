@@ -15,8 +15,12 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
+import android.text.style.ForegroundColorSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -44,6 +48,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.TreeMap;
 
 public class MainActivity extends AppCompatActivity {
@@ -56,9 +65,11 @@ public class MainActivity extends AppCompatActivity {
     boolean visible;
     TextView error;
     CardView card1, card2;
+    TextView forgot;
 
     boolean firstTime;
-double screenW;
+    double screenW;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,7 +87,11 @@ double screenW;
         card2 = findViewById(R.id.card2);
         error = findViewById(R.id.error);
         holder.setVisibility(View.INVISIBLE);
+        forgot = findViewById(R.id.forgot);
         firstTime = true;
+        card1.setBackgroundResource(R.drawable.welcome_card);
+        card2.setBackgroundResource(R.drawable.welcome_card);
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
         WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
@@ -101,15 +116,72 @@ double screenW;
         });
         //startActivity(new Intent(MainActivity.this, Registration.class));
 
-
-        //holder.setVisibility(View.VISIBLE);
-        initialStuff();
         clickers();
+
+        Intent intent = getIntent();
+        String s = intent.getStringExtra("Type");
+        String reader = readFromFile(getApplicationContext());
+        if (s == null) {
+            //TODO Have to check if firstAccountCreated.txt exists. If it does, just make everything visible.
+            // Otherwise call initialStuff()
+            if (reader.isEmpty())
+                initialStuff();
+            else {
+                //TODO Just make the stuff visible
+                makeToast("Not null");
+                justShowStuff();
+            }
+        } else {
+            //TODO They just created their account.
+            // Show dialog based on whether the are patient or doctor.
+            justShowStuff();
+            makeToast("MESSAGE: " + reader);
+            if (s.equals("Doctor")) {
+
+            } else {
+
+            }
+        }
 
 
     }
 
+    private String readFromFile(Context context) {
+
+        String ret = "";
+
+        try {
+            InputStream inputStream = context.openFileInput("firstAccountCreated.txt");
+
+            if (inputStream != null) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ((receiveString = bufferedReader.readLine()) != null) {
+                    stringBuilder.append("\n").append(receiveString);
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+            }
+        } catch (FileNotFoundException e) {
+            Log.wtf("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.wtf("login activity", "Can not read file: " + e.toString());
+        }
+
+        return ret;
+    }
+
     private void clickers() {
+        forgot.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showForgotPassword();
+            }
+        });
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -122,7 +194,7 @@ double screenW;
                     longToast("Fill in the username and password.");
                     error.setText("*Fill in the username and password.");
                 } else {
-
+                    //TODO Check credentials and also boolean from Verified Account.
                 }
             }
         });
@@ -154,9 +226,15 @@ double screenW;
         password.addTextChangedListener(textWatcher);
     }
 
+    private void justShowStuff() {
+        title.setVisibility(View.VISIBLE);
+        card1.setVisibility(View.VISIBLE);
+        card2.setVisibility(View.VISIBLE);
+        error.setVisibility(View.VISIBLE);
+        holder.setVisibility(View.VISIBLE);
+    }
+
     private void initialStuff() {
-        card1.setBackgroundResource(R.drawable.welcome_card);
-        card2.setBackgroundResource(R.drawable.welcome_card);
         Runnable r = new Runnable() {
             @Override
             public void run() {
@@ -202,6 +280,51 @@ double screenW;
         return super.onOptionsItemSelected(item);
     }
 
+    public void showForgotPassword() {
+        final Dialog dialog = new Dialog(MainActivity.this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setCancelable(false);
+        dialog.setContentView(R.layout.forgot_login);
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+        lp.copyFrom(dialog.getWindow().getAttributes());
+        lp.width = (int) (screenW * .875);
+        dialog.getWindow().setAttributes(lp);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+
+        Button back = (Button) dialog.findViewById(R.id.back);
+        back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+                dialog.cancel();
+            }
+        });
+        TextView text = dialog.findViewById(R.id.text2);
+        SpannableString ss = new SpannableString(text.getText().toString());
+        ss.setSpan(new ForegroundColorSpan(Color.parseColor("#2E88F6")), 8, 30, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        text.setText(ss);
+
+        ImageView email = dialog.findViewById(R.id.email);
+        email.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent email = new Intent(Intent.ACTION_SEND);
+                email.putExtra(Intent.EXTRA_EMAIL, new String[]{"covid.ijapps@gmail.com"});
+                email.putExtra(Intent.EXTRA_SUBJECT, "Forgot COVID-ID Login");
+                email.putExtra(Intent.EXTRA_TEXT, "Hello,\n\tI forgot my login credentials for COVID-ID."
+                        + "\n\tMy name is ______, my phone # is _______, and my username is ______.\n\tI am a (doctor, patient)\n\nThank you");
+
+//need this to prompts email client only
+                email.setType("message/rfc822");
+
+                startActivity(Intent.createChooser(email, "Choose an Email app:"));
+            }
+        });
+
+
+        dialog.show();
+    }
+
     public void showAboutApp() {
         final Dialog dialog = new Dialog(MainActivity.this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -230,7 +353,7 @@ double screenW;
                 holder.setVisibility(View.VISIBLE);
                 if (firstTime) {
                     card1.setVisibility(View.INVISIBLE);
-                  Animation fadeIn = new AlphaAnimation(0, 1);
+                    Animation fadeIn = new AlphaAnimation(0, 1);
                     fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
                     fadeIn.setDuration(2100);
                     card1.setAnimation(fadeIn);
