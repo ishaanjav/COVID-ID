@@ -4,4 +4,7 @@
     <string name="register"><u>Registration</u></string>
     <string name="city"><i>City *</i></string>
     <string name="forgot"><u>Forgot Login?</u></string>
+
+    <string name="enterpass"><font size="17"><i>Enter Password</i></font></string>
+    <string name="confirmpass"><font size="17"><i>Confirm Password</i></font></string>
 </resources>

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/screen"
     android:background="@drawable/gradient_welcome"
     tools:context=".MainActivity">
 
@@ -77,6 +78,7 @@
                         android:ems="10"
                         android:hint="Username"
                         android:padding="8sp"
+                        android:singleLine="true"
                         android:textCursorDrawable="@drawable/welcome_cursor"
                         android:textSize="22sp"
                         android:theme="@style/welcomeET"

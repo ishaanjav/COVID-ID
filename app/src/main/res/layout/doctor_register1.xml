@@ -69,19 +69,69 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/passText"
-                android:layout_marginLeft="36sp"
-                android:layout_marginTop="-7sp"
+                android:layout_marginLeft="37sp"
+                android:layout_marginTop="-6sp"
                 android:backgroundTint="#9547CD"
+                android:textColorHint="#9071A6"
+                android:hint="@string/enterpass"
                 android:ems="10"
                 android:inputType="textPassword"
                 android:textCursorDrawable="@null"
                 android:textSize="20sp" />
 
+            <EditText
+                android:id="@+id/confirmpass"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/pass"
+                android:layout_marginLeft="37sp"
+                android:layout_marginTop="0sp"
+                android:hint="@string/confirmpass"
+                android:backgroundTint="#9547CD"
+                android:textColorHint="#9071A6"
+                android:ems="10"
+                android:inputType="textPassword"
+                android:textCursorDrawable="@null"
+                android:textSize="20sp" />
+            <RelativeLayout
+                android:id="@+id/container1"
+                android:layout_width="50sp"
+                android:layout_height="45sp"
+                android:layout_below="@id/passText"
+                android:layout_marginLeft="20sp"
+                android:layout_marginTop="0sp"
+                android:layout_toRightOf="@+id/pass"
+                android:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/passtoggle"
+                    android:layout_width="37sp"
+                    android:layout_height="37sp"
+                    android:layout_centerInParent="true"
+                    android:src="@drawable/hidepassword" />
+            </RelativeLayout>
+            <RelativeLayout
+                android:id="@+id/container2"
+                android:layout_width="50sp"
+                android:layout_height="45sp"
+                android:layout_below="@id/pass"
+                android:layout_marginLeft="20sp"
+                android:layout_marginTop="6sp"
+                android:layout_toRightOf="@+id/confirmpass"
+                android:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/passtoggle2"
+                    android:layout_width="37sp"
+                    android:layout_height="37sp"
+                    android:layout_centerInParent="true"
+                    android:src="@drawable/hidepassword" />
+            </RelativeLayout>
             <TextView
                 android:id="@+id/nameText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/pass"
+                android:layout_below="@id/confirmpass"
                 android:layout_marginLeft="30sp"
                 android:layout_marginTop="15sp"
                 android:fontFamily="@font/remedium"

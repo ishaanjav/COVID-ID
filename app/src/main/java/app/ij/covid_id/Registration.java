@@ -35,6 +35,7 @@ import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.TextWatcher;
+import android.text.method.PasswordTransformationMethod;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.util.DisplayMetrics;
@@ -141,6 +142,7 @@ public class Registration extends AppCompatActivity {
         doctorCard2 = findViewById(R.id.card5);
         db = FirebaseFirestore.getInstance();
         firstAsk = 0;
+        denyCounter = 0;
 
         firstCard.setBackgroundResource(R.drawable.card_white);
         patientCard1.setBackgroundResource(R.drawable.card_white);
@@ -214,7 +216,46 @@ public class Registration extends AppCompatActivity {
         });
     }
 
+    boolean visible, confirmVisible;
+
+    private void toggle() {
+        visible = false;
+        confirmVisible = false;
+        passToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (visible) {
+                    passToggle.setImageResource(R.drawable.hidepassword);
+                    pass.setTransformationMethod(new PasswordTransformationMethod());
+                    pass.setSelection(pass.getText().length());
+                } else {
+                    passToggle.setImageResource(R.drawable.showpassword);
+                    pass.setTransformationMethod(null);
+                    pass.setSelection(pass.getText().length());
+                }
+                visible = !visible;
+            }
+        });
+
+        confirmPassToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (confirmVisible) {
+                    confirmPassToggle.setImageResource(R.drawable.hidepassword);
+                    confirmPass.setTransformationMethod(new PasswordTransformationMethod());
+                    confirmPass.setSelection(pass.getText().length());
+                } else {
+                    confirmPassToggle.setImageResource(R.drawable.showpassword);
+                    confirmPass.setTransformationMethod(null);
+                    confirmPass.setSelection(pass.getText().length());
+                }
+                confirmVisible = !confirmVisible;
+            }
+        });
+    }
+
     Button take, delete;
+    EditText confirmPass;
 
     private void initializePatient() {
         user = patientCard1.findViewById(R.id.user);
@@ -235,11 +276,15 @@ public class Registration extends AppCompatActivity {
         photoHelp = patientCard1.findViewById(R.id.photohelp);
         patientContinue = patientCard1.findViewById(R.id.patientContinue);
         patientBack1 = patientCard1.findViewById(R.id.patientPrevious1);
+        confirmPassToggle = patientCard1.findViewById(R.id.passtoggle2);
+        confirmPass = patientCard1.findViewById(R.id.confirmpass);
+        passToggle = patientCard1.findViewById(R.id.passtoggle);
         spinners();
         helpers();
         allGood();
         previousClickers();
         test();
+        toggle();
     }
 
     private void initializeDoctor() {
@@ -250,6 +295,7 @@ public class Registration extends AppCompatActivity {
         email = doctorCard1.findViewById(R.id.email);
         city = doctorCard1.findViewById(R.id.city);
         state = doctorCard1.findViewById(R.id.state);
+        confirmPass = doctorCard1.findViewById(R.id.confirmpass);
         country = doctorCard1.findViewById(R.id.country);
         phoneHelp = doctorCard1.findViewById(R.id.phoneHelp);
         locationHelp = doctorCard1.findViewById(R.id.locationHelp);
@@ -261,12 +307,14 @@ public class Registration extends AppCompatActivity {
         photoHelp = doctorCard1.findViewById(R.id.photohelp);
         doctorContinue = doctorCard1.findViewById(R.id.doctorContinue);
         doctorBack1 = doctorCard1.findViewById(R.id.doctorPrevious1);
-
+        confirmPassToggle = doctorCard1.findViewById(R.id.passtoggle2);
+        passToggle = doctorCard1.findViewById(R.id.passtoggle);
         spinners();
         helpers();
         allGood();
         previousClickers();
         test();
+        toggle();
     }
 
     @Override
@@ -278,6 +326,7 @@ public class Registration extends AppCompatActivity {
     }
 
     FirebaseFirestore db;
+    ImageView confirmPassToggle, passToggle;
 
     private void saveInformation() {
         final String reference = (doctor) ? "Doctors" : "Patients";
@@ -322,6 +371,7 @@ public class Registration extends AppCompatActivity {
         userPass.put("Username", user.getText().toString().trim());
         userPass.put("Password", pass.getText().toString().trim());
         userPass.put("Account Verified", !doctor);
+        userPass.put("Type", reference.substring(0, reference.length() - 1));
         db.collection("userPass")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -368,6 +418,7 @@ public class Registration extends AppCompatActivity {
                                                                         dates.put("Previous Status", "n/a");
                                                                         dates.put("Date", currentDate + " " + time);
                                                                         dates.put("Doctor", (doctor) ? "You" : "n/a");
+                                                                        dates.put("Medical Center Phone Number", (doctor) ? phone.getText().toString() : "n/a");
                                                                         dates.put("Notes", "n/a");
                                                                         final String documentID = documentReference.getId();
                                                                         db.collection(reference + "/" + documentID + "/Updates")
@@ -553,6 +604,7 @@ public class Registration extends AppCompatActivity {
         sPass = pass.getText().toString().trim();
         sName = name.getText().toString().trim();
         sPhone = phone.getText().toString().trim();
+        String confirm = confirmPass.getText().toString();
         sEmail = email.getText().toString().trim();
         sCity = city.getText().toString().trim();
         sState = state.getSelectedItem().toString();
@@ -563,6 +615,10 @@ public class Registration extends AppCompatActivity {
             makeSnackBar(2600, "This username already exists. Please choose another.");
         else if (sPass.length() < 6)
             makeSnackBar(2000, "Please make your password longer.");
+        else if (confirm.length() < 6)
+            makeSnackBar(2000, "Confirm your password by retyping it.");
+        else if (!confirm.equals(sPass))
+            makeSnackBar(2000, "Your passwords do not match.");
         else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
             makeSnackBar(2000, "Please enter your full name.");
         else if (sPhone.length() < 10)
@@ -624,6 +680,7 @@ public class Registration extends AppCompatActivity {
         sUser = user.getText().toString().trim();
         sPass = pass.getText().toString().trim();
         sName = name.getText().toString().trim();
+        String confirm = confirmPass.getText().toString();
         sPhone = phone.getText().toString().trim();
         sEmail = email.getText().toString().trim();
         sCity = city.getText().toString().trim();
@@ -635,6 +692,10 @@ public class Registration extends AppCompatActivity {
             makeSnackBar(2600, "This username already exists. Please choose another.");
         else if (sPass.length() < 6)
             makeSnackBar(2000, "Please make your password longer.");
+        else if (confirm.length() < 6)
+            makeSnackBar(2000, "Confirm your password by retyping it.");
+        else if (!confirm.equals(sPass))
+            makeSnackBar(2000, "Your passwords do not match.");
         else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
             makeSnackBar(2000, "Please enter your full name.");
         else if (sPhone.length() < 10)
@@ -697,6 +758,7 @@ public class Registration extends AppCompatActivity {
         sUser = user.getText().toString().trim();
         sPass = pass.getText().toString().trim();
         sName = name.getText().toString().trim();
+        String confirm = confirmPass.getText().toString();
         sPhone = phone.getText().toString().trim();
         sEmail = email.getText().toString().trim();
         sCity = city.getText().toString().trim();
@@ -708,6 +770,10 @@ public class Registration extends AppCompatActivity {
             makeSnackBar(2600, "This username already exists. Please choose another.");
         else if (sPass.length() < 6)
             makeSnackBar(2000, "Please make your password longer.");
+        else if (confirm.length() < 6)
+            makeSnackBar(2000, "Confirm your password by retyping it.");
+        else if (!confirm.equals(sPass))
+            makeSnackBar(2000, "Your passwords do not match.");
         else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
             makeSnackBar(2000, "Please enter your full name.");
         else if (sPhone.length() < 10)
@@ -753,6 +819,7 @@ public class Registration extends AppCompatActivity {
         //return true;
         sUser = user.getText().toString().trim();
         sPass = pass.getText().toString().trim();
+        String confirm = confirmPass.getText().toString();
         sName = name.getText().toString().trim();
         sPhone = phone.getText().toString().trim();
         sEmail = email.getText().toString().trim();
@@ -765,6 +832,10 @@ public class Registration extends AppCompatActivity {
             makeSnackBar(2600, "This username already exists. Please choose another.");
         else if (sPass.length() < 6)
             makeSnackBar(2000, "Please make your password longer.");
+        else if (confirm.length() < 6)
+            makeSnackBar(2000, "Confirm your password by retyping it.");
+        else if (!confirm.equals(sPass))
+            makeSnackBar(2000, "Your passwords do not match.");
         else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
             makeSnackBar(2000, "Please enter your full name.");
         else if (sPhone.length() < 10)
@@ -1331,6 +1402,8 @@ public class Registration extends AppCompatActivity {
 
     }
 
+    int denyCounter;
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         //INFO If they choose to take high quality image.
@@ -1345,8 +1418,31 @@ public class Registration extends AppCompatActivity {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
                 startActivityForResult(intent, 100);
-            } else {
-
+            } else if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_DENIED) {
+                if (denyCounter > 0)
+                    makeSnackBar(3900, "To take a high quality picture, storage permission is required.");
+                denyCounter++;
+            }
+        } else if (requestCode == 1034) {
+            if (checkSelfPermission(Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED) {
+                if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        == PackageManager.PERMISSION_GRANTED) {
+                    values = new ContentValues();
+                    values.put(MediaStore.Images.Media.TITLE, "New Picture");
+                    values.put(MediaStore.Images.Media.DESCRIPTION, "From your Camera");
+                    imageUri = getContentResolver().insert(
+                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                    startActivityForResult(intent, 100);
+                } else {
+                    showPicQuality();
+                }
+            } else if (checkSelfPermission(Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_DENIED) {
+                //makeToast("You must allow camera permission to take a picture");
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);

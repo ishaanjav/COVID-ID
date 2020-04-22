@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,6 +14,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.Spannable;
@@ -46,14 +48,30 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -69,6 +87,10 @@ public class MainActivity extends AppCompatActivity {
 
     boolean firstTime;
     double screenW;
+
+    boolean patientShowing;
+
+    FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
         card1.setBackgroundResource(R.drawable.welcome_card);
         card2.setBackgroundResource(R.drawable.welcome_card);
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        db = FirebaseFirestore.getInstance();
 
         WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
@@ -107,20 +130,22 @@ public class MainActivity extends AppCompatActivity {
                 if (visible) {
                     toggle.setImageResource(R.drawable.hidepassword);
                     password.setTransformationMethod(new PasswordTransformationMethod());
+                    password.setSelection(password.getText().length());
                 } else {
                     toggle.setImageResource(R.drawable.showpassword);
                     password.setTransformationMethod(null);
-                }
+                    password.setSelection(password.getText().length());}
                 visible = !visible;
             }
         });
         //startActivity(new Intent(MainActivity.this, Registration.class));
 
         clickers();
-
+        patientShowing = false;
         Intent intent = getIntent();
         String s = intent.getStringExtra("Type");
         String reader = readFromFile(getApplicationContext());
+
         if (s == null) {
             //TODO Have to check if firstAccountCreated.txt exists. If it does, just make everything visible.
             // Otherwise call initialStuff()
@@ -128,23 +153,120 @@ public class MainActivity extends AppCompatActivity {
                 initialStuff();
             else {
                 //TODO Just make the stuff visible
-                makeToast("Not null");
+                //makeToast("Not null");
                 justShowStuff();
             }
         } else {
             //TODO They just created their account.
             // Show dialog based on whether the are patient or doctor.
             justShowStuff();
-            makeToast("MESSAGE: " + reader);
+            //makeToast("MESSAGE: " + reader);
             if (s.equals("Doctor")) {
-
-            } else {
-
+                doctorVerification();
+                writeToFile("Done", getApplicationContext());
+            } else if(s.equals("Patient")) {
+                patientContinue();
+                writeToFile("Done", getApplicationContext());
             }
         }
 
-
     }
+    private void writeToFile(String data, Context context) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("firstAccountCreated.txt", Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
+    }
+    private void doctorVerification() {
+        final Dialog dialog = new Dialog(MainActivity.this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setCancelable(true);
+        dialog.setContentView(R.layout.doctor_verification);
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+        lp.copyFrom(dialog.getWindow().getAttributes());
+        //lp.width = (int) (screenW * .875);
+        dialog.getWindow().setAttributes(lp);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+
+        Button back = (Button) dialog.findViewById(R.id.back);
+        back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+                dialog.cancel();
+            }
+        });
+        ImageView email = dialog.findViewById(R.id.email);
+        email.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent email = new Intent(Intent.ACTION_SEND);
+                email.putExtra(Intent.EXTRA_EMAIL, new String[]{"covid.ijapps@gmail.com"});
+                email.putExtra(Intent.EXTRA_SUBJECT, "Verification Status");
+                email.putExtra(Intent.EXTRA_TEXT, "");
+
+//need this to prompts email client only
+                email.setType("message/rfc822");
+                startActivity(email);
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void patientContinue() {
+        patientShowing = true;
+
+        final Dialog dialog = new Dialog(MainActivity.this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setCancelable(true);
+        dialog.setContentView(R.layout.patient_congratulations);
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+        lp.copyFrom(dialog.getWindow().getAttributes());
+        //lp.width = (int) (screenW * .875);
+        dialog.getWindow().setAttributes(lp);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+
+        Button back = (Button) dialog.findViewById(R.id.back);
+        back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+                dialog.cancel();
+            }
+        });
+
+        new CountDownTimer(15000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                TextView dismiss = dialog.findViewById(R.id.text2);
+                String s = "Message closing in " + (millisUntilFinished / 1000 + 1);
+                s += (millisUntilFinished / 1000 == 0) ? " second." : " seconds.";
+                dismiss.setText(s);
+            }
+
+            @Override
+            public void onFinish() {
+                if ((dialog).isShowing()) {
+                    dialog.dismiss();
+                    dialog.cancel();
+                }
+            }
+        }.start();
+
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                patientShowing = false;
+            }
+        });
+
+        dialog.show();
+    }
+
 
     private String readFromFile(Context context) {
 
@@ -185,16 +307,60 @@ public class MainActivity extends AppCompatActivity {
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String u = username.getText().toString();
-                String p = password.getText().toString();
+                final String u = username.getText().toString();
+                final String p = password.getText().toString();
                 if (u == null || p == null) {
-                    longToast("Fill in the username and password.");
+                    makeSnackBar(3500, "Fill in the username and password.");
                     error.setText("*Fill in the username and password.");
                 } else if (u.isEmpty() || p.isEmpty()) {
-                    longToast("Fill in the username and password.");
+                    makeSnackBar(3000, "Fill in the username and password.");
                     error.setText("*Fill in the username and password.");
                 } else {
                     //TODO Check credentials and also boolean from Verified Account.
+                    db.collection("userPass").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                boolean match = false;
+                                String curUser = u;
+                                String curPass = p;
+                                boolean verified = false;
+                                String userType = "", documentId;
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    String user = document.get("Username").toString();
+                                    String pass = document.get("Password").toString();
+                                    Log.wtf("Login - ", user + " " +pass);
+                                    if(user.equals(curUser) && curPass.equals(pass)){
+                                        Log.wtf("Login SUCCESSFUL- ", user + " "+ pass);
+                                        match = true;
+                                        verified = Boolean.parseBoolean(document.get("Account Verified").toString());
+                                        documentId = document.getId();
+                                        if(verified){
+                                            //TODO Login successful.
+                                            //TODO Send intent with the userType and documentId.
+                                            //userType = document.get("Type").toString();
+                                            makeToast("Logging in...");
+                                        }else{
+                                            makeSnackBar(6800, "Your account has not yet been verified yet. Contact covid.ijapps@gmail.com for more info.");
+                                        }
+                                        break;
+                                    }
+                                }
+                                if(!match){
+                                    makeSnackBar(3000, "The username or password you entered is wrong.");
+                                    error.setText("The username or password is wrong.");
+                                }
+
+                            } else {
+                                Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                            }
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            makeSnackBar(5000, "Could not verify your username and password. Please have a stable internet connection.");
+                        }
+                    });
                 }
             }
         });
@@ -323,6 +489,14 @@ public class MainActivity extends AppCompatActivity {
 
 
         dialog.show();
+    }
+
+    private void makeSnackBar(int duration, String s) {
+        Snackbar mySnackbar = Snackbar.make(findViewById(R.id.screen), s, duration);
+        View snackbarView = mySnackbar.getView();
+        TextView tv = (TextView) snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
+        tv.setMaxLines(4);
+        mySnackbar.show();
     }
 
     public void showAboutApp() {
