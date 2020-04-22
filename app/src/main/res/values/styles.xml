@@ -7,11 +7,20 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="welcomeET" >
+    <style name="welcomeET">
         <item name="android:textColor">#000</item>
         <item name="android:textColorHint">#8675C3</item>
         <item name="android:fontFamily">@font/remedium</item>
-        <item name= "background">@drawable/welcome_et</item>
+        <item name="background">@drawable/welcome_et</item>
     </style>
+
+    <style name="BottomTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">#424242</item>
+        <item name="colorPrimaryDark">#202020</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
 </resources>

@@ -26,8 +26,11 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.media.ExifInterface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Vibrator;
@@ -243,11 +246,11 @@ public class Registration extends AppCompatActivity {
                 if (confirmVisible) {
                     confirmPassToggle.setImageResource(R.drawable.hidepassword);
                     confirmPass.setTransformationMethod(new PasswordTransformationMethod());
-                    confirmPass.setSelection(pass.getText().length());
+                    confirmPass.setSelection(confirmPass.getText().length());
                 } else {
                     confirmPassToggle.setImageResource(R.drawable.showpassword);
                     confirmPass.setTransformationMethod(null);
-                    confirmPass.setSelection(pass.getText().length());
+                    confirmPass.setSelection(confirmPass.getText().length());
                 }
                 confirmVisible = !confirmVisible;
             }
@@ -328,6 +331,13 @@ public class Registration extends AppCompatActivity {
     FirebaseFirestore db;
     ImageView confirmPassToggle, passToggle;
 
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
     private void saveInformation() {
         final String reference = (doctor) ? "Doctors" : "Patients";
         final Map<String, Object> map = new HashMap<>();
@@ -340,6 +350,7 @@ public class Registration extends AppCompatActivity {
         map.put("City", city.getText().toString().trim());
         map.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
         map.put("Country", (country.getSelectedItem().toString()));
+
         final String time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
         final String currentDate = new SimpleDateFormat("M/d/yy", Locale.getDefault()).format(new Date());
         final String status;
@@ -367,11 +378,46 @@ public class Registration extends AppCompatActivity {
                 dialog.setMessage("Loading. Please wait..." + "\nMake sure you have a good internet connection.");
             }
         }, 5000);
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                final int[] count = {5};
+                new CountDownTimer(5000, 1000) {
+                    @Override
+                    public void onTick(long millisUntilFinished) {
+                        String s = count[0] + "";
+                        count[0]--;
+                        s += (millisUntilFinished / 1000 == 0) ? " second." : " seconds.";
+                        if (dialog.isShowing())
+                            dialog.setMessage("Are you connected to the internet?\n\nCheck your connection" +
+                                    " and try again in " + s);
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        if ((dialog).isShowing()) {
+                            dialog.dismiss();
+                            dialog.cancel();
+                            makeSnackBar(8000, "Failed to create account.\nPlease make sure you have a good connection before trying again.");
+                        }
+                    }
+                }.start();
+            }
+        }, 22500);
         final Map<String, Object> userPass = new HashMap<>();
         userPass.put("Username", user.getText().toString().trim());
         userPass.put("Password", pass.getText().toString().trim());
         userPass.put("Account Verified", !doctor);
         userPass.put("Type", reference.substring(0, reference.length() - 1));
+        userPass.put("Account Created", currentDate + " " + time);
+
+        userPass.put("Name", name.getText().toString().trim());
+        //userPass.put("City", city.getText().toString().trim());
+        //userPass.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
+        //userPass.put("Country", (country.getSelectedItem().toString()));
+        userPass.put("Phone", phone.getText().toString().trim());
+        userPass.put("Email", email.getText().toString().trim());
         db.collection("userPass")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -384,7 +430,7 @@ public class Registration extends AppCompatActivity {
                                 String r = document.get("Username").toString();
                                 Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("Username").toString());
                                 if (r.equals(curUser)) {
-                                    makeSnackBar(3700, "Your username was just taken. Please choose another.");
+                                    makeSnackBar(3700, "Your username was just taken. Please choose another username.");
                                     unique = false;
                                     break;
                                 }
@@ -1319,7 +1365,7 @@ public class Registration extends AppCompatActivity {
                     }
                 }
                 makeToast("Double tap or long press the image to rotate it.");
-                makeSnackBar(4300, "The image is low quality. Please consider taking a higher quality picture.");
+                makeSnackBar(4000, "The image is low quality. Please consider taking a higher quality picture.");
                 //saveImage(getApplicationContext(), bitmap, "temp", "jpg");
 
                 photo.setImageBitmap(bitmap);
@@ -2213,7 +2259,10 @@ public class Registration extends AppCompatActivity {
                 //TODO Save their info then go back to welcome page.
                 dialog.dismiss();
                 dialog.cancel();
-                saveInformation();
+                if (isNetworkAvailable())
+                    saveInformation();
+                else
+                    makeSnackBar(10000, "Please connect your device to a network. It is currently not connected and to create your account, an internet connection is required.");
             }
         });
         dialog.show();

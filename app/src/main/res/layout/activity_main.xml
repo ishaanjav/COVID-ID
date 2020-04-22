@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="23sp"
+            android:layout_marginTop="20sp"
             android:fontFamily="@font/caviarbold"
             android:text="@string/welcome"
             android:textColor="#4D3ED8"
@@ -29,7 +29,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/title"
-            android:layout_margin="18sp"
+            android:layout_marginLeft="18sp"
+            android:layout_marginTop="8sp"
             android:text=""
             android:textColor="#F45050"
             android:textSize="19sp"
@@ -40,7 +41,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_below="@+id/title"
-            android:layout_marginTop="45sp">
+            android:layout_marginTop="36sp">
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/card1"
@@ -73,7 +74,7 @@
                         android:layout_height="45sp"
                         android:layout_below="@+id/existingusertext"
                         android:layout_centerHorizontal="true"
-                        android:layout_marginTop="25sp"
+                        android:layout_marginTop="20sp"
                         android:background="@drawable/welcome_et"
                         android:ems="10"
                         android:hint="Username"
@@ -91,7 +92,7 @@
                         android:layout_height="45sp"
                         android:layout_below="@+id/user"
                         android:layout_centerHorizontal="true"
-                        android:layout_marginTop="23sp"
+                        android:layout_marginTop="20sp"
                         android:background="@drawable/welcome_et"
                         android:ems="10"
                         android:hint="Password"
@@ -111,7 +112,7 @@
                         android:layout_height="45sp"
                         android:layout_below="@id/user"
                         android:layout_marginLeft="-50sp"
-                        android:layout_marginTop="23sp"
+                        android:layout_marginTop="20sp"
                         android:layout_toRightOf="@+id/pass"
                         android:background="@drawable/welcome_et_box"
                         android:visibility="visible">
@@ -124,14 +125,26 @@
                             android:src="@drawable/hidepassword" />
                     </RelativeLayout>
 
+                    <CheckBox
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/container"
+                        android:layout_marginTop="4sp"
+                        android:id="@+id/remember"
+                        android:buttonTint="#2B2B2B"
+                        android:layout_marginLeft="20sp"
+                        android:textSize="16sp"
+                        android:text="Keep me signed in"
+                        />
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:id="@+id/forgot"
-                        android:layout_below="@id/pass"
-                        android:layout_marginTop="8sp"
+                        android:layout_below="@id/login"
+                        android:layout_marginBottom="13sp"
                         android:text="@string/forgot"
-                        android:textSize="17sp"
-                        android:layout_marginLeft="19sp"
+                        android:textSize="16sp"
+                        android:layout_marginLeft="25sp"
                         android:fontFamily="@font/opensansitalci"
                         android:layout_height="wrap_content"/>
 
@@ -141,8 +154,8 @@
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/pass"
                         android:layout_centerHorizontal="true"
-                        android:layout_marginTop="44sp"
-                        android:layout_marginBottom="16sp"
+                        android:layout_marginTop="50sp"
+                        android:layout_marginBottom="9sp"
                         android:background="@drawable/welcome_background"
                         android:paddingLeft="63sp"
                         android:paddingTop="6sp"
@@ -161,7 +174,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/card1"
-                android:layout_marginTop="52sp">
+                android:layout_marginTop="48sp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -194,7 +207,7 @@
                 android:layout_below="@+id/bar"
                 android:layout_centerHorizontal="true"
                 android:layout_marginLeft="10sp"
-                android:layout_marginTop="42sp"
+                android:layout_marginTop="39sp"
                 android:layout_marginRight="10sp"
                 app:cardCornerRadius="15sp"
                 android:layout_marginBottom="20sp"
@@ -221,7 +234,7 @@
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/newusertext"
                         android:layout_centerHorizontal="true"
-                        android:layout_marginTop="27sp"
+                        android:layout_marginTop="21sp"
                         android:background="@drawable/welcome_background_reverse"
                         android:paddingLeft="63sp"
                         android:paddingTop="6sp"

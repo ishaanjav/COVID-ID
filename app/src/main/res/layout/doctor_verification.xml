@@ -13,7 +13,7 @@
             android:id="@+id/titleHolder"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#A761C5"
+            android:background="#4C4C4C"
             >
 
             <TextView
@@ -68,9 +68,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/text2"
-            android:background="#A761C5"
+            android:background="#2B2B2B"
             android:text="OK"
             android:textSize="24sp"
-            android:textColor="#E5E2FF" />
+            android:textColor="#FFFFFF" />
     </RelativeLayout>
 </androidx.cardview.widget.CardView>
