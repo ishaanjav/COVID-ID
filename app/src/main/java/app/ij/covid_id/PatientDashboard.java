@@ -36,6 +36,7 @@ public class PatientDashboard extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
+        overridePendingTransition( R.anim.medium_fade_in, R.anim.fast_fade_out);
     }
 
     @Override

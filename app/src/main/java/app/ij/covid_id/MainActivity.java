@@ -128,6 +128,10 @@ public class MainActivity extends AppCompatActivity {
         next.putExtra("Account Created", "4/21/20 22:57:56");
         startActivity(next);*/
 
+        //writeLogin("false", getApplicationContext());
+        startActivity(new Intent(MainActivity.this, PatientDashboard.class));
+        overridePendingTransition( R.anim.fast_fade_in, R.anim.fast_fade_out);
+
         String logged_in = readFromFile("login.txt", getApplicationContext());
         if (logged_in.contains("tru")) {
             String info = readFromFile("info.txt", getApplicationContext());
@@ -142,6 +146,9 @@ public class MainActivity extends AppCompatActivity {
             next.putExtra("Name", contents[5]);
             next.putExtra("Phone", contents[6]);
             next.putExtra("Email", contents[7]);
+            next.putExtra("Document ID", contents[8]);
+            next.putExtra("Status", contents[9]);
+            next.putExtra("userPass ID", contents[10]);
             startActivity(next);
         }
 
@@ -368,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 loggedIn = false;
                 error.setText("");
-                if(mySnackbar != null) mySnackbar.dismiss();
+                if (mySnackbar != null) mySnackbar.dismiss();
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -422,18 +429,20 @@ public class MainActivity extends AppCompatActivity {
                                             //TODO Login successful.
                                             //TODO Send intent with the userType and documentId.
                                             //userType = document.get("Type").toString();
-                                           error.setText("");
+                                            error.setText("");
                                             Intent intent;
                                             if (userType.equals("Patient"))
                                                 intent = new Intent(MainActivity.this, PatientDashboard.class);
                                             else //TODO Change to doctor dashboard
                                                 intent = new Intent(MainActivity.this, PatientDashboard.class);
 
-                                            String n = "Bob", p = "9999999999", e = "e@g.com", city = "", state = "", country = "";
-                                            //TODO Uncomment eventually.
-                                            /*n = document.get("Name").toString();
+                                            String n = "Bob", p = "9999999999", e = "e@g.com", city = "", state = "", country = "", docId;
+                                            docId = document.get("Document ID").toString();
+                                            String userPassID = document.getId();
+                                            //DONE Uncomment eventually.
+                                            n = document.get("Name").toString();
                                             p = document.get("Phone").toString();
-                                            e = document.get("Email").toString();*/
+                                            e = document.get("Email").toString();
 
                                             /*city = document.get("City").toString();
                                             state = document.get("State").toString();
@@ -443,20 +452,25 @@ public class MainActivity extends AppCompatActivity {
                                             intent.putExtra("State", state);
                                             intent.putExtra("Country", country);*/
 
+                                            String stat = document.get("Status").toString();
                                             if (state.isEmpty() || state.length() == 0) state = " ";
                                             intent.putExtra("Type", userType);
-                                            intent.putExtra("Document ID", documentId);
+                                            //intent.putExtra("Document ID", documentId);
                                             intent.putExtra("Username", user);
                                             intent.putExtra("Password", pass);
                                             intent.putExtra("Name", n);
                                             intent.putExtra("Phone", p);
                                             intent.putExtra("Email", e);
+                                            intent.putExtra("Document ID", docId);
+                                            intent.putExtra("userPass ID", userPassID);
+                                            intent.putExtra("Status", stat);
 
                                             intent.putExtra("Account Created", document.get("Account Created").toString());
 
                                             writeToInfo(userType + "___________" + documentId + "___________" + user + "___________" +
                                                     pass + "___________" + document.get("Account Created").toString()
-                                                    + "___________" + n + "___________" + p + "___________" + e, getApplicationContext());
+                                                    + "___________" + n + "___________" + p + "___________" + e + "___________" + docId
+                                                    + "___________" + stat + "___________" + userPassID, getApplicationContext());
                                             writeLogin("" + remember.isChecked(), getApplicationContext());
                                             writeToFile("Done", getApplicationContext());
 
@@ -476,14 +490,14 @@ public class MainActivity extends AppCompatActivity {
                                     loggedIn = true;
                                     if (dialog != null) dialog.dismiss();
 
-                                    if(isNetworkAvailable()) {
+                                    if (isNetworkAvailable()) {
                                         makeSnackBar(3000, "The username or password you entered is wrong.");
                                         error.setText("The username or password is wrong.");
-                                    }else {
+                                    } else {
                                         if (task.getResult().size() == 0) {
                                             error.setText("Device not connected to network.");
                                             makeSnackBar(7000, "It appears you do not have an internet connection. Please connect before trying again.");
-                                        }else{
+                                        } else {
                                             error.setText("The username or password is wrong.");
                                             makeSnackBar(7700, "The username or password you entered is wrong. ALSO: try connecting your device to the internet.");
                                         }
@@ -575,6 +589,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public Menu menuOptions;
+    boolean animate = true;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -582,6 +597,14 @@ public class MainActivity extends AppCompatActivity {
         menuInflater.inflate(R.menu.menu, menu);
         MenuItem item = menu.findItem(R.id.about);
         item.setVisible(false);
+
+        Intent intent = getIntent();
+        String s = intent.getStringExtra("Type");
+        String reader = readFromFile("firstAccountCreated.txt", getApplicationContext());
+        if (s == null && !reader.isEmpty()) {
+            item.setVisible(true);
+            animate = false;
+        }
 
         menuOptions = menu;
 
@@ -641,9 +664,11 @@ public class MainActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
     Snackbar mySnackbar;
+
     private void makeSnackBar(int duration, String s) {
-         mySnackbar = Snackbar.make(findViewById(R.id.screen), s, duration);
+        mySnackbar = Snackbar.make(findViewById(R.id.screen), s, duration);
         View snackbarView = mySnackbar.getView();
         TextView tv = (TextView) snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
         tv.setMaxLines(4);
@@ -661,6 +686,9 @@ public class MainActivity extends AppCompatActivity {
         dialog.getWindow().setAttributes(lp);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
 
+        if (!animate)
+            dialog.getWindow().getAttributes().windowAnimations = R.style.SlidingDialogAnimation;
+
         Button back = (Button) dialog.findViewById(R.id.back);
         back.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -673,35 +701,37 @@ public class MainActivity extends AppCompatActivity {
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialogInterface) {
-                MenuItem item2 = menuOptions.findItem(R.id.about);
-                item2.setVisible(true);
-                holder.setVisibility(View.VISIBLE);
-                if (firstTime) {
-                    card1.setVisibility(View.INVISIBLE);
-                    Animation fadeIn = new AlphaAnimation(0, 1);
-                    fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
-                    fadeIn.setDuration(2100);
-                    card1.setAnimation(fadeIn);
-                    Animation animZoomin = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom_in);
+                if (animate) {
+                    MenuItem item2 = menuOptions.findItem(R.id.about);
+                    item2.setVisible(true);
+                    holder.setVisibility(View.VISIBLE);
+                    if (firstTime) {
+                        card1.setVisibility(View.INVISIBLE);
+                        Animation fadeIn = new AlphaAnimation(0, 1);
+                        fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
+                        fadeIn.setDuration(2100);
+                        card1.setAnimation(fadeIn);
+                        Animation animZoomin = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom_in);
 
-                    card1.startAnimation(animZoomin);
-                    card1.setVisibility(View.VISIBLE);
-                    card2.setVisibility(View.INVISIBLE);
-                    Runnable r2 = new Runnable() {
-                        @Override
-                        public void run() {
-                            Animation fadeIn = new AlphaAnimation(0, 1);
-                            fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
-                            fadeIn.setDuration(2000);
-                            card2.setAnimation(fadeIn);
-                            Animation animZoomin = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom_in);
+                        card1.startAnimation(animZoomin);
+                        card1.setVisibility(View.VISIBLE);
+                        card2.setVisibility(View.INVISIBLE);
+                        Runnable r2 = new Runnable() {
+                            @Override
+                            public void run() {
+                                Animation fadeIn = new AlphaAnimation(0, 1);
+                                fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
+                                fadeIn.setDuration(2000);
+                                card2.setAnimation(fadeIn);
+                                Animation animZoomin = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom_in);
 
-                            card2.startAnimation(animZoomin);
-                            card2.setVisibility(View.VISIBLE);
-                        }
-                    };
-                    Handler h = new Handler();
-                    h.postDelayed(r2, 1220);
+                                card2.startAnimation(animZoomin);
+                                card2.setVisibility(View.VISIBLE);
+                            }
+                        };
+                        Handler h = new Handler();
+                        h.postDelayed(r2, 1220);
+                    }
                 }
                 firstTime = false;
             }
