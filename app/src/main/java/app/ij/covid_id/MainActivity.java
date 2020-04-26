@@ -129,15 +129,16 @@ public class MainActivity extends AppCompatActivity {
         startActivity(next);*/
 
         //writeLogin("false", getApplicationContext());
-        startActivity(new Intent(MainActivity.this, PatientDashboard.class));
-        overridePendingTransition( R.anim.fast_fade_in, R.anim.fast_fade_out);
+        //startActivity(new Intent(MainActivity.this, PatientDashboard.class));
+
+        overridePendingTransition(R.anim.fast_fade_in, R.anim.fast_fade_out);
 
         String logged_in = readFromFile("login.txt", getApplicationContext());
         if (logged_in.contains("tru")) {
-            String info = readFromFile("info.txt", getApplicationContext());
-            String[] contents = info.split("___________");
+            //String info = readFromFile("info.txt", getApplicationContext());
+            //String[] contents = info.split("___________");
             Intent next = new Intent(MainActivity.this, PatientDashboard.class);
-            Log.wtf("Username", contents[2]);
+            /*Log.wtf("Username", contents[2]);
             next.putExtra("Type", contents[0]);
             next.putExtra("Document ID", contents[1]);
             next.putExtra("Username", contents[2]);
@@ -145,10 +146,10 @@ public class MainActivity extends AppCompatActivity {
             next.putExtra("Account Created", contents[4]);
             next.putExtra("Name", contents[5]);
             next.putExtra("Phone", contents[6]);
-            next.putExtra("Email", contents[7]);
-            next.putExtra("Document ID", contents[8]);
-            next.putExtra("Status", contents[9]);
-            next.putExtra("userPass ID", contents[10]);
+            //next.putExtra("Email", contents[7]);
+            next.putExtra("Document ID", contents[7]);
+            next.putExtra("Status", contents[8]);
+            next.putExtra("userPass ID", contents[9]);*/
             startActivity(next);
         }
 
@@ -436,13 +437,13 @@ public class MainActivity extends AppCompatActivity {
                                             else //TODO Change to doctor dashboard
                                                 intent = new Intent(MainActivity.this, PatientDashboard.class);
 
-                                            String n = "Bob", p = "9999999999", e = "e@g.com", city = "", state = "", country = "", docId;
+                                            String n = "Bob", p = "9999999999", city = "", state = "", country = "", docId;
                                             docId = document.get("Document ID").toString();
                                             String userPassID = document.getId();
                                             //DONE Uncomment eventually.
                                             n = document.get("Name").toString();
                                             p = document.get("Phone").toString();
-                                            e = document.get("Email").toString();
+                                            //e = document.get("Email").toString();
 
                                             /*city = document.get("City").toString();
                                             state = document.get("State").toString();
@@ -460,7 +461,7 @@ public class MainActivity extends AppCompatActivity {
                                             intent.putExtra("Password", pass);
                                             intent.putExtra("Name", n);
                                             intent.putExtra("Phone", p);
-                                            intent.putExtra("Email", e);
+                                            //intent.putExtra("Email", e);
                                             intent.putExtra("Document ID", docId);
                                             intent.putExtra("userPass ID", userPassID);
                                             intent.putExtra("Status", stat);
@@ -469,7 +470,7 @@ public class MainActivity extends AppCompatActivity {
 
                                             writeToInfo(userType + "___________" + documentId + "___________" + user + "___________" +
                                                     pass + "___________" + document.get("Account Created").toString()
-                                                    + "___________" + n + "___________" + p + "___________" + e + "___________" + docId
+                                                    + "___________" + n + "___________" + p + "___________" + docId
                                                     + "___________" + stat + "___________" + userPassID, getApplicationContext());
                                             writeLogin("" + remember.isChecked(), getApplicationContext());
                                             writeToFile("Done", getApplicationContext());
@@ -478,12 +479,13 @@ public class MainActivity extends AppCompatActivity {
                                             startActivity(intent);
                                             loggedIn = true;
                                             if (dialog != null) dialog.dismiss();
+                                            break;
                                         } else {
                                             loggedIn = true;
                                             if (dialog != null) dialog.dismiss();
                                             makeSnackBar(6800, "Your account has not yet been verified yet. Contact covid.ijapps@gmail.com for more info.");
+                                            break;
                                         }
-                                        break;
                                     }
                                 }
                                 if (!match) {

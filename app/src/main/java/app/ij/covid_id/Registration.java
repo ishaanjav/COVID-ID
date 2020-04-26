@@ -340,7 +340,7 @@ public class Registration extends AppCompatActivity {
     }
 
     private void saveInformation() {
-        final String reference = (doctor) ? "Doctors" : "Patients";
+        final String reference = (doctor) ? "Doctor" : "Patient";
         final Map<String, Object> map = new HashMap<>();
         map.put("Username", user.getText().toString().trim());
         map.put("Original Username", user.getText().toString().trim());
@@ -357,12 +357,12 @@ public class Registration extends AppCompatActivity {
         final String status;
         if (u) status = "Unknown";
         else if (covidR) status = "Recovered";
-        else if (covidN) status = "Negative";
-        else status = "Positive";
-        map.put("Covid Status", status);
+        else if (covidN) status = "Uninfected";
+        else status = "Infected";
+        map.put("Status", status);
 
-        map.put("Num of Dates", 1);
-        map.put("Status 1", status);
+        //map.put("Num of Dates", 1);
+        //map.put("Status 1", status);
         map.put("Date 1", currentDate + " " + time);
         if (doctor) {
             map.put("Account Verified", false);
@@ -405,13 +405,14 @@ public class Registration extends AppCompatActivity {
                     }
                 }.start();
             }
-        }, 22500);
+        }, 24500);
         final Map<String, Object> userPass = new HashMap<>();
         userPass.put("Username", user.getText().toString().trim());
         userPass.put("Password", pass.getText().toString().trim());
         userPass.put("Account Verified", !doctor);
-        userPass.put("Type", reference.substring(0, reference.length() - 1));
+        userPass.put("Type", reference);
         userPass.put("Account Created", currentDate + " " + time);
+        //userPass.put("Latest Update", currentDate + " " + time);
         userPass.put("Status", status);
 
         userPass.put("Name", name.getText().toString().trim());
@@ -419,7 +420,7 @@ public class Registration extends AppCompatActivity {
         //userPass.put("State", (country.getSelectedItem().toString ().contains("United States")) ? state.getSelectedItem().toString() : "");
         //userPass.put("Country", (country.getSelectedItem().toString()));
         userPass.put("Phone", phone.getText().toString().trim());
-        userPass.put("Email", email.getText().toString().trim());
+        //userPass.put("Email", email.getText().toString().trim());
         db.collection("userPass")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -457,71 +458,90 @@ public class Registration extends AppCompatActivity {
                                                     @Override
                                                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                                         //INFO Adding the maint content
-                                                        db.collection(reference)
-                                                                .add(map)
-                                                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                                        HashMap<String, String> hashMap= new HashMap<>();
+                                                        hashMap.put("Status", status);
+                                                        hashMap.put("City", city.getText().toString().trim());
+                                                        hashMap.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
+                                                        hashMap.put("Country", (country.getSelectedItem().toString()));
+                                                        db.collection("Map").document(user.getText().toString().trim())
+                                                                .set(hashMap)
+                                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                     @Override
-                                                                    public void onSuccess(DocumentReference documentReference) {
-                                                                        final String mainDocumentID = documentReference.getId();
+                                                                    public void onSuccess(Void aVoid) {
+                                                                        db.collection(reference)
+                                                                                .add(map)
+                                                                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                                                                    @Override
+                                                                                    public void onSuccess(DocumentReference documentReference) {
+                                                                                        final String mainDocumentID = documentReference.getId();
 
-                                                                        DocumentReference doc = db.document(userPassDocumentID);
-                                                                        Map<String, Object> data = new HashMap<>();
-                                                                        data.put("Document ID", mainDocumentID);
-                                                                        //IMPORTANT After adding the main info, get the ID and go back to userPass to add it there.
-                                                                        doc.set(data, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                                            @Override
-                                                                            public void onSuccess(Void aVoid) {
-                                                                                //INFO Write to "Updates" and put in stuff.
-                                                                                HashMap<String, Object> dates = new HashMap<>();
-                                                                                dates.put("Status", status);
-                                                                                dates.put("Previous Status", "n/a");
-                                                                                dates.put("Date", currentDate + " " + time);
-                                                                                dates.put("Doctor", (doctor) ? "You" : "n/a");
-                                                                                dates.put("Medical Center Phone Number", (doctor) ? phone.getText().toString() : "n/a");
-                                                                                dates.put("Notes", "n/a");
-                                                                                final String documentID = mainDocumentID;
-                                                                                db.collection(reference + "/" + documentID + "/Updates")
-                                                                                        .document("Update 1").set(dates)
-                                                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                                        DocumentReference doc = db.document(userPassDocumentID);
+                                                                                        Map<String, Object> data = new HashMap<>();
+                                                                                        data.put("Document ID", mainDocumentID);
+                                                                                        //IMPORTANT After adding the main info, get the ID and go back to userPass to add it there.
+                                                                                        doc.set(data, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                                             @Override
                                                                                             public void onSuccess(Void aVoid) {
-                                                                                                makeToast("Account created");
-                                                                                                dialog.cancel();
-                                                                                                writeToFile(doctor ? "Doctor" : "Patient", getApplicationContext());
-                                                                                                //IMPORTANT Account has successfully been created.
-                                                                                                Intent finish = new Intent(Registration.this, MainActivity.class);
-                                                                                                finish.putExtra("Type", doctor ? "Doctor" : "Patient");
-                                                                                                startActivity(finish);
-                                                                                                Log.wtf("TESTING", "DocumentSnapshot added with ID: " + documentID);
+                                                                                                //INFO Write to "Updates" and put in stuff.
+                                                                                                HashMap<String, Object> dates = new HashMap<>();
+                                                                                                dates.put("Status", status);
+                                                                                                dates.put("Prev", "n/a");
+                                                                                                dates.put("Date", currentDate + " " + time);
+                                                                                                dates.put("Doc", (doctor) ? "You" : "n/a");
+                                                                                                dates.put("Ph", (doctor) ? phone.getText().toString() : "n/a");
+                                                                                                dates.put("Note", "n/a");
+                                                                                                final String documentID = mainDocumentID;
+                                                                                                db.collection(reference + "/" + documentID + "/Updates")
+                                                                                                        .document("Update 1").set(dates)
+                                                                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                                                            @Override
+                                                                                                            public void onSuccess(Void aVoid) {
+                                                                                                                makeToast("Account created");
+                                                                                                                dialog.cancel();
+                                                                                                                writeToFile(doctor ? "Doctor" : "Patient", getApplicationContext());
+                                                                                                                //IMPORTANT Account has successfully been created.
+                                                                                                                Intent finish = new Intent(Registration.this, MainActivity.class);
+                                                                                                                finish.putExtra("Type", doctor ? "Doctor" : "Patient");
+                                                                                                                startActivity(finish);
+                                                                                                                Log.wtf("TESTING", "DocumentSnapshot added with ID: " + documentID);
+                                                                                                            }
+                                                                                                        }).addOnFailureListener(new OnFailureListener() {
+                                                                                                    @Override
+                                                                                                    public void onFailure(@NonNull Exception e) {
+                                                                                                        dialog.cancel();
+                                                                                                        makeToast(e.getMessage());
+                                                                                                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                                                                        makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
+                                                                                                    }
+                                                                                                });
                                                                                             }
                                                                                         }).addOnFailureListener(new OnFailureListener() {
+                                                                                            @Override
+                                                                                            public void onFailure(@NonNull Exception e) {
+                                                                                                dialog.cancel();
+                                                                                                Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
+                                                                                            }
+                                                                                        });
+                                                                                    }
+                                                                                })
+                                                                                .addOnFailureListener(new OnFailureListener() {
                                                                                     @Override
                                                                                     public void onFailure(@NonNull Exception e) {
                                                                                         dialog.cancel();
-                                                                                        makeToast(e.getMessage());
                                                                                         Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
                                                                                         makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
                                                                                     }
                                                                                 });
-                                                                            }
-                                                                        }).addOnFailureListener(new OnFailureListener() {
-                                                                            @Override
-                                                                            public void onFailure(@NonNull Exception e) {
-                                                                                dialog.cancel();
-                                                                                Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                                                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
-                                                                            }
-                                                                        });
                                                                     }
-                                                                })
-                                                                .addOnFailureListener(new OnFailureListener() {
-                                                                    @Override
-                                                                    public void onFailure(@NonNull Exception e) {
-                                                                        dialog.cancel();
-                                                                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                                                                        makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
-                                                                    }
-                                                                });
+                                                                }).addOnFailureListener(new OnFailureListener() {
+                                                            @Override
+                                                            public void onFailure(@NonNull Exception e) {
+                                                                dialog.cancel();
+                                                                Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
+                                                            }
+                                                        });
                                                     }
                                                 }).addOnFailureListener(new OnFailureListener() {
                                                     @Override
@@ -2220,21 +2240,21 @@ public class Registration extends AppCompatActivity {
         String s2 = text2.getText().toString().trim();
         String s3 = text3.getText().toString().trim();
         SpannableString ss1 = new SpannableString(s1);
-        ss1.setSpan(new StyleSpan(Typeface.BOLD), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss1.setSpan(new StyleSpan(Typeface.BOLD), 1, 20, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         ss1.setSpan(new ForegroundColorSpan(Color.parseColor("#505050")), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         text1.setText(ss1);
         SpannableString ss2 = new SpannableString(s2);
-        ss2.setSpan(new StyleSpan(Typeface.BOLD), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss2.setSpan(new ForegroundColorSpan(Color.parseColor("#D63636")), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss2.setSpan(new StyleSpan(Typeface.BOLD), 1, 9, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss2.setSpan(new ForegroundColorSpan(Color.parseColor("#D63636")), 0, 12, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         text2.setText(ss2);
         SpannableString ss3 = new SpannableString(s3);
-        ss3.setSpan(new StyleSpan(Typeface.BOLD), 0, 24, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss3.setSpan(new ForegroundColorSpan(Color.parseColor("#31B115")), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss3.setSpan(new StyleSpan(Typeface.BOLD), 1, 10, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss3.setSpan(new ForegroundColorSpan(Color.parseColor("#31B115")), 0, 12, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         text3.setText(ss3);
         TextView text4 = dialog.findViewById(R.id.text5);
         SpannableString ss4 = new SpannableString(text4.getText().toString().trim());
-        ss4.setSpan(new StyleSpan(Typeface.BOLD), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss4.setSpan(new ForegroundColorSpan(Color.parseColor("#2E88F6")), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss4.setSpan(new StyleSpan(Typeface.BOLD), 1, 13, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss4.setSpan(new ForegroundColorSpan(Color.parseColor("#2E88F6")), 0, 15, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         text4.setText(ss4);
 
         Button back = (Button) dialog.findViewById(R.id.back);

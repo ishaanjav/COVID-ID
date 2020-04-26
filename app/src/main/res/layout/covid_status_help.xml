@@ -63,7 +63,7 @@
             android:id="@+id/text3"
             android:textColor="#424242"
             android:fontFamily="@font/regular"
-            android:text="&quot;Positive for COVID&quot;: Select this if you have tested positive for COVID at a medical center."
+            android:text="&quot;Infected&quot;: Select this if you have tested positive for COVID at a medical center."
             android:textSize="20sp" />
 
         <TextView
@@ -75,7 +75,7 @@
             android:id="@+id/text5"
             android:textColor="#424242"
             android:fontFamily="@font/regular"
-            android:text="&quot;Negative for COVID&quot;: Select this if you have tested negative for COVID at a medical center."
+            android:text="&quot;Not Infected&quot;: Select this if you have tested negative for COVID at a medical center."
             android:textSize="20sp" />
 
         <TextView
@@ -87,7 +87,7 @@
             android:id="@+id/text4"
             android:textColor="#424242"
             android:fontFamily="@font/regular"
-            android:text="&quot;Recovered from COVID&quot;: Select this if you have recovered from COVID and don't currently have it."
+            android:text="&quot;Recovered&quot;: Select this if you have recovered from COVID and don't currently have it."
             android:textSize="20sp" />
 
         <Button

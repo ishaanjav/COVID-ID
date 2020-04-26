@@ -10,7 +10,7 @@
                 android:right="3dp" />
 
             <gradient
-                android:angle="360"
+                android:angle="180"
                 android:centerColor="#CC726AE3"
                 android:endColor="#CC5070df"
                 android:startColor="#CC9873e3"
@@ -29,7 +29,7 @@
                 android:bottomLeftRadius="11dp"
                 android:bottomRightRadius="11dp" />
 
-            <solid android:color="#DD4848" />
+            <solid android:color="#29DD00" />
         </shape>
     </item>
 </layer-list>

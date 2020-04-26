@@ -5,7 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.ScanResult;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.util.Log;
 import android.util.Pair;
@@ -23,6 +25,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.CollectionReference;
@@ -33,12 +36,21 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
+import app.ij.covid_id.MainActivity;
+import app.ij.covid_id.PatientDashboard;
 import app.ij.covid_id.R;
 
 public class DashboardFragment extends Fragment {
@@ -51,8 +63,11 @@ public class DashboardFragment extends Fragment {
     ArrayList<HashMap<String, Object>> statusUpdates;
     Pair<HashMap<String, Object>, ArrayList<HashMap<String, Object>>> pair;
     public String documentID, username, name, userPassID, type, password, accountCreated, phone, email, status;
-    TextView textView;
     String statusLastUpdated;
+    TextView statusTextView, lastUpdated;
+    String patientsPath;
+    RelativeLayout statusColor1, statuScolor2;
+    RecyclerView list;
 
     public View findViewById(int id) {
         return root.findViewById(id);
@@ -64,16 +79,22 @@ public class DashboardFragment extends Fragment {
         /*dashboardViewModel =
                 ViewModelProviders.of(this).get(DashboardViewModel.class);*/
         //dashboardViewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
-    Log.wtf("HI", "HIiiiiiiioioiioioioiioipodfi asidf oisd foi ");
+        Log.wtf("HI", "HIiiiiiiioioiioioioiioipodfi asidf oisd foi ");
         db = FirebaseFirestore.getInstance();
         root = inflater.inflate(R.layout.fragment_dashboard, container, false);
         screen = root.findViewById(R.id.screen);
-        textView = (TextView) findViewById(R.id.text_dashboard);
-
+        //textView = (TextView) findViewById(R.id.text_dashboard);
+        statusTextView = (TextView) findViewById(R.id.status);
+        lastUpdated = (TextView) findViewById(R.id.lastUpdated);
+        statusColor1 = (RelativeLayout) findViewById(R.id.statusColor1);
+        statuScolor2 = (RelativeLayout) findViewById(R.id.statusColor2);
+        list = (RecyclerView) findViewById(R.id.list);
+        //TODO Change below to Patient after deleting collection and creating new dummy accounts.
+        patientsPath = "Patients";
         //getIntent();
+        readStorage();
 
-
-        //dashboardViewModel = ViewModelProviders.of(this, new DashboardViewModelFactory(getActivity(), username, documentID, db, root)).get(DashboardViewModel.class);
+        dashboardViewModel = ViewModelProviders.of(this, new DashboardViewModelFactory(getActivity(), username, documentID, db, root)).get(DashboardViewModel.class);
 
         //textView.setText(name);
         /*dashboardViewModel.loadInformation();
@@ -103,94 +124,69 @@ public class DashboardFragment extends Fragment {
         return root;
     }
 
+    int tempCount;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         //makeSnackBar(3000, "HI");
-        //TODO Using the status from intent, immediately go and use that to set the status text/color in layout
-        // before loadInformation()
-        /*if (!isNetworkAvailable()) {
+
+        updateLayout();
+        if (!isNetworkAvailable()) {
             makeSnackBar(6000, "You are not connected to the internet. Therefore, you will not receive updates unless you connect.");
         } else {
             //TODO Read from userPass 1-time and update info.txt.
             //TODO If not too much, add a listener on userPass and everytime it is changed
             // only write to info.txt. That is the only purpose of listener ----> UI will be for loadInformation();
-            updateInfoTxt();
-            loadInformation();
-        }*/
+            //updateInfoTxt();
+            //loadInformationOld();
+        }
+        loadInformation();
+        updateInfoTxt();
     }
 
-    Snackbar mySnackbar;
-
-    public void updateLayout() {
-        //TODO use info from the maps and arraylsts to display the stuff.
-        statusLastUpdated = generalInfo.get("Date 1").toString();
+    private void updateList() {
+        //TODO Write code to set Adapter on recyclerview
     }
 
-    public void loadInformation() {
-        generalInfo = new HashMap<>();
-        statusUpdates = new ArrayList<>();
-        Log.wtf("*-*-- LOCATION: ", "loadInformation() called");
-        //TODO Make notification onEvent
-        final DocumentReference docRef = db.collection("Patients").document(documentID);
-        docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+    private void loadInformation() {
+        final CollectionReference updatesRef = db.collection(patientsPath + "/" + documentID + "/" + "Updates");
+        updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
-            public void onEvent(@Nullable DocumentSnapshot snapshot,
-                                @Nullable FirebaseFirestoreException e) {
-                if (e != null) {
-                    Log.wtf("ERROR", "Listen failed.", e);
-                    makeSnackBar(3000, "Could not load your data. Are you connected to the internet?");
-                    return;
-                }
+            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                statusUpdates = new ArrayList<>();
                 //counter++;
-
-                final CollectionReference updatesRef = db.collection("Patients" + "/" + snapshot.getId() + "/" + "Updates");
-                updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
-                    @Override
-                    public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                        statusUpdates = new ArrayList<>();
-                        //counter++;
-                        for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots.getDocuments()) {
-                            if (e != null) {
-                                Log.wtf("ERROR", "Listen failed.", e);
-                                return;
-                            }
-
-                            String source = documentSnapshot != null && documentSnapshot.getMetadata().hasPendingWrites()
-                                    ? "Local" : "Server";
-                            if (documentSnapshot != null && documentSnapshot.exists() && source.equals("Server")) {
-                                statusUpdates.add((HashMap) documentSnapshot.getData());
-                                //textView.setText("TEST: " + counter);
-                                Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + documentSnapshot.getData());
-                            } else {
-                                Log.wtf("ERROR", source + " data: null");
-                                makeSnackBar(3000, "No data could be found. Are you connected to the internet?");
-                            }
-                        }
-                        pair = new Pair<>(generalInfo, statusUpdates);
-                        updateLayout();
+                for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots.getDocuments()) {
+                    if (e != null) {
+                        Log.wtf("ERROR", "Listen failed.", e);
+                        return;
                     }
-                });
+                    counter++;
 
-                String source = snapshot != null && snapshot.getMetadata().hasPendingWrites()
-                        ? "Local" : "Server";
-                if (snapshot != null && snapshot.exists() && source.equals("Server")) {
-                    generalInfo = (HashMap) snapshot.getData();
-                    pair = new Pair<>(generalInfo, statusUpdates);
-                    updateLayout();
-                    //textView.setText("TEST: " + counter);
-                    Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + snapshot.getData());
-                } else if (snapshot == null) {
-                    //generalInfo.put("ERROR STATE", "Fail");
-                    makeSnackBar(2000, "Could not load new data.");
-                    Log.wtf("ERROR", source + " data: null");
-                } else {
-                    Log.wtf("ERROR", source + " data: null");
+                    String source = documentSnapshot != null && documentSnapshot.getMetadata().hasPendingWrites()
+                            ? "Local" : "Server";
+                    if (documentSnapshot != null && documentSnapshot.exists() && source.equals("Server")) {
+                        statusUpdates.add((HashMap) documentSnapshot.getData());
+                        //textView.setText("TEST: " + counter);
+                        Log.wtf("*------ UPDATE INFO RETRIEVED -----", source + " data: " + documentSnapshot.getData());
+                    } else {
+                        Log.wtf("ERROR", source + " data: null");
+                        makeSnackBar(3000, "No data could be found. Are you connected to the internet?");
+                    }
                 }
+                updateList();
+                Log.wtf("COUNTER VALUE", "-------------------- " + counter);
             }
         });
     }
+
+    public void updateLayout() {
+        //TODO use info from the maps and arraylsts to display the stuff.
+        statusTextView.setText(cleanStatus());
+        lastUpdated.setText(cleanDate());
+    }
+
+    int counter = 0;
 
     //IMPORTANT If you do decide on writing Hello "NAME" on dashboard, then you have to listen to local changes
     //  and update UI for local changes to say Hello "new name" or whatever.
@@ -213,9 +209,11 @@ public class DashboardFragment extends Fragment {
                 if (snapshot != null && snapshot.exists() && source.equals("Server")) {
                     //TODO Write new info to info.txt
                     writeNewInfo(snapshot.getData());
+                    updateLayout();
                     //textView.setText(snapshot.getData().get("Status").toString());
                     Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + snapshot.getData());
                 } else if (snapshot == null) {
+                    makeSnackBar(2000, "Could not load new data.");
                     Log.wtf("ERROR", source + " data: null");
                 } else {
                     Log.wtf("ERROR", source + " data: null");
@@ -228,6 +226,7 @@ public class DashboardFragment extends Fragment {
 
     private void writeNewInfo(Map<String, Object> data) {
         String toWrite = "";
+        String tempStatus = data.get("Status").toString();
         toWrite += data.get("Type");
         toWrite += "___________";
         toWrite += data.get("Document ID");
@@ -242,11 +241,11 @@ public class DashboardFragment extends Fragment {
         toWrite += "___________";
         toWrite += data.get("Password");
         toWrite += "___________";
-        toWrite += data.get("Email");
-        toWrite += "___________";
+        /*toWrite += data.get("Email");
+        toWrite += "___________";*/
         toWrite += data.get("Document ID");
         toWrite += "___________";
-        toWrite += data.get("Status");
+        toWrite += tempStatus;
         toWrite += "___________";
         toWrite += userPassID;
         username = data.get("Username").toString();
@@ -256,18 +255,57 @@ public class DashboardFragment extends Fragment {
         type = data.get("Type").toString();
         password = data.get("Password").toString();
         accountCreated = data.get("Account Created").toString();
+        statusLastUpdated = data.get("Account Created").toString();
         phone = data.get("Phone").toString();
-        email = data.get("Email").toString();
-        status = data.get("Status").toString();
+        //email = data.get("Email").toString();
+        if(!tempStatus.equals(status)){
+            //TODO Status changed --> Consider making a notification.
+        }
+        status = tempStatus;
         writeToInfo(toWrite);
     }
 
-    private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager
-                = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    public String cleanStatus() {
+        if (status.equals("Unknown")) {
+            statusColor1.setBackgroundResource(R.drawable.grey_top);
+            statuScolor2.setBackgroundResource(R.drawable.grey_bottom);
+            return "Unknown/Untested";
+        } else if (status.equals("Recovered")) {
+            statusColor1.setBackgroundResource(R.drawable.green_top);
+            statuScolor2.setBackgroundResource(R.drawable.green_bottom);
+        } else if (status.equals("Uninfected")) {
+            statusColor1.setBackgroundResource(R.drawable.yellow_top);
+            statuScolor2.setBackgroundResource(R.drawable.yellow_bottom);
+        } else if (status.equals("Infected")) {
+            statusColor1.setBackgroundResource(R.drawable.red_top);
+            statuScolor2.setBackgroundResource(R.drawable.red_bottom);
+        }
+        return status;
     }
+
+    public String cleanDate() {
+        String currentDate = new SimpleDateFormat("M/d/yy", Locale.getDefault()).format(new Date());
+        String[] split = statusLastUpdated.split(" ");
+        String time = cleanTime(split[1]);
+        if (currentDate.equals(split[0]))
+            return "Today, " + time;
+        return "Last Updated: " + split[0].substring(0, split[0].length() - 3) + time;
+    }
+
+    public String cleanTime(String s) {
+        Integer a = Integer.parseInt(s.substring(0, s.indexOf(":")));
+        String end = "AM";
+        if (a > 12) {
+            a -= 12;
+            end = "PM";
+        } else if (a == 0) {
+            a += 12;
+        }
+        int firstIndex = s.indexOf(":");
+        int secondIdex = s.indexOf(":", firstIndex + 1);
+        return " " + a + s.substring(s.indexOf(":"), secondIdex) + " " + end;
+    }
+
 
     private void writeToInfo(String data) {
         try {
@@ -277,6 +315,119 @@ public class DashboardFragment extends Fragment {
         } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
         }
+    }
+
+    private void readStorage() {
+        String info = readFromFile("info.txt", getContext());
+        String[] contents = info.split("___________");
+        Log.wtf("Read Status-", contents[8]);
+        type = (contents[0]);
+        documentID = (contents[1]);
+        username = (contents[2]);
+        password = (contents[3]);
+        accountCreated = (contents[4]);
+        statusLastUpdated = (contents[4]);
+        name = (contents[5]);
+        phone = (contents[6]);
+        //next.putExtra("Email", contents[7]);
+        documentID = (contents[7]);
+        status = (contents[8]);
+        userPassID = (contents[9]);
+    }
+
+    private String readFromFile(String file, Context context) {
+        String ret = "";
+
+        try {
+            InputStream inputStream = context.openFileInput(file);
+
+            if (inputStream != null) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ((receiveString = bufferedReader.readLine()) != null) {
+                    stringBuilder.append("\n").append(receiveString);
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+            }
+        } catch (FileNotFoundException e) {
+            Log.wtf("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.wtf("login activity", "Can not read file: " + e.toString());
+        }
+
+        return ret;
+    }
+
+    public void loadInformationOld() {
+        generalInfo = new HashMap<>();
+        statusUpdates = new ArrayList<>();
+        Log.wtf("*-*-- LOCATION: ", "loadInformation() called");
+        //TODO Make notification onEvent
+        final DocumentReference docRef = db.collection(patientsPath).document(documentID);
+        final CollectionReference updatesRef = db.collection(patientsPath + "/" + documentID + "/" + "Updates");
+        docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot snapshot,
+                                @Nullable FirebaseFirestoreException e) {
+                if (e != null) {
+                    Log.wtf("ERROR", "Listen failed.", e);
+                    makeSnackBar(3000, "Could not load your data. Are you connected to the internet?");
+                    return;
+                }
+                counter++;
+
+                updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                        statusUpdates = new ArrayList<>();
+                        //counter++;
+                        for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots.getDocuments()) {
+                            if (e != null) {
+                                Log.wtf("ERROR", "Listen failed.", e);
+                                return;
+                            }
+                            counter++;
+
+                            String source = documentSnapshot != null && documentSnapshot.getMetadata().hasPendingWrites()
+                                    ? "Local" : "Server";
+                            if (documentSnapshot != null && documentSnapshot.exists() && source.equals("Server")) {
+                                statusUpdates.add((HashMap) documentSnapshot.getData());
+                                //textView.setText("TEST: " + counter);
+                                Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + documentSnapshot.getData());
+                            } else {
+                                Log.wtf("ERROR", source + " data: null");
+                                makeSnackBar(3000, "No data could be found. Are you connected to the internet?");
+                            }
+                        }
+                        Log.wtf("COUNTER VALUE", "-------------------- " + counter);
+                        pair = new Pair<>(generalInfo, statusUpdates);
+                        //updateLayout();
+                    }
+                });
+
+                String source = snapshot != null && snapshot.getMetadata().hasPendingWrites()
+                        ? "Local" : "Server";
+                if (snapshot != null && snapshot.exists() && source.equals("Server")) {
+                    generalInfo = (HashMap) snapshot.getData();
+                    pair = new Pair<>(generalInfo, statusUpdates);
+                    //updateLayout();
+                    //textView.setText("TEST: " + counter);
+                    Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + snapshot.getData());
+                } else if (snapshot == null) {
+                    //generalInfo.put("ERROR STATE", "Fail");
+                    makeSnackBar(2000, "Could not load new data.");
+                    Log.wtf("ERROR", source + " data: null");
+                } else {
+                    Log.wtf("ERROR", source + " data: null");
+                }
+            }
+        });
+
     }
 
     private void getIntent() {
@@ -292,6 +443,15 @@ public class DashboardFragment extends Fragment {
         email = intent.getStringExtra("Email");
         status = intent.getStringExtra("Status");
     }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    Snackbar mySnackbar;
 
     private void makeSnackBar(int duration, String s) {
         mySnackbar = Snackbar.make(screen, s, duration);
