@@ -466,12 +466,12 @@ public class MainActivity extends AppCompatActivity {
                                             intent.putExtra("userPass ID", userPassID);
                                             intent.putExtra("Status", stat);
 
-                                            intent.putExtra("Account Created", document.get("Account Created").toString());
+                                            intent.putExtra("Account Created", document.get("Last Updated").toString());
 
                                             writeToInfo(userType + "___________" + documentId + "___________" + user + "___________" +
-                                                    pass + "___________" + document.get("Account Created").toString()
+                                                    pass + "___________" + document.get("Last Updated").toString()
                                                     + "___________" + n + "___________" + p + "___________" + docId
-                                                    + "___________" + stat + "___________" + userPassID, getApplicationContext());
+                                                    + "___________" + stat + "___________" + userPassID + "___________" + document.get("Account Created").toString(), getApplicationContext());
                                             writeLogin("" + remember.isChecked(), getApplicationContext());
                                             writeToFile("Done", getApplicationContext());
 

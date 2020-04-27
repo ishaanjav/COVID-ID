@@ -1,29 +1,25 @@
 package app.ij.covid_id.ui.dashboard;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.wifi.ScanResult;
 import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.os.Handler;
 import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -49,8 +45,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import app.ij.covid_id.MainActivity;
-import app.ij.covid_id.PatientDashboard;
 import app.ij.covid_id.R;
 
 public class DashboardFragment extends Fragment {
@@ -66,8 +60,10 @@ public class DashboardFragment extends Fragment {
     String statusLastUpdated;
     TextView statusTextView, lastUpdated;
     String patientsPath;
-    RelativeLayout statusColor1, statuScolor2;
+    RelativeLayout statusColor1/*, statuScolor2*/;
     RecyclerView list;
+    Button update;
+    TextView message;
 
     public View findViewById(int id) {
         return root.findViewById(id);
@@ -83,53 +79,26 @@ public class DashboardFragment extends Fragment {
         db = FirebaseFirestore.getInstance();
         root = inflater.inflate(R.layout.fragment_dashboard, container, false);
         screen = root.findViewById(R.id.screen);
+        message = (TextView) findViewById(R.id.information);
         //textView = (TextView) findViewById(R.id.text_dashboard);
         statusTextView = (TextView) findViewById(R.id.status);
         lastUpdated = (TextView) findViewById(R.id.lastUpdated);
         statusColor1 = (RelativeLayout) findViewById(R.id.statusColor1);
-        statuScolor2 = (RelativeLayout) findViewById(R.id.statusColor2);
+        //statuScolor2 = (RelativeLayout) findViewById(R.id.statusColor2);
         list = (RecyclerView) findViewById(R.id.list);
         //TODO Change below to Patient after deleting collection and creating new dummy accounts.
         patientsPath = "Patients";
-        //getIntent();
+        update = (Button) findViewById(R.id.update);
         readStorage();
 
         dashboardViewModel = ViewModelProviders.of(this, new DashboardViewModelFactory(getActivity(), username, documentID, db, root)).get(DashboardViewModel.class);
-
-        //textView.setText(name);
-        /*dashboardViewModel.loadInformation();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                dashboardViewModel.loadInformation().observe(getViewLifecycleOwner(), new Observer<Pair<HashMap<String, Object>, ArrayList<HashMap<String, Object>>>>() {
-                    @Override
-                    public void onChanged(@Nullable Pair<HashMap<String, Object>, ArrayList<HashMap<String, Object>>> p) {
-                        textView.setText("HI");
-                        if (p != null) {
-                            HashMap<String, Object> content = p.first;
-                            ArrayList<HashMap<String, Object>> updates = p.second;
-                            if (content != null) {
-                                if (content.containsKey("ERROR STATE")) {
-                                    makeSnackBar(4000, "ERROR");
-                                } else {
-                                    makeSnackBar(4000, "WASSUP");
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }, 5000);*/
-
         return root;
     }
 
-    int tempCount;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        //makeSnackBar(3000, "HI");
 
         updateLayout();
         if (!isNetworkAvailable()) {
@@ -138,10 +107,9 @@ public class DashboardFragment extends Fragment {
             //TODO Read from userPass 1-time and update info.txt.
             //TODO If not too much, add a listener on userPass and everytime it is changed
             // only write to info.txt. That is the only purpose of listener ----> UI will be for loadInformation();
-            //updateInfoTxt();
-            //loadInformationOld();
         }
-        loadInformation();
+        //TODO Uncomment below when you release update with recyclerview.
+        //loadInformation();
         updateInfoTxt();
     }
 
@@ -235,7 +203,7 @@ public class DashboardFragment extends Fragment {
         toWrite += "___________";
         toWrite += data.get("Password");
         toWrite += "___________";
-        toWrite += data.get("Account Created");
+        toWrite += data.get("Last Updated");
         toWrite += "___________";
         toWrite += data.get("Name");
         toWrite += "___________";
@@ -248,6 +216,8 @@ public class DashboardFragment extends Fragment {
         toWrite += tempStatus;
         toWrite += "___________";
         toWrite += userPassID;
+        toWrite += "___________";
+        toWrite += data.get("Account Created");
         username = data.get("Username").toString();
         documentID = data.get("Document ID").toString();
         userPassID = userPassID;
@@ -255,10 +225,10 @@ public class DashboardFragment extends Fragment {
         type = data.get("Type").toString();
         password = data.get("Password").toString();
         accountCreated = data.get("Account Created").toString();
-        statusLastUpdated = data.get("Account Created").toString();
+        statusLastUpdated = data.get("Last Updated").toString();
         phone = data.get("Phone").toString();
         //email = data.get("Email").toString();
-        if(!tempStatus.equals(status)){
+        if (!tempStatus.equals(status)) {
             //TODO Status changed --> Consider making a notification.
         }
         status = tempStatus;
@@ -267,18 +237,26 @@ public class DashboardFragment extends Fragment {
 
     public String cleanStatus() {
         if (status.equals("Unknown")) {
-            statusColor1.setBackgroundResource(R.drawable.grey_top);
-            statuScolor2.setBackgroundResource(R.drawable.grey_bottom);
-            return "Unknown/Untested";
+            statusColor1.setBackgroundResource(R.drawable.gradient_border_grey);
+           // statuScolor2.setBackgroundResource(R.drawable.grey_bottom);
+            statusTextView.setTextColor(Color.parseColor("#ffffff"));
+            statusTextView.setTextSize(36);
+            return "Unknown\nor\nUntested";
         } else if (status.equals("Recovered")) {
-            statusColor1.setBackgroundResource(R.drawable.green_top);
-            statuScolor2.setBackgroundResource(R.drawable.green_bottom);
+            statusColor1.setBackgroundResource(R.drawable.gradient_border_green);
+            statusTextView.setTextSize(37);
+            statusTextView.setTextColor(Color.parseColor("#000000"));
+            //  statuScolor2.setBackgroundResource(R.drawable.green_bottom);
         } else if (status.equals("Uninfected")) {
-            statusColor1.setBackgroundResource(R.drawable.yellow_top);
-            statuScolor2.setBackgroundResource(R.drawable.yellow_bottom);
+            statusColor1.setBackgroundResource(R.drawable.gradient_border_yellow);
+            statusTextView.setTextSize(37);
+            statusTextView.setTextColor(Color.parseColor("#000000"));
+            // statuScolor2.setBackgroundResource(R.drawable.yellow_bottom);
         } else if (status.equals("Infected")) {
-            statusColor1.setBackgroundResource(R.drawable.red_top);
-            statuScolor2.setBackgroundResource(R.drawable.red_bottom);
+            statusTextView.setTextColor(Color.parseColor("#ffffff"));
+            statusTextView.setTextSize(37);
+            statusColor1.setBackgroundResource(R.drawable.gradient_border_red);
+           // statuScolor2.setBackgroundResource(R.drawable.red_bottom);
         }
         return status;
     }
@@ -325,7 +303,7 @@ public class DashboardFragment extends Fragment {
         documentID = (contents[1]);
         username = (contents[2]);
         password = (contents[3]);
-        accountCreated = (contents[4]);
+        accountCreated = (contents[10]);
         statusLastUpdated = (contents[4]);
         name = (contents[5]);
         phone = (contents[6]);
@@ -444,6 +422,7 @@ public class DashboardFragment extends Fragment {
         status = intent.getStringExtra("Status");
     }
 
+
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -459,5 +438,9 @@ public class DashboardFragment extends Fragment {
         TextView tv = (TextView) snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
         tv.setMaxLines(4);
         mySnackbar.show();
+    }
+
+    public void makeToast(String s) {
+        Toast.makeText(getContext(), s, Toast.LENGTH_LONG).show();
     }
 }

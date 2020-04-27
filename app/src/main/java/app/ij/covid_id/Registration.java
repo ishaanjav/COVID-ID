@@ -378,7 +378,7 @@ public class Registration extends AppCompatActivity {
             public void run() {
                 dialog.setMessage("Loading. Please wait..." + "\nMake sure you have a good internet connection.");
             }
-        }, 5000);
+        }, 5500);
 
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -412,6 +412,7 @@ public class Registration extends AppCompatActivity {
         userPass.put("Account Verified", !doctor);
         userPass.put("Type", reference);
         userPass.put("Account Created", currentDate + " " + time);
+        userPass.put("Last Updated", currentDate + " " + time);
         //userPass.put("Latest Update", currentDate + " " + time);
         userPass.put("Status", status);
 
@@ -486,9 +487,14 @@ public class Registration extends AppCompatActivity {
                                                                                                 HashMap<String, Object> dates = new HashMap<>();
                                                                                                 dates.put("Status", status);
                                                                                                 dates.put("Prev", "n/a");
+                                                                                                dates.put("City", "n/a");
                                                                                                 dates.put("Date", currentDate + " " + time);
                                                                                                 dates.put("Doc", (doctor) ? "You" : "n/a");
-                                                                                                dates.put("Ph", (doctor) ? phone.getText().toString() : "n/a");
+                                                                                                dates.put("Ph", (doctor) ? phone.getText().toString().trim() : "n/a");
+                                                                                                String em = email.getText().toString();
+                                                                                                if(em.isEmpty())
+                                                                                                    em = "";
+                                                                                                dates.put("Em", (doctor) ? em : "n/a");
                                                                                                 dates.put("Note", "n/a");
                                                                                                 final String documentID = mainDocumentID;
                                                                                                 db.collection(reference + "/" + documentID + "/Updates")
