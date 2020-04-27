@@ -3,9 +3,18 @@ package app.ij.covid_id.ui.dashboard;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -110,6 +119,7 @@ public class DashboardFragment extends Fragment {
         }
         //TODO Uncomment below when you release update with recyclerview.
         //loadInformation();
+
         updateInfoTxt();
     }
 
@@ -149,9 +159,13 @@ public class DashboardFragment extends Fragment {
     }
 
     public void updateLayout() {
-        //TODO use info from the maps and arraylsts to display the stuff.
+        //README Uncomment below for quick testing
+        //status = "Unknown";
+        //statusLastUpdated = "4/23/20 22:48:25";
+
         statusTextView.setText(cleanStatus());
         lastUpdated.setText(cleanDate());
+        //TODO use info from ArrayList to fill recycler.
     }
 
     int counter = 0;
@@ -238,25 +252,60 @@ public class DashboardFragment extends Fragment {
     public String cleanStatus() {
         if (status.equals("Unknown")) {
             statusColor1.setBackgroundResource(R.drawable.gradient_border_grey);
-           // statuScolor2.setBackgroundResource(R.drawable.grey_bottom);
+            // statuScolor2.setBackgroundResource(R.drawable.grey_bottom);
             statusTextView.setTextColor(Color.parseColor("#ffffff"));
             statusTextView.setTextSize(36);
+            String temp = "This status means that either you have not been tested or the test results have not been received yet.\n" +
+                    "You can contact your Medical Provider to get your status updated.\n" +
+                    "\nNote: Ensure your provider has the app downloaded. If the provider does not have the app, reach out to covid.ijapps@gmail.com mentioning the doctor/provider name, street address and phone/email information.\n";
+            SpannableString ss = new SpannableString(temp);
+            ss.setSpan(new ForegroundColorSpan(Color.parseColor("#8b02ed")), temp.indexOf("Note"), temp.indexOf("Note") + 5, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            ss.setSpan(new StyleSpan(Typeface.BOLD), temp.indexOf("Note"), temp.indexOf("Note") + 5, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+            ss.setSpan(new StyleSpan(Typeface.BOLD), temp.indexOf("covid"), temp.indexOf("covid") + 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+            ss.setSpan(new ForegroundColorSpan(Color.parseColor("#1599e6")), temp.indexOf("covid"), temp.indexOf("covid") + 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            ClickableSpan clickableSpan = new ClickableSpan() {
+                @Override
+                public void onClick(View textView) {
+                    Intent email = new Intent(Intent.ACTION_SEND);
+                    email.putExtra(Intent.EXTRA_EMAIL, new String[]{"covid.ijapps@gmail.com"});
+                    email.putExtra(Intent.EXTRA_SUBJECT, "COVID Testing Status Update");
+                    //TODO Change app name below based on which one you choose to go with.
+                    email.putExtra(Intent.EXTRA_TEXT, "Hello,\n\tI would like to know when I can receive an update regarding my COVID Status."
+                            + "\n\tMy medical provider does not have the COVID-ID app.\n\tMy medical provider is ____,  their phone number is ____, and their email is ____.\n\nThank you");
+                    email.setType("message/rfc822");
+                    startActivity(Intent.createChooser(email, "Choose an Email app:"));
+                }
+            };
+            ss.setSpan(clickableSpan, temp.indexOf("covid"), temp.indexOf("covid") + 22, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            message.setText(ss);
+
+            message.setMovementMethod(LinkMovementMethod.getInstance());
+            /*message.setText("This status means that either you have not been tested or the test results have not been received yet.\n" +
+                    "You can contact your Medical Provider to get your status updated.\n" +
+                    "Note: Ensure your provider has the app downloaded. If the provider does not have the app, reach out to ijappscovid@gmail.com mentioning the doctor/provider name, street address and phone/email information.");
+            */
             return "Unknown\nor\nUntested";
         } else if (status.equals("Recovered")) {
             statusColor1.setBackgroundResource(R.drawable.gradient_border_green);
             statusTextView.setTextSize(37);
             statusTextView.setTextColor(Color.parseColor("#000000"));
+            message.setText("This status implies that you were infected with COVID and more importantly you have recovered. Ask your doctor how you can conduct future activities and or give plasma to help others.\n");
             //  statuScolor2.setBackgroundResource(R.drawable.green_bottom);
         } else if (status.equals("Uninfected")) {
             statusColor1.setBackgroundResource(R.drawable.gradient_border_yellow);
             statusTextView.setTextSize(37);
             statusTextView.setTextColor(Color.parseColor("#000000"));
+            message.setText("This status implies that your COVID test has returned negative. This means you did not have COVID at the time of your test.\n");
             // statuScolor2.setBackgroundResource(R.drawable.yellow_bottom);
         } else if (status.equals("Infected")) {
             statusTextView.setTextColor(Color.parseColor("#ffffff"));
             statusTextView.setTextSize(37);
+            message.setText("This status implies that you are infected with COVID. You need immediate medical attention and provider advice.\n");
+
             statusColor1.setBackgroundResource(R.drawable.gradient_border_red);
-           // statuScolor2.setBackgroundResource(R.drawable.red_bottom);
+            // statuScolor2.setBackgroundResource(R.drawable.red_bottom);
         }
         return status;
     }

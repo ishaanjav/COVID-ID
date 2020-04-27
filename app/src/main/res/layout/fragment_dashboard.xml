@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/screen"
     android:layout_width="match_parent"
+    android:fadeScrollbars="false"
     android:layout_height="match_parent"
     tools:context=".ui.dashboard.DashboardFragment">
 
@@ -12,104 +13,99 @@
         android:layout_height="match_parent">
 
         <RelativeLayout
-            android:id="@+id/statusBox"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="4sp"
-            android:layout_marginTop="6sp"
-            android:layout_marginRight="4sp"
-            android:background="@drawable/dashboard_top">
-
-            <TextView
-                android:id="@+id/yourStatusText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="28sp"
-                android:layout_marginTop="15sp"
-                android:fontFamily="@font/ralewaybold"
-                android:text="@string/yourstatus"
-                android:textColor="#fff"
-                android:textSize="32sp" />
-
-            <TextView
-                android:id="@+id/lastUpdated"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/yourStatusText"
-                android:layout_marginLeft="32sp"
-                android:layout_marginTop="14sp"
-                android:layout_marginBottom="18sp"
-                android:fontFamily="@font/rlightitalic"
-                android:text="Last Updated: "
-                android:textColor="#FFFFFF"
-                android:textSize="17sp" />
-
-        </RelativeLayout>
-
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/statusBox"
-            android:id="@+id/ll"
-            android:layout_alignParentBottom="true"
-            android:layout_marginTop="30sp"
-            android:orientation="horizontal">
+            android:layout_height="match_parent">
 
             <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="10sp"
-                android:layout_weight="20" />
-
-            <RelativeLayout
-                android:id="@+id/statusColor1"
-                android:layout_width="wrap_content"
-                android:layout_height="310sp"
-                android:layout_weight="120"
-                android:background="@drawable/gradient_border_grey">
+                android:id="@+id/statusBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="4sp"
+                android:layout_marginTop="6sp"
+                android:layout_marginRight="4sp"
+                android:background="@drawable/dashboard_top">
 
                 <TextView
-                    android:id="@+id/status"
+                    android:id="@+id/yourStatusText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:layout_marginLeft="60sp"
-                    android:layout_marginTop="13sp"
-                    android:fontFamily="@font/remedium"
-                    android:text="Unknown"
-                    android:textAlignment="center"
+                    android:layout_marginLeft="28sp"
+                    android:layout_marginTop="15sp"
+                    android:fontFamily="@font/ralewaybold"
+                    android:text="@string/yourstatus"
                     android:textColor="#fff"
-                    android:textSize="35sp" />
+                    android:textSize="32sp" />
+
+                <TextView
+                    android:id="@+id/lastUpdated"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/yourStatusText"
+                    android:layout_marginLeft="32sp"
+                    android:layout_marginTop="14sp"
+                    android:layout_marginBottom="18sp"
+                    android:fontFamily="@font/rlightitalic"
+                    android:text="Last Updated: "
+                    android:textColor="#FFFFFF"
+                    android:textSize="17sp" />
 
             </RelativeLayout>
 
-            <RelativeLayout
+
+            <LinearLayout
+                android:id="@+id/ll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/statusBox"
+                android:layout_marginTop="30sp"
+                android:orientation="horizontal">
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="310sp"
+                    android:layout_weight="20" />
+
+                <RelativeLayout
+                    android:id="@+id/statusColor1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="310sp"
+                    android:layout_weight="120"
+                    android:background="@drawable/gradient_border_grey">
+
+                    <TextView
+                        android:id="@+id/status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:fontFamily="@font/remedium"
+                        android:text="Unknown"
+                        android:textAlignment="center"
+                        android:textColor="#fff"
+                        android:textSize="35sp" />
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="310sp"
+                    android:layout_weight="20" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/information"
                 android:layout_width="wrap_content"
-                android:layout_height="10sp"
-                android:layout_weight="20" />
-        </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/information"
-            android:layout_below="@+id/ll"
-            android:layout_marginLeft="20sp"
-            android:layout_marginRight="20sp"
-            android:textSize="21sp"
-            android:textColor="#222"
-            android:layout_marginTop="10sp"
-            />
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/ll"
+                android:layout_centerHorizontal="true"
+                android:textColorLink="#1599e6"
+                android:layout_marginLeft="33sp"
+                android:layout_marginTop="10sp"
+                android:layout_marginRight="9sp"
+                android:textColor="#333"
+                android:textSize="20sp" />
 
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="56sp"
-            android:visibility="gone" />
-
-
+        </RelativeLayout>
     </RelativeLayout>
 </ScrollView>
 
