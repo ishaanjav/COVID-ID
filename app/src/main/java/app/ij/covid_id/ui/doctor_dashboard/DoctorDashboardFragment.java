@@ -1,4 +1,4 @@
-package app.ij.covid_id.ui.dashboard;
+package app.ij.covid_id.ui.doctor_dashboard;
 
 import android.content.Context;
 import android.content.Intent;
@@ -7,10 +7,8 @@ import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
-import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
@@ -29,7 +27,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -55,8 +52,9 @@ import java.util.Locale;
 import java.util.Map;
 
 import app.ij.covid_id.R;
+import app.ij.covid_id.ui.dashboard.DashboardViewModel;
 
-public class DashboardFragment extends Fragment {
+public class DoctorDashboardFragment extends Fragment {
 
     private DashboardViewModel dashboardViewModel;
     FirebaseFirestore db;
@@ -68,7 +66,7 @@ public class DashboardFragment extends Fragment {
     public String documentID, username, name, userPassID, type, password, accountCreated, phone, email, status;
     String statusLastUpdated;
     TextView statusTextView, lastUpdated;
-    String doctorPath;
+    String patientsPath;
     RelativeLayout statusColor1/*, statuScolor2*/;
     RecyclerView list;
     Button update;
@@ -94,11 +92,10 @@ public class DashboardFragment extends Fragment {
         lastUpdated = (TextView) findViewById(R.id.lastUpdated);
         statusColor1 = (RelativeLayout) findViewById(R.id.statusColor1);
         //statuScolor2 = (RelativeLayout) findViewById(R.id.statusColor2);
-        list = (RecyclerView) findViewById(R.id.list);
-        //TODO Change below to Doctor after deleting collection and creating new dummy accounts.
-        doctorPath = "Doctors";
+        //TODO Change below to Patient after deleting collection and creating new dummy accounts.
+        patientsPath = "Patients";
         update = (Button) findViewById(R.id.update);
-        readStorage();
+        //readStorage();
 
         //dashboardViewModel = ViewModelProviders.of(this, new DashboardViewModelFactory(getActivity(), username, documentID, db, root)).get(DashboardViewModel.class);
         return root;
@@ -109,7 +106,7 @@ public class DashboardFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        updateLayout();
+        //updateLayout();
         if (!isNetworkAvailable()) {
             makeSnackBar(6000, "You are not connected to the internet. Therefore, you will not receive updates unless you connect.");
         } else {
@@ -119,8 +116,8 @@ public class DashboardFragment extends Fragment {
         }
         //TODO Uncomment below when you release update with recyclerview.
         //loadInformation();
-
-        updateInfoTxt();
+        makeToast("Inside doctor dashboard");
+        //updateInfoTxt();
     }
 
     private void updateList() {
@@ -128,7 +125,7 @@ public class DashboardFragment extends Fragment {
     }
 
     private void loadInformation() {
-        final CollectionReference updatesRef = db.collection(doctorPath + "/" + documentID + "/" + "Updates");
+        final CollectionReference updatesRef = db.collection(patientsPath + "/" + documentID + "/" + "Updates");
         updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
@@ -405,8 +402,8 @@ public class DashboardFragment extends Fragment {
         statusUpdates = new ArrayList<>();
         Log.wtf("*-*-- LOCATION: ", "loadInformation() called");
         //TODO Make notification onEvent
-        final DocumentReference docRef = db.collection(doctorPath).document(documentID);
-        final CollectionReference updatesRef = db.collection(doctorPath + "/" + documentID + "/" + "Updates");
+        final DocumentReference docRef = db.collection(patientsPath).document(documentID);
+        final CollectionReference updatesRef = db.collection(patientsPath + "/" + documentID + "/" + "Updates");
         docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot snapshot,

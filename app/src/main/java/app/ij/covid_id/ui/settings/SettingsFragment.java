@@ -99,7 +99,7 @@ public class SettingsFragment extends Fragment {
                                     previous = true;
                                 } else {
                                     previous = false;
-                                    makeSnackBar(3000, "Sorry. No updates available yet.");
+                                    makeSnackBar(2125, "Sorry. No updates available yet.");
                                 }
                             }
                         }

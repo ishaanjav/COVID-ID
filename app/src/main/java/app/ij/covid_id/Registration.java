@@ -407,12 +407,12 @@ public class Registration extends AppCompatActivity {
             }
         }, 24500);
         final Map<String, Object> userPass = new HashMap<>();
-        userPass.put("Username", user.getText().toString().trim());
-        userPass.put("Password", pass.getText().toString().trim());
-        userPass.put("Account Verified", !doctor);
+        userPass.put("User", user.getText().toString().trim());
+        userPass.put("Pass", pass.getText().toString().trim());
+        userPass.put("Verified", !doctor);
         userPass.put("Type", reference);
-        userPass.put("Account Created", currentDate + " " + time);
-        userPass.put("Last Updated", currentDate + " " + time);
+        userPass.put("Created", currentDate + " " + time);
+        userPass.put("Updated", currentDate + " " + time);
         //userPass.put("Latest Update", currentDate + " " + time);
         userPass.put("Status", status);
 
@@ -478,7 +478,7 @@ public class Registration extends AppCompatActivity {
 
                                                                                         DocumentReference doc = db.document(userPassDocumentID);
                                                                                         Map<String, Object> data = new HashMap<>();
-                                                                                        data.put("Document ID", mainDocumentID);
+                                                                                        data.put("Doc ID", mainDocumentID);
                                                                                         //IMPORTANT After adding the main info, get the ID and go back to userPass to add it there.
                                                                                         doc.set(data, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                                             @Override

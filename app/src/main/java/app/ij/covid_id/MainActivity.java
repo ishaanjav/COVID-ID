@@ -59,6 +59,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
@@ -101,6 +102,44 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //writeLogin("false", getApplicationContext());
+        startActivity(new Intent(MainActivity.this, DoctorDashboard.class));
+
+        overridePendingTransition(R.anim.fast_fade_in, R.anim.fast_fade_out);
+
+        String logged_in = readFromFile("login.txt", getApplicationContext());
+        if (!logged_in.contains("fal")) {
+            //String info = readFromFile("info.txt", getApplicationContext());
+            //String[] contents = info.split("___________");
+            Intent next;
+            if (logged_in.contains("Doc"))
+                next = new Intent(MainActivity.this, PatientDashboard.class);
+            else
+                next = new Intent(MainActivity.this, DoctorDashboard.class);
+
+            /*Log.wtf("Username", contents[2]);
+            next.putExtra("Type", contents[0]);
+            next.putExtra("Document ID", contents[1]);
+            next.putExtra("Username", contents[2]);
+            next.putExtra("Password", contents[3]);
+            next.putExtra("Account Created", contents[4]);
+            next.putExtra("Name", contents[5]);
+            next.putExtra("Phone", contents[6]);
+            //next.putExtra("Email", contents[7]);
+            next.putExtra("Document ID", contents[7]);
+            next.putExtra("Status", contents[8]);
+            next.putExtra("userPass ID", contents[9]);*/
+            startActivity(next);
+        }
+
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setCacheSizeBytes(300000000)
+                .build();
+        db = FirebaseFirestore.getInstance();
+        db.setFirestoreSettings(settings);
+
         title = findViewById(R.id.title);
         username = findViewById(R.id.user);
         password = findViewById(R.id.pass);
@@ -120,41 +159,6 @@ public class MainActivity extends AppCompatActivity {
         card1.setBackgroundResource(R.drawable.welcome_card);
         card2.setBackgroundResource(R.drawable.welcome_card);
         loggedIn = false;
-        /*Intent next = new Intent(MainActivity.this, PatientDashboard.class);
-        next.putExtra("Type", "Patient");
-        next.putExtra("Document ID", "33333");
-        next.putExtra("Username", "patient11");
-        next.putExtra("Password", "patient123");
-        next.putExtra("Account Created", "4/21/20 22:57:56");
-        startActivity(next);*/
-
-        //writeLogin("false", getApplicationContext());
-        //startActivity(new Intent(MainActivity.this, PatientDashboard.class));
-
-        overridePendingTransition(R.anim.fast_fade_in, R.anim.fast_fade_out);
-
-        String logged_in = readFromFile("login.txt", getApplicationContext());
-        if (logged_in.contains("tru")) {
-            //String info = readFromFile("info.txt", getApplicationContext());
-            //String[] contents = info.split("___________");
-            Intent next = new Intent(MainActivity.this, PatientDashboard.class);
-            /*Log.wtf("Username", contents[2]);
-            next.putExtra("Type", contents[0]);
-            next.putExtra("Document ID", contents[1]);
-            next.putExtra("Username", contents[2]);
-            next.putExtra("Password", contents[3]);
-            next.putExtra("Account Created", contents[4]);
-            next.putExtra("Name", contents[5]);
-            next.putExtra("Phone", contents[6]);
-            //next.putExtra("Email", contents[7]);
-            next.putExtra("Document ID", contents[7]);
-            next.putExtra("Status", contents[8]);
-            next.putExtra("userPass ID", contents[9]);*/
-            startActivity(next);
-        }
-
-        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-        db = FirebaseFirestore.getInstance();
 
         WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
@@ -434,8 +438,8 @@ public class MainActivity extends AppCompatActivity {
                                             Intent intent;
                                             if (userType.equals("Patient"))
                                                 intent = new Intent(MainActivity.this, PatientDashboard.class);
-                                            else //TODO Change to doctor dashboard
-                                                intent = new Intent(MainActivity.this, PatientDashboard.class);
+                                            else //DONE Change to doctor dashboard
+                                                intent = new Intent(MainActivity.this, DoctorDashboard.class);
 
                                             String n = "Bob", p = "9999999999", city = "", state = "", country = "", docId;
                                             docId = document.get("Document ID").toString();
@@ -457,8 +461,8 @@ public class MainActivity extends AppCompatActivity {
                                             if (state.isEmpty() || state.length() == 0) state = " ";
                                             intent.putExtra("Type", userType);
                                             //intent.putExtra("Document ID", documentId);
-                                            intent.putExtra("Username", user);
-                                            intent.putExtra("Password", pass);
+                                            intent.putExtra("User", user);
+                                            intent.putExtra("Pass", pass);
                                             intent.putExtra("Name", n);
                                             intent.putExtra("Phone", p);
                                             //intent.putExtra("Email", e);
@@ -466,13 +470,18 @@ public class MainActivity extends AppCompatActivity {
                                             intent.putExtra("userPass ID", userPassID);
                                             intent.putExtra("Status", stat);
 
-                                            intent.putExtra("Account Created", document.get("Last Updated").toString());
+                                            intent.putExtra("Created", document.get("Updated").toString());
 
                                             writeToInfo(userType + "___________" + documentId + "___________" + user + "___________" +
-                                                    pass + "___________" + document.get("Last Updated").toString()
+                                                    pass + "___________" + document.get("Updated").toString()
                                                     + "___________" + n + "___________" + p + "___________" + docId
-                                                    + "___________" + stat + "___________" + userPassID + "___________" + document.get("Account Created").toString(), getApplicationContext());
-                                            writeLogin("" + remember.isChecked(), getApplicationContext());
+                                                    + "___________" + stat + "___________" + userPassID + "___________" + document.get("Created").toString(), getApplicationContext());
+                                            if (!remember.isChecked())
+                                                writeLogin("false", getApplicationContext());
+                                            else if (userType.contains("octor"))
+                                                writeLogin("Doctor", getApplicationContext());
+                                            else writeLogin("Patient", getApplicationContext());
+
                                             writeToFile("Done", getApplicationContext());
 
                                             makeToast("Logged in.");
