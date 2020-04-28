@@ -85,10 +85,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6sp"
-                    android:buttonTint="#2E88F6"
+                    android:buttonTint="#FFA560"
                     android:textColor="#505050"
                     android:text="Not Infected"
                     android:textSize="20sp" />
+                <!--android:buttonTint="#2E88F6"-->
                 <RadioButton
                     android:id="@+id/covidnegative"
                     android:layout_width="wrap_content"

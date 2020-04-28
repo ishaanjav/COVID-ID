@@ -231,6 +231,7 @@
                 android:ems="4"
                 android:singleLine="true"
                 android:hint="City *"
+                android:inputType="textCapWords"
                 android:fontFamily="@font/remedium"
                 android:textColorHint="#956DAE"
                 android:textCursorDrawable="@null"

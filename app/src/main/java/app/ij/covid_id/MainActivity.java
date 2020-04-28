@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //writeLogin("false", getApplicationContext());
-        startActivity(new Intent(MainActivity.this, DoctorDashboard.class));
+        //startActivity(new Intent(MainActivity.this, DoctorDashboard.class));
 
         overridePendingTransition(R.anim.fast_fade_in, R.anim.fast_fade_out);
 
@@ -421,14 +421,14 @@ public class MainActivity extends AppCompatActivity {
                                 boolean verified = false;
                                 String userType = "", documentId;
                                 for (QueryDocumentSnapshot document : task.getResult()) {
-                                    String user = document.get("Username").toString();
-                                    String pass = document.get("Password").toString();
+                                    String user = document.get("User").toString();
+                                    String pass = document.get("Pass").toString();
                                     Log.wtf("Login - ", user + " " + pass);
                                     if (user.equals(curUser) && curPass.equals(pass)) {
                                         userType = document.get("Type").toString();
                                         Log.wtf("Login SUCCESSFUL- ", user + " " + pass);
                                         match = true;
-                                        verified = Boolean.parseBoolean(document.get("Account Verified").toString());
+                                        verified = Boolean.parseBoolean(document.get("Verified").toString());
                                         documentId = document.getId();
                                         if (verified) {
                                             //TODO Login successful.

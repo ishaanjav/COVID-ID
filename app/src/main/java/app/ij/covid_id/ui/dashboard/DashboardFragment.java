@@ -68,7 +68,7 @@ public class DashboardFragment extends Fragment {
     public String documentID, username, name, userPassID, type, password, accountCreated, phone, email, status;
     String statusLastUpdated;
     TextView statusTextView, lastUpdated;
-    String doctorPath;
+    String patientsPath;
     RelativeLayout statusColor1/*, statuScolor2*/;
     RecyclerView list;
     Button update;
@@ -96,7 +96,7 @@ public class DashboardFragment extends Fragment {
         //statuScolor2 = (RelativeLayout) findViewById(R.id.statusColor2);
         list = (RecyclerView) findViewById(R.id.list);
         //TODO Change below to Doctor after deleting collection and creating new dummy accounts.
-        doctorPath = "Doctors";
+        patientsPath = "Doctors";
         update = (Button) findViewById(R.id.update);
         readStorage();
 
@@ -128,7 +128,7 @@ public class DashboardFragment extends Fragment {
     }
 
     private void loadInformation() {
-        final CollectionReference updatesRef = db.collection(doctorPath + "/" + documentID + "/" + "Updates");
+        final CollectionReference updatesRef = db.collection(patientsPath + "/" + documentID + "/" + "Updates");
         updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
@@ -405,8 +405,8 @@ public class DashboardFragment extends Fragment {
         statusUpdates = new ArrayList<>();
         Log.wtf("*-*-- LOCATION: ", "loadInformation() called");
         //TODO Make notification onEvent
-        final DocumentReference docRef = db.collection(doctorPath).document(documentID);
-        final CollectionReference updatesRef = db.collection(doctorPath + "/" + documentID + "/" + "Updates");
+        final DocumentReference docRef = db.collection(patientsPath).document(documentID);
+        final CollectionReference updatesRef = db.collection(patientsPath + "/" + documentID + "/" + "Updates");
         docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot snapshot,

@@ -186,6 +186,7 @@ public class Registration extends AppCompatActivity {
         //patientCard1.setVisibility(View.INVISIBLE);
 
         //textWatcher();
+
         RadioGroup.OnCheckedChangeListener changeListener = new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int i) {
@@ -343,7 +344,7 @@ public class Registration extends AppCompatActivity {
         final String reference = (doctor) ? "Doctor" : "Patient";
         final Map<String, Object> map = new HashMap<>();
         map.put("Username", user.getText().toString().trim());
-        map.put("Original Username", user.getText().toString().trim());
+        map.put("Orig", user.getText().toString().trim());
         map.put("Password", pass.getText().toString().trim());
         map.put("Name", name.getText().toString().trim());
         map.put("Phone", phone.getText().toString().trim());
@@ -359,39 +360,40 @@ public class Registration extends AppCompatActivity {
         else if (covidR) status = "Recovered";
         else if (covidN) status = "Uninfected";
         else status = "Infected";
-        map.put("Status", status);
+        map.put("Stat", status);
 
         //map.put("Num of Dates", 1);
         //map.put("Status 1", status);
-        map.put("Date 1", currentDate + " " + time);
+        //map.put("Date 1", currentDate + " " + time);
+        map.put("Updated", currentDate + " " + time);
+        map.put("Created", currentDate + " " + time);
         if (doctor) {
             map.put("Account Verified", false);
         } else {
             map.put("Donated Plasma", (haveDonatedPlasma));
             map.put("Will Donate Plasma", (willDonatePlasma));
         }
-
         final ProgressDialog dialog = ProgressDialog.show(Registration.this, "Creating Account",
-                "Loading. Please wait...", true);
+                "Processing. Please wait...", true);
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                dialog.setMessage("Loading. Please wait..." + "\nMake sure you have a good internet connection.");
+                dialog.setMessage("Processing. Please wait..." + "\nMake sure you have a good internet connection.");
             }
-        }, 5500);
+        }, 8250);
 
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                final int[] count = {5};
-                new CountDownTimer(5000, 1000) {
+                final int[] count = {8};
+                new CountDownTimer(8000, 1000) {
                     @Override
                     public void onTick(long millisUntilFinished) {
                         String s = count[0] + "";
                         count[0]--;
                         s += (millisUntilFinished / 1000 == 0) ? " second." : " seconds.";
                         if (dialog.isShowing())
-                            dialog.setMessage("Are you connected to the internet?\n\nCheck your connection" +
+                            dialog.setMessage("This took longer than expected.\nAre you connected to the internet?\n\nCheck your connection" +
                                     " and try again in " + s);
                     }
 
@@ -405,7 +407,9 @@ public class Registration extends AppCompatActivity {
                     }
                 }.start();
             }
-        }, 24500);
+        }, 27460);
+        final long start = System.currentTimeMillis();
+        Log.wtf("-_--START", "" + start);
         final Map<String, Object> userPass = new HashMap<>();
         userPass.put("User", user.getText().toString().trim());
         userPass.put("Pass", pass.getText().toString().trim());
@@ -431,8 +435,8 @@ public class Registration extends AppCompatActivity {
                             boolean unique = true;
                             String curUser = user.getText().toString().trim();
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                String r = document.get("Username").toString();
-                                Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("Username").toString());
+                                String r = document.get("User").toString();
+                                Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("User").toString());
                                 if (r.equals(curUser)) {
                                     makeSnackBar(3700, "Your username was just taken. Please choose another username.");
                                     unique = false;
@@ -459,7 +463,7 @@ public class Registration extends AppCompatActivity {
                                                     @Override
                                                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                                         //INFO Adding the maint content
-                                                        HashMap<String, String> hashMap= new HashMap<>();
+                                                        HashMap<String, String> hashMap = new HashMap<>();
                                                         hashMap.put("Status", status);
                                                         hashMap.put("City", city.getText().toString().trim());
                                                         hashMap.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
@@ -492,7 +496,7 @@ public class Registration extends AppCompatActivity {
                                                                                                 dates.put("Doc", (doctor) ? "You" : "n/a");
                                                                                                 dates.put("Ph", (doctor) ? phone.getText().toString().trim() : "n/a");
                                                                                                 String em = email.getText().toString();
-                                                                                                if(em.isEmpty())
+                                                                                                if (em.isEmpty())
                                                                                                     em = "";
                                                                                                 dates.put("Em", (doctor) ? em : "n/a");
                                                                                                 dates.put("Note", "n/a");
@@ -508,6 +512,9 @@ public class Registration extends AppCompatActivity {
                                                                                                                 //IMPORTANT Account has successfully been created.
                                                                                                                 Intent finish = new Intent(Registration.this, MainActivity.class);
                                                                                                                 finish.putExtra("Type", doctor ? "Doctor" : "Patient");
+                                                                                                                long end = System.currentTimeMillis();
+                                                                                                                Log.wtf("-_--END", "" + end);
+                                                                                                                Log.wtf("-_--Upload Time", "" + (end - start));
                                                                                                                 startActivity(finish);
                                                                                                                 Log.wtf("TESTING", "DocumentSnapshot added with ID: " + documentID);
                                                                                                             }
@@ -736,8 +743,8 @@ public class Registration extends AppCompatActivity {
                                 boolean unique = true;
                                 String curUser = user.getText().toString().trim();
                                 for (QueryDocumentSnapshot document : task.getResult()) {
-                                    String r = document.get("Username").toString();
-                                    Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("Username").toString());
+                                    String r = document.get("User").toString();
+                                    Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("User").toString());
                                     if (r.equals(curUser)) {
                                         makeSnackBar(2400, "This username is taken. Please choose another.");
                                         dialog.cancel();
@@ -813,8 +820,9 @@ public class Registration extends AppCompatActivity {
                                 boolean unique = true;
                                 String curUser = user.getText().toString().trim();
                                 for (QueryDocumentSnapshot document : task.getResult()) {
-                                    String r = document.get("Username").toString();
-                                    Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("Username").toString());
+                                    //TODO Change to User
+                                    String r = document.get("User").toString();
+                                    Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("User").toString());
                                     if (r.equals(curUser)) {
                                         makeSnackBar(2400, "This username is taken. Please choose another.");
                                         unique = false;
@@ -956,6 +964,11 @@ public class Registration extends AppCompatActivity {
         covidPositive = doctorCard2.findViewById(R.id.covidpositive);
         covidRecovered = doctorCard2.findViewById(R.id.covidnegative);
         covidNegative = doctorCard2.findViewById(R.id.covidn);
+        try {
+            getImageSize();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         doctor2Helpers();
         doctorDone();
     }
@@ -975,6 +988,11 @@ public class Registration extends AppCompatActivity {
         covidStatus = patientCard2.findViewById(R.id.covidStatus);
         haveDonatedGroup = patientCard2.findViewById(R.id.donationgroupStatus);
         willDonateGroup = patientCard2.findViewById(R.id.willdonategroupstatus);
+        try {
+            getImageSize();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         patient2Helpers();
         patientDone();
     }
@@ -1350,6 +1368,42 @@ public class Registration extends AppCompatActivity {
     }
 
     Bitmap bitmap;
+    boolean toCompress;
+
+    private long getImageSize() throws IOException {
+        long lengthbmp = 0;
+        if (toCompress) {
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+            byte[] imageInByte = stream.toByteArray();
+            lengthbmp = imageInByte.length;
+            Log.wtf("-_- BEFORE IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
+
+            stream = new ByteArrayOutputStream();
+            if (lengthbmp > 1100000) {
+                if (lengthbmp > 4000000)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 24, stream);
+                else if (lengthbmp > 3000000)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 26, stream);
+                if (lengthbmp > 2500000)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 41, stream);
+                else if (lengthbmp > 2000000) {
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 50, stream);
+                } else if (lengthbmp > 1500000)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 62, stream);
+                else if (lengthbmp > 1100000)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 77, stream);
+
+                bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(stream.toByteArray()));
+                imageInByte = stream.toByteArray();
+                lengthbmp = imageInByte.length;
+                Log.wtf("-_- AFTER IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
+                photo.setImageBitmap(bitmap);
+            }
+            toCompress = false;
+        }
+        return lengthbmp;
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -1357,6 +1411,7 @@ public class Registration extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
 
             if (requestCode == 10) {
+                toCompress = false;
                 //README They choose to take low quality image.
                /* try {
                     bitmap = MediaStore.Images.Media.getBitmap(
@@ -1419,6 +1474,7 @@ public class Registration extends AppCompatActivity {
                 photo.setImageBitmap(bitmap);
             }
             if (requestCode == 100) {
+                toCompress = true;
                 //extra = data.getData();
                 //extra = data.getData();
                 //INFO Getting high quality image
@@ -1492,6 +1548,7 @@ public class Registration extends AppCompatActivity {
 
 
             }
+
         }
 
     }
@@ -1499,7 +1556,8 @@ public class Registration extends AppCompatActivity {
     int denyCounter;
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         //INFO If they choose to take high quality image.
         if (requestCode == 3) {
             if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -2189,7 +2247,8 @@ public class Registration extends AppCompatActivity {
         }
     }
 
-    public void animateCards(CardView card1, final CardView card2, final int animation1, final int animation2) {
+    public void animateCards(CardView card1, final CardView card2, final int animation1,
+                             final int animation2) {
         Animation slide = AnimationUtils.loadAnimation(getApplicationContext(), animation1);
 
         card1.startAnimation(slide);
@@ -2251,16 +2310,16 @@ public class Registration extends AppCompatActivity {
         text1.setText(ss1);
         SpannableString ss2 = new SpannableString(s2);
         ss2.setSpan(new StyleSpan(Typeface.BOLD), 1, 9, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss2.setSpan(new ForegroundColorSpan(Color.parseColor("#D63636")), 0, 12, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss2.setSpan(new ForegroundColorSpan(Color.parseColor("#eb3838")), 0, 12, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         text2.setText(ss2);
         SpannableString ss3 = new SpannableString(s3);
         ss3.setSpan(new StyleSpan(Typeface.BOLD), 1, 10, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss3.setSpan(new ForegroundColorSpan(Color.parseColor("#31B115")), 0, 12, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss3.setSpan(new ForegroundColorSpan(Color.parseColor("#35c215")), 0, 12, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         text3.setText(ss3);
         TextView text4 = dialog.findViewById(R.id.text5);
         SpannableString ss4 = new SpannableString(text4.getText().toString().trim());
         ss4.setSpan(new StyleSpan(Typeface.BOLD), 1, 13, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss4.setSpan(new ForegroundColorSpan(Color.parseColor("#2E88F6")), 0, 15, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss4.setSpan(new ForegroundColorSpan(Color.parseColor("#e6b105")), 0, 15, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         text4.setText(ss4);
 
         Button back = (Button) dialog.findViewById(R.id.back);
