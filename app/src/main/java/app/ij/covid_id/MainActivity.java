@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
             //String info = readFromFile("info.txt", getApplicationContext());
             //String[] contents = info.split("___________");
             Intent next;
-            if (logged_in.contains("Doc"))
+            if (logged_in.contains("Pat"))
                 next = new Intent(MainActivity.this, PatientDashboard.class);
             else
                 next = new Intent(MainActivity.this, DoctorDashboard.class);
@@ -381,27 +381,7 @@ public class MainActivity extends AppCompatActivity {
                 loggedIn = false;
                 error.setText("");
                 if (mySnackbar != null) mySnackbar.dismiss();
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (!loggedIn) {
-                            dialog = ProgressDialog.show(MainActivity.this, "Verifying...",
-                                    "Checking username and password.", true);
-                            dialog.setCancelable(true);
-                            new Handler().postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (!loggedIn && dialog.isShowing()) {
-                                        dialog.setMessage("Please check your internet connection." +
-                                                "\nThen tap outside this box and try again.");
-                                    }
-                                }
-                            }, 9000);
-                        }
-                    }
-                }, 1000);
-
-                final String u = username.getText().toString();
+                                final String u = username.getText().toString();
                 final String p = password.getText().toString();
                 if (u == null || p == null) {
                     makeSnackBar(3500, "Fill in the username and password.");
@@ -411,7 +391,127 @@ public class MainActivity extends AppCompatActivity {
                     error.setText("*Fill in the username and password.");
                 } else {
                     //TODO Check credentials and also boolean from Verified Account.
-                    db.collection("userPass").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!loggedIn) {
+                                dialog = ProgressDialog.show(MainActivity.this, "Verifying...",
+                                        "Checking username and password.", true);
+                                dialog.setCancelable(true);
+                                new Handler().postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (!loggedIn && dialog.isShowing()) {
+                                            dialog.setMessage("Please check your internet connection." +
+                                                    "\nThen tap outside this box and try again.");
+                                        }
+                                    }
+                                }, 9000);
+                            }
+                        }
+                    }, 1100);
+
+                    final long start = System.currentTimeMillis();
+                    Log.wtf("-_--START", "" + start);
+                    db.collection("userPass")
+                            .whereEqualTo("User", u)
+                            .whereEqualTo("Pass", p)
+                            .get()
+                            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                    if (task.isSuccessful()) {
+                                        if (task.getResult().size() == 0) {
+                                            //INFO Credentials are wrong since there were no documents retreived with that username and password.
+                                            loggedIn = true;
+                                            if (dialog != null) dialog.dismiss();
+
+                                            if (isNetworkAvailable()) {
+                                                makeSnackBar(3000, "The username or password you entered is wrong.");
+                                                error.setText("The username or password is wrong.");
+                                            } else {
+                                                error.setText("The username or password is wrong.");
+                                                makeSnackBar(7700, "The username or password entered may be wrong. ALSO: Try connecting your device to the internet.");
+                                            }
+                                        } else {
+                                            String user = u, pass = p;
+                                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                                String userType = document.get("Type").toString();
+                                                Log.wtf("Login SUCCESSFUL- ", user + " " + pass);
+                                                boolean match = true;
+                                                boolean verified = Boolean.parseBoolean(document.get("Verified").toString());
+                                                String documentId = document.getId();
+                                                if (verified) {
+                                                    //TODO Login successful.
+                                                    //TODO Send intent with the userType and documentId.
+                                                    //userType = document.get("Type").toString();
+                                                    error.setText("");
+                                                    Intent intent;
+                                                    if (userType.equals("Patient"))
+                                                        intent = new Intent(MainActivity.this, PatientDashboard.class);
+                                                    else //DONE Change to doctor dashboard
+                                                        intent = new Intent(MainActivity.this, DoctorDashboard.class);
+
+                                                    String n = "Bob", p = "9999999999", city = "", state = "", country = "", docId;
+                                                    docId = document.get("Doc ID").toString();
+                                                    String userPassID = document.getId();
+                                                    n = document.get("Name").toString();
+                                                    p = document.get("Phone").toString();
+
+                                                    String stat = document.get("Status").toString();
+                                                    if (state.isEmpty() || state.length() == 0)
+                                                        state = " ";
+
+                                                    writeToInfo(userType + "___________" + documentId + "___________" + user + "___________" +
+                                                            pass + "___________" + document.get("Updated").toString()
+                                                            + "___________" + n + "___________" + p + "___________" + docId
+                                                            + "___________" + stat + "___________" + userPassID + "___________" + document.get("Created").toString(), getApplicationContext());
+                                                    if (!remember.isChecked())
+                                                        writeLogin("false", getApplicationContext());
+                                                    else if (userType.contains("octor"))
+                                                        writeLogin("Doctor", getApplicationContext());
+                                                    else
+                                                        writeLogin("Patient", getApplicationContext());
+
+                                                    writeToFile("Done", getApplicationContext());
+
+                                                    makeToast("Logged in.");
+                                                    startActivity(intent);
+                                                    loggedIn = true;
+                                                    if (dialog != null) dialog.dismiss();
+                                                    break;
+                                                } else {
+                                                    loggedIn = true;
+                                                    if (dialog != null) dialog.dismiss();
+                                                    makeSnackBar(7000, "Your account has not been verified yet. Contact covid.ijapps@gmail.com for more info.");
+                                                    break;
+                                                }
+
+                                            }
+                                        }
+                                    } else {
+                                        makeSnackBar(5000, "Could not verify your username and password. Please have a stable internet connection.");
+                                        loggedIn = true;
+                                        if (dialog != null) dialog.dismiss();
+                                        Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                                    }
+                                    long end = System.currentTimeMillis();
+                                    Log.wtf("-_--END", "" + end);
+                                    Log.wtf("-_--Reading Time", "" + (end - start));
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            loggedIn = true;
+                            if (dialog != null) dialog.dismiss();
+                            makeSnackBar(5000, "Could not verify your username and password. Please have a stable internet connection.");
+
+                        }
+                    });
+
+
+                    //README Old method of signing in.
+                    /*db.collection("userPass").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                         @Override
                         public void onComplete(@NonNull Task<QuerySnapshot> task) {
                             if (task.isSuccessful()) {
@@ -444,18 +544,8 @@ public class MainActivity extends AppCompatActivity {
                                             String n = "Bob", p = "9999999999", city = "", state = "", country = "", docId;
                                             docId = document.get("Document ID").toString();
                                             String userPassID = document.getId();
-                                            //DONE Uncomment eventually.
                                             n = document.get("Name").toString();
                                             p = document.get("Phone").toString();
-                                            //e = document.get("Email").toString();
-
-                                            /*city = document.get("City").toString();
-                                            state = document.get("State").toString();
-                                            country = document.get("Country").toString();
-                                            if(state.isEmpty() || state.length()== 0) state=" ";*/
-                                            /*intent.putExtra("City", city);
-                                            intent.putExtra("State", state);
-                                            intent.putExtra("Country", country);*/
 
                                             String stat = document.get("Status").toString();
                                             if (state.isEmpty() || state.length() == 0) state = " ";
@@ -529,7 +619,7 @@ public class MainActivity extends AppCompatActivity {
                             if (dialog != null) dialog.dismiss();
                             makeSnackBar(5000, "Could not verify your username and password. Please have a stable internet connection.");
                         }
-                    });
+                    });*/
                 }
             }
         });

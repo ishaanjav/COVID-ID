@@ -1,13 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/screen"
+    android:layout_width="match_parent"
     android:layout_height="match_parent">
+    <!--android:background="#424242"-->
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <androidx.cardview.widget.CardView
+            android:id="@+id/patientCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10sp"
+            android:layout_marginTop="12sp"
+            android:layout_marginBottom="20sp"
+            app:cardElevation="10sp"
+            app:cardCornerRadius="18sp"
+            android:layout_marginRight="10sp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/patientTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/patientTitle"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="12sp"
+                    android:fontFamily="@font/ralewaybold"
+                    android:textSize="27sp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:layout_width="match_parent"
+                    android:id="@+id/patientRecycler"
+                    android:layout_below="@+id/patientTitle"
+                    android:layout_marginLeft="10sp"
+                    android:layout_marginTop="12sp"
+                    android:layout_marginRight="10sp"
+                    android:layout_height="wrap_content"/>
+            </RelativeLayout>
+
+        </androidx.cardview.widget.CardView>
 
 
     </RelativeLayout>

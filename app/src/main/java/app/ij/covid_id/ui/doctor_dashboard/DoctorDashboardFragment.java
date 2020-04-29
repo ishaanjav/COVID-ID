@@ -7,6 +7,7 @@ import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
@@ -36,6 +37,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.io.BufferedReader;
@@ -66,7 +68,7 @@ public class DoctorDashboardFragment extends Fragment {
     public String documentID, username, name, userPassID, type, password, accountCreated, phone, email, status;
     String statusLastUpdated;
     TextView statusTextView, lastUpdated;
-    String patientsPath;
+    String doctorPath;
     RelativeLayout statusColor1/*, statuScolor2*/;
     RecyclerView list;
     Button update;
@@ -93,9 +95,10 @@ public class DoctorDashboardFragment extends Fragment {
         statusColor1 = (RelativeLayout) findViewById(R.id.statusColor1);
         //statuScolor2 = (RelativeLayout) findViewById(R.id.statusColor2);
         //TODO Change below to Patient after deleting collection and creating new dummy accounts.
-        patientsPath = "Patients";
+        doctorPath = "Doctor";
         update = (Button) findViewById(R.id.update);
-        //readStorage();
+        status = "";
+        readStorage();
 
         //dashboardViewModel = ViewModelProviders.of(this, new DashboardViewModelFactory(getActivity(), username, documentID, db, root)).get(DashboardViewModel.class);
         return root;
@@ -106,18 +109,16 @@ public class DoctorDashboardFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        //updateLayout();
+        updateLayout();
         if (!isNetworkAvailable()) {
             makeSnackBar(6000, "You are not connected to the internet. Therefore, you will not receive updates unless you connect.");
         } else {
-            //TODO Read from userPass 1-time and update info.txt.
-            //TODO If not too much, add a listener on userPass and everytime it is changed
-            // only write to info.txt. That is the only purpose of listener ----> UI will be for loadInformation();
         }
         //TODO Uncomment below when you release update with recyclerview.
         //loadInformation();
-        makeToast("Inside doctor dashboard");
-        //updateInfoTxt();
+
+        //makeToast("Inside doctor dashboard");
+        updateInfoTxt();
     }
 
     private void updateList() {
@@ -125,7 +126,7 @@ public class DoctorDashboardFragment extends Fragment {
     }
 
     private void loadInformation() {
-        final CollectionReference updatesRef = db.collection(patientsPath + "/" + documentID + "/" + "Updates");
+        final CollectionReference updatesRef = db.collection(doctorPath + "/" + documentID + "/" + "Updates");
         updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
@@ -165,52 +166,88 @@ public class DoctorDashboardFragment extends Fragment {
         //status = "Unknown";
         //statusLastUpdated = "4/23/20 22:48:25";
 
-        statusTextView.setText(cleanStatus());
-        lastUpdated.setText(cleanDate());
+        if (isSafe()) {
+            statusTextView.setText(cleanStatus());
+            lastUpdated.setText(cleanDate());
+        }
         //TODO use info from ArrayList to fill recycler.
     }
 
     int counter = 0;
+    ListenerRegistration listener;
 
     //IMPORTANT If you do decide on writing Hello "NAME" on dashboard, then you have to listen to local changes
     //  and update UI for local changes to say Hello "new name" or whatever.
     // For things like status, don't need to worry since they can't change it in settings
     public void updateInfoTxt() {
         final DocumentReference docRef = db.collection("userPass").document(userPassID);
-        docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+        listener = docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot snapshot, @Nullable FirebaseFirestoreException e) {
-                if (e != null) {
-                    Log.wtf("USERPATH ERROR", "Listen failed.", e);
-                    makeSnackBar(3000, "Could not load your data. Are you connected to the internet?");
-                    return;
-                }
+                if (statusTextView != null && isSafe()) {
+                    if (e != null) {
+                        Log.wtf("USERPATH ERROR", "Listen failed.", e);
+                        makeSnackBar(3000, "Could not load your data. Are you connected to the internet?");
+                        return;
+                    }
 
-                String source = snapshot != null && snapshot.getMetadata().hasPendingWrites()
-                        ? "Local" : "Server";
-                String source2 = snapshot.getMetadata().isFromCache() ?
-                        "local cache" : "server";
-                //README Local changes (taking place in Settings) will update info.txt in Settings
-                if (snapshot != null && snapshot.exists() && source.equals("Server")) {
-                    //TODO Write new info to info.txt
-                    writeNewInfo(snapshot.getData());
-                    updateLayout();
-                    //textView.setText(snapshot.getData().get("Status").toString());
-                    Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + snapshot.getData());
-                } else if (source2.contains("cach")) {
-                    makeSnackBar(4000, "Loaded offline data. Connect to the internet for updated information.");
-                    writeNewInfo(snapshot.getData());
-                    updateLayout();
-                } else if (snapshot == null) {
-                    makeSnackBar(2000, "Could not load new data.");
-                    Log.wtf("ERROR", source + " data: null");
-                } else {
-                    Log.wtf("ERROR", source + " data: null");
+                    String source = snapshot != null && snapshot.getMetadata().hasPendingWrites()
+                            ? "Local" : "Server";
+                    String source2 = snapshot.getMetadata().isFromCache() ?
+                            "local cache" : "server";
+                    //README Local changes (taking place in Settings) will update info.txt in Settings
+                    if (snapshot != null && snapshot.exists() && source.equals("Server")) {
+                        //TODO Write new info to info.txt
+                        //makeToast("HI");
+                        writeNewInfo(snapshot.getData());
+                        updateLayout();
+                        Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + snapshot.getData());
+                    } else if (source2.contains("cach")) {
+                        makeSnackBar(4000, "Loaded offline data. Connect to the internet for updated information.");
+                        writeNewInfo(snapshot.getData());
+                        updateLayout();
+                    } else if (snapshot == null) {
+                        makeSnackBar(2000, "Could not load new data.");
+                        Log.wtf("ERROR", source + " data: null");
+                    } else {
+                        Log.wtf("ERROR", source + " data: null");
+                    }
                 }
+                // IMPORTANT -- Logic for notification
+                //  If status is not "" and !tempStatus.equals(status)
+                //  Then do vibration notification
+                //NOTES For above, may have to call isSafe() before doing vibration.
+                //String tempStatus = snapshot.getData().get("Status").toString();
+                //if (!tempStatus.equals(status)) {
+                //TODO Status changed --> Consider making a notification.
+                //makeToast("IMPORTANT: Your COVID Status changed. Visit the dashboard for more info.");
+                /*new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        //makeToast("IMPORTANT: Your COVID Status changed. Visit the dashboard for more info.");
+                    }
+                }, 3500);*/
+                //}
 
             }
         });
 
+    }
+
+    protected boolean isSafe() {
+        return !(this.isRemoving() || this.getActivity() == null || this.isDetached() || !this.isAdded() || this.getView() == null);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        listener.remove();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        listener.remove();
     }
 
     private void writeNewInfo(Map<String, Object> data) {
@@ -232,7 +269,7 @@ public class DoctorDashboardFragment extends Fragment {
         toWrite += "___________";
         /*toWrite += data.get("Email");
         toWrite += "___________";*/
-        toWrite += data.get("Document ID");
+        toWrite += data.get("Doc ID");
         toWrite += "___________";
         toWrite += tempStatus;
         toWrite += "___________";
@@ -249,9 +286,7 @@ public class DoctorDashboardFragment extends Fragment {
         statusLastUpdated = data.get("Updated").toString();
         phone = data.get("Phone").toString();
         //email = data.get("Email").toString();
-        if (!tempStatus.equals(status)) {
-            //TODO Status changed --> Consider making a notification.
-        }
+
         status = tempStatus;
         writeToInfo(toWrite);
     }
@@ -342,12 +377,14 @@ public class DoctorDashboardFragment extends Fragment {
 
 
     private void writeToInfo(String data) {
-        try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getContext().openFileOutput("info.txt", Context.MODE_PRIVATE));
-            outputStreamWriter.write(data);
-            outputStreamWriter.close();
-        } catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
+        if (isSafe()) {
+            try {
+                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getContext().openFileOutput("info.txt", Context.MODE_PRIVATE));
+                outputStreamWriter.write(data);
+                outputStreamWriter.close();
+            } catch (IOException e) {
+                Log.e("Exception", "File write failed: " + e.toString());
+            }
         }
     }
 
@@ -402,8 +439,8 @@ public class DoctorDashboardFragment extends Fragment {
         statusUpdates = new ArrayList<>();
         Log.wtf("*-*-- LOCATION: ", "loadInformation() called");
         //TODO Make notification onEvent
-        final DocumentReference docRef = db.collection(patientsPath).document(documentID);
-        final CollectionReference updatesRef = db.collection(patientsPath + "/" + documentID + "/" + "Updates");
+        final DocumentReference docRef = db.collection(doctorPath).document(documentID);
+        final CollectionReference updatesRef = db.collection(doctorPath + "/" + documentID + "/" + "Updates");
         docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot snapshot,
@@ -469,21 +506,6 @@ public class DoctorDashboardFragment extends Fragment {
 
     }
 
-    private void getIntent() {
-        Intent intent = getActivity().getIntent();
-        username = intent.getStringExtra("Username");
-        documentID = intent.getStringExtra("Document ID");
-        userPassID = intent.getStringExtra("userPass ID");
-        name = intent.getStringExtra("Name");
-        type = intent.getStringExtra("Type");
-        password = intent.getStringExtra("Password");
-        accountCreated = intent.getStringExtra("Account Created");
-        phone = intent.getStringExtra("Phone");
-        email = intent.getStringExtra("Email");
-        status = intent.getStringExtra("Status");
-    }
-
-
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -494,11 +516,13 @@ public class DoctorDashboardFragment extends Fragment {
     Snackbar mySnackbar;
 
     private void makeSnackBar(int duration, String s) {
-        mySnackbar = Snackbar.make(screen, s, duration);
-        View snackbarView = mySnackbar.getView();
-        TextView tv = (TextView) snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
-        tv.setMaxLines(4);
-        mySnackbar.show();
+        if (isSafe()) {
+            mySnackbar = Snackbar.make(screen, s, duration);
+            View snackbarView = mySnackbar.getView();
+            TextView tv = (TextView) snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
+            tv.setMaxLines(4);
+            mySnackbar.show();
+        }
     }
 
     public void makeToast(String s) {

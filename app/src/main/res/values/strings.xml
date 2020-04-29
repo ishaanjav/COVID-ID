@@ -17,4 +17,6 @@
     <string name="title_activity_patient_dashboard">MainActivity</string>
     <string name="yourstatus"><u>Your Status</u></string>
     <string name="title_activity_doctor_dashboard">MainActivity</string>
+    <string name="patientTitle"><u>Patient Statuses</u></string>
+    <string name="doctorTitle"><u>Other Doctors</u></string>
 </resources>

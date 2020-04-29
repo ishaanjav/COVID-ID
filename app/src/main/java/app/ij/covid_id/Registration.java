@@ -427,12 +427,14 @@ public class Registration extends AppCompatActivity {
         userPass.put("Phone", phone.getText().toString().trim());
         //userPass.put("Email", email.getText().toString().trim());
         db.collection("userPass")
+                .whereEqualTo("User", user.getText().toString())
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
-                            boolean unique = true;
+                            boolean unique = task.getResult().size() == 0;
+                            /*true;
                             String curUser = user.getText().toString().trim();
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 String r = document.get("User").toString();
@@ -442,7 +444,7 @@ public class Registration extends AppCompatActivity {
                                     unique = false;
                                     break;
                                 }
-                            }
+                            }*/
                             if (unique) {
                                 //INFO Username is unique.
                                 db.collection("userPass")
@@ -578,6 +580,8 @@ public class Registration extends AppCompatActivity {
                                             }
                                         });
                             } else {
+                                makeSnackBar(3700, "Your username was just taken. Please choose another username.");
+                                unique = false;
                                 dialog.cancel();
                             }
                         } else {
@@ -735,30 +739,33 @@ public class Registration extends AppCompatActivity {
                     "Checking username uniqueness...", true);
             dialog.setCancelable(true);
             db.collection("userPass")
+                    .whereEqualTo("User", user.getText().toString())
                     .get()
                     .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                         @Override
                         public void onComplete(@NonNull Task<QuerySnapshot> task) {
                             if (task.isSuccessful()) {
-                                boolean unique = true;
-                                String curUser = user.getText().toString().trim();
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                    String r = document.get("User").toString();
-                                    Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("User").toString());
-                                    if (r.equals(curUser)) {
-                                        makeSnackBar(2400, "This username is taken. Please choose another.");
-                                        dialog.cancel();
-                                        unique = false;
-                                        break;
-                                    } else {
-
-                                    }
+                                boolean unique = task.getResult().size() == 0;
+                            /*true;
+                            String curUser = user.getText().toString().trim();
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                String r = document.get("User").toString();
+                                Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("User").toString());
+                                if (r.equals(curUser)) {
+                                    makeSnackBar(3700, "Your username was just taken. Please choose another username.");
+                                    unique = false;
+                                    break;
                                 }
+                            }*/
                                 if (unique) {
                                     //INFO Username is unique.
                                     animateCards(doctorCard1, doctorCard2, R.anim.slide_out_left, R.anim.slide_in_left);
                                     page = Page.DOCTOR2;
                                     initializeDoctor2();
+                                    dialog.cancel();
+                                }else {
+                                    makeSnackBar(2400, "This username is taken. Please choose another.");
+                                    unique = false;
                                     dialog.cancel();
                                 }
                             } else {
@@ -812,31 +819,33 @@ public class Registration extends AppCompatActivity {
                     "Checking username uniqueness...", true);
             dialog.setCancelable(true);
             db.collection("userPass")
+                    .whereEqualTo("User", user.getText().toString())
                     .get()
                     .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                         @Override
                         public void onComplete(@NonNull Task<QuerySnapshot> task) {
                             if (task.isSuccessful()) {
-                                boolean unique = true;
-                                String curUser = user.getText().toString().trim();
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                    //TODO Change to User
-                                    String r = document.get("User").toString();
-                                    Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("User").toString());
-                                    if (r.equals(curUser)) {
-                                        makeSnackBar(2400, "This username is taken. Please choose another.");
-                                        unique = false;
-                                        dialog.cancel();
-                                        break;
-                                    } else {
-
-                                    }
+                                boolean unique = task.getResult().size() == 0;
+                            /*true;
+                            String curUser = user.getText().toString().trim();
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                String r = document.get("User").toString();
+                                Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("User").toString());
+                                if (r.equals(curUser)) {
+                                    makeSnackBar(3700, "Your username was just taken. Please choose another username.");
+                                    unique = false;
+                                    break;
                                 }
+                            }*/
                                 if (unique) {
                                     //INFO Username is unique.
                                     animateCards(patientCard1, patientCard2, R.anim.slide_out_left, R.anim.slide_in_left);
                                     page = Page.PATIENT2;
                                     initializePatient2();
+                                    dialog.cancel();
+                                } else {
+                                    makeSnackBar(2400, "This username is taken. Please choose another.");
+                                    unique = false;
                                     dialog.cancel();
                                 }
                             } else {
@@ -1380,19 +1389,19 @@ public class Registration extends AppCompatActivity {
             Log.wtf("-_- BEFORE IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
 
             stream = new ByteArrayOutputStream();
-            if (lengthbmp > 1100000) {
+            if (lengthbmp > 1000000) {
                 if (lengthbmp > 4000000)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 24, stream);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 15, stream);
                 else if (lengthbmp > 3000000)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 26, stream);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 18, stream);
                 if (lengthbmp > 2500000)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 41, stream);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 33, stream);
                 else if (lengthbmp > 2000000) {
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 50, stream);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 40, stream);
                 } else if (lengthbmp > 1500000)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 62, stream);
-                else if (lengthbmp > 1100000)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 77, stream);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 46, stream);
+                else if (lengthbmp > 1000000)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 55, stream);
 
                 bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(stream.toByteArray()));
                 imageInByte = stream.toByteArray();
