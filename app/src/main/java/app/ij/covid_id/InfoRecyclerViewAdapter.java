@@ -1,6 +1,8 @@
 package app.ij.covid_id;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.transition.TransitionManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
 
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -29,7 +32,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
     RecyclerView recyclerView;
     public String TAG = "RecyclerViewAdapter";
 
-    public InfoRecyclerViewAdapter(Context context,  ArrayList<HashMap<String, Object>> list, RecyclerView recyclerView) {
+    public InfoRecyclerViewAdapter(Context context, ArrayList<HashMap<String, Object>> list, RecyclerView recyclerView) {
         this.context = context;
         this.list = list;
         this.recyclerView = recyclerView;
@@ -66,12 +69,19 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
-        Log.wtf(TAG, "onBindViewHolder --  called");
+        //Log.wtf(TAG, "onBindViewHolder --  called");
 
         HashMap<String, Object> map = list.get(position);
-        Log.wtf(TAG, "onBindViewHolder List - " + list.toString() + " \n\t\t\\t\t\t\t\\t\tt\t\t\t\t\t" + map.toString());
+        //Log.wtf(TAG, "onBindViewHolder List - " + list.toString() + " \n\t\t\\t\t\t\t\\t\tt\t\t\t\t\t" + map.toString());
 
         holder.text.setText("TEST: " + map.get("Number").toString());
+
+        //TODO See if there is a way to load all the text stuff first and then load images once it is retrieved.
+        //INFO Right now we have to load all the stuff after images are retrieved and it takes a while for
+        // 3 images so search alternatives.
+        // 3 images = 1457
+        holder.image.setImageBitmap(loadImageBitmap(context, map.get("Username").toString(), "jpg"));
+
 
         final boolean isExpanded = position == mExpandedPosition;
         details.setVisibility(isExpanded ? View.VISIBLE : View.GONE);
@@ -90,6 +100,20 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
 
             }
         });
+    }
+
+    public Bitmap loadImageBitmap(Context context, String name, String extension) {
+        name = name + "." + extension;
+        FileInputStream fileInputStream;
+        Bitmap bitmap = null;
+        try {
+            fileInputStream = context.openFileInput(name);
+            bitmap = BitmapFactory.decodeStream(fileInputStream);
+            fileInputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return bitmap;
     }
 
     @Override

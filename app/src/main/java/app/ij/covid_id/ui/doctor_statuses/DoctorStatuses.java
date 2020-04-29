@@ -2,9 +2,15 @@ package app.ij.covid_id.ui.doctor_statuses;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +26,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -27,14 +35,19 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,6 +71,8 @@ public class DoctorStatuses extends Fragment {
         return root.findViewById(id);
     }
 
+    String directory;
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         db = FirebaseFirestore.getInstance();
@@ -66,30 +81,52 @@ public class DoctorStatuses extends Fragment {
         patientRecycler = root.findViewById(R.id.patientRecycler);
         doctorsPath = "Doctor";
 
+        directory = getContext().getApplicationInfo().dataDir + "/files";
+
+        /*PackageManager m = getContext().getPackageManager();
+        String s = getContext().getPackageName();
+        try {
+            PackageInfo p = m.getPackageInfo(s, 0);
+            directory = p.applicationInfo.dataDir;
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.w("yourtag", "Error Package name not found ", e);
+        }*/
+
         readStorage();
         return root;
     }
 
     ArrayList<HashMap<String, Object>> patientInfo;
+    InfoRecyclerViewAdapter adapter;
+    long startTime;
+    ArrayList<String> patientUsernames;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        patientUsernames = new ArrayList<>();
         patientInfo = new ArrayList<>();
         HashMap<String, Object> temp = new HashMap<>();
-        temp.put("Number", 1);
+        temp.put("Number", 7);
+        temp.put("Username", "patient1");
         patientInfo.add(temp);
         HashMap<String, Object> temp2 = new HashMap<>();
-        temp2.put("Number", 2);
+        temp2.put("Number", 8);
+        temp2.put("Username", "patient2");
         patientInfo.add(temp2);
         HashMap<String, Object> temp3 = new HashMap<>();
-        temp3.put("Number", 3);
+        temp3.put("Number", 9);
+        temp3.put("Username", "patient3");
         patientInfo.add(temp3);
-        Log.wtf(TAG, "LIST: " +  patientInfo.toString());
-        InfoRecyclerViewAdapter adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
-        patientRecycler.setAdapter(adapter);
-        patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+        Log.wtf(TAG, "LIST: " + patientInfo.toString());
+        startTime = System.currentTimeMillis();
+        patientUsernames.add("patient1");
+        patientUsernames.add("patient2");
+        patientUsernames.add("patient3");
+        Log.wtf("-_--START", "" + startTime);
+
+        getfile();
+        writeImages();
 
         updateLayout();
         if (!isNetworkAvailable()) {
@@ -98,6 +135,98 @@ public class DoctorStatuses extends Fragment {
         }
 
         updateInfoTxt();
+    }
+
+    private ArrayList<String> fileList = new ArrayList<>();
+
+
+    public void getfile() {
+        Log.wtf("**IMAGE Files", "Path: " + directory);
+        File location = new File(directory);
+        File[] files = location.listFiles();
+        Log.wtf("**Files", "Size: " + files.length);
+        for (int i = 0; i < files.length; i++) {
+            String name = files[i].getName();
+            if (name.endsWith(".jpg")) {
+                Log.wtf("**Files", "FileName:" + name);
+                fileList.add(name.substring(0, name.length() - 4));
+                //    files[i].delete();
+            }
+        }
+    }
+
+    public boolean containsFile(String name) {
+        File location = new File(directory);
+        File[] files = location.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            String n = files[i].getName();
+            if (n.substring(0, n.length() - 4).equals(name)) return true;
+        }
+        return false;
+    }
+
+    public void writeImages() {
+        final boolean[] set = {false};
+        for (int i = 0; i < patientUsernames.size(); i++) {
+            final String username = patientUsernames.get(i);
+            final StorageReference mImageRef = FirebaseStorage.getInstance().getReference("Patient/" + username + ".jpg");
+            final long ONE_MEGABYTE = 3000 * 3000;
+            boolean entered = false;
+            if (!fileList.contains(username)) {
+                //TODO Take a look into getBytes and whether it can be used to get smaller images.
+                final int finalI = i;
+                entered = i == patientUsernames.size() - 1;
+                mImageRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                    @Override
+                    public void onSuccess(byte[] bytes) {
+                        Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                        saveImage(getContext(), bm, username, "jpg");
+                        Log.wtf("**SAVED IMAGE", "IMAGE " + username + " SAVED   " + fileList.toString());
+                        if (finalI == patientUsernames.size() - 1) {
+                            adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
+                            patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+                            patientRecycler.setAdapter(adapter);
+                            long end = System.currentTimeMillis();
+                            Log.wtf("-_--END", "" + end);
+                            set[0] = true;
+                            Log.wtf("-_--Image Retrieval Time 1", "" + (end - startTime));
+                        }
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        Toast.makeText(getContext(), "FAILED", Toast.LENGTH_LONG).show();
+                        Log.wtf("**FAILED 2 SAVE IMAGE", exception.toString());
+                    }
+                });
+            }
+            /*adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
+            adapter.notifyDataSetChanged();
+            patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+            patientRecycler.setAdapter(adapter);*/
+            if (!entered && !set[0] && i == patientUsernames.size() - 1) {
+                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
+                patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+                patientRecycler.setAdapter(adapter);
+                long end = System.currentTimeMillis();
+                Log.wtf("-_--END", "" + end);
+                Log.wtf("-_--Image Retrieval Time 2", "" + (end - startTime));
+                set[0] = true;
+            }
+        }
+
+    }
+
+    public void saveImage(Context context, Bitmap bitmap, String name, String extension) {
+        name = name + "." + extension;
+        FileOutputStream fileOutputStream;
+        try {
+            fileOutputStream = context.openFileOutput(name, Context.MODE_PRIVATE);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, fileOutputStream);
+            fileOutputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void updateList() {

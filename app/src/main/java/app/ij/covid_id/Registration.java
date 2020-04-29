@@ -1397,11 +1397,11 @@ public class Registration extends AppCompatActivity {
                 if (lengthbmp > 2500000)
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 33, stream);
                 else if (lengthbmp > 2000000) {
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 40, stream);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 39, stream);
                 } else if (lengthbmp > 1500000)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 46, stream);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 44, stream);
                 else if (lengthbmp > 1000000)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 55, stream);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 51, stream);
 
                 bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(stream.toByteArray()));
                 imageInByte = stream.toByteArray();

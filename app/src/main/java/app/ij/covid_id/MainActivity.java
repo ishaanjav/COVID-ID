@@ -109,9 +109,10 @@ public class MainActivity extends AppCompatActivity {
         overridePendingTransition(R.anim.fast_fade_in, R.anim.fast_fade_out);
 
         String logged_in = readFromFile("login.txt", getApplicationContext());
-        if (!logged_in.contains("fal")) {
+        if (!logged_in.contains("fal") && !logged_in.isEmpty()) {
             //String info = readFromFile("info.txt", getApplicationContext());
             //String[] contents = info.split("___________");
+            Log.wtf("MAINACTVITY", "Logging in");
             Intent next;
             if (logged_in.contains("Pat"))
                 next = new Intent(MainActivity.this, PatientDashboard.class);
