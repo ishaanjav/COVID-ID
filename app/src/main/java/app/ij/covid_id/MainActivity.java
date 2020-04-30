@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
             next.putExtra("userPass ID", contents[9]);*/
             startActivity(next);
         }
-
+        //makeToast("Removed Doctor 2: " + removeFile("doctor2"));
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                 .setCacheSizeBytes(300000000)
@@ -266,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
                         longToast("COVID-ID app updates are available! Check the Play Store.");
                     }
                 } else if (update && !sx.equals("Doctor") && !sx.equals("Patient") && !reader.isEmpty()) {
-                    if (readUpdate == null ||  !readUpdate.contains("no")) {
+                    if (readUpdate == null || !readUpdate.contains("no")) {
                         long[] pattern = {0, 100, 50, 100, 250, 100, 50, 100, 250, 100, 50, 100, 250, 100, 50, 100};
                         //vib.vibrate(3000);
                         if (vib.hasVibrator())

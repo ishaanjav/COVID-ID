@@ -14,12 +14,10 @@ import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ScrollView;
-import android.widget.Scroller;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,7 +57,7 @@ import java.util.Map;
 import app.ij.covid_id.InfoRecyclerViewAdapter;
 import app.ij.covid_id.R;
 
-public class DoctorStatuses extends Fragment {
+public class DoctorStatuses2 extends Fragment {
 
     FirebaseFirestore db;
     ScrollView screen;
@@ -67,10 +65,10 @@ public class DoctorStatuses extends Fragment {
     public String documentID, username, name, userPassID, type, password, accountCreated, phone, email, status;
     String statusLastUpdated;
     String doctorsPath;
-    public RecyclerView patientRecycler;
+    RecyclerView patientRecycler;
     Button update;
     TextView message;
-    public String TAG = "DoctorStatuses";
+    public String TAG = "DoctorStatuses2";
     String city, state, country;
     float screenW, screenH, maxHeightPatient, maxHeightDoctor;
 
@@ -103,7 +101,6 @@ public class DoctorStatuses extends Fragment {
     long totalStartTime, imageStartTime;
     ArrayList<String> patientUsernames;
     boolean foreign;
-    int MAX_VELOCITY_Y = 1;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -130,16 +127,7 @@ public class DoctorStatuses extends Fragment {
         //country = "IN: India";
         //foreign = false;
         //removeUncessaryFiles();
-
-        //TODO Uncomment below
-        /*if (isSafe()) {
-            loadingResults = ProgressDialog.show(getContext(), "Loading Patients",
-                    "Retrieving Data. Please wait...", true);
-            loadingResults.setCancelable(true);
-        }*/
         updateInfoTxt();
-
-
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -149,7 +137,7 @@ public class DoctorStatuses extends Fragment {
                     loadPatientInfo();
                 }
             }
-        }, 180);
+        }, 200);
         /*HashMap<String, Object> temp = new HashMap<>();
         temp.put("Number", 7);
         temp.put("Username", "patient7");
@@ -172,8 +160,10 @@ public class DoctorStatuses extends Fragment {
         //OLD
         //getfile();
 
-        if (!isNetworkAvailable())
+        if (!isNetworkAvailable()) {
             makeSnackBar(6000, "You are not connected to the internet. Therefore, you will not receive updates unless you connect.");
+        } else {
+        }
 
     }
 
@@ -185,12 +175,11 @@ public class DoctorStatuses extends Fragment {
     //IDEA What I am thinking is just have this 1 time function, set a listener. If listener changes, call 1 time function
     int maxSize;
     DocumentSnapshot lastVisible, firstVisible;
-    ListenerRegistration listen;
 
     private void loadPatientInfo() {
         maxSize = 30;
-        //city = "Allen";
-        listen = db.collection("userPass")
+        city = "Allen";
+        db.collection("userPass")
                 .whereEqualTo("State", state)
                 //.orderBy("State")
                 .whereEqualTo("City", city)
@@ -201,13 +190,17 @@ public class DoctorStatuses extends Fragment {
                     @Override
                     public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
                         //makeSnackBar(3000, "CHANGE");
-                        Log.wtf("*-_FIRSTVISIBLE -----------", "-----------------------------------------------------------------------------");
-                                Log.wtf("______________","-----------------------------------------------------------------------------");
-                        Log.wtf("______________","-----------------------------------------------------------------------------");
+                        Log.wtf("*-_LASTVISIBLE --------", "-------------------------------------------------------------------------------");
+
                         if (e != null) {
                             Log.wtf("Loading Patient Snapshot ERROR", e.toString());
                         } else {
-
+                            //TODO Uncomment below
+        /*if (isSafe()) {
+            loadingResults = ProgressDialog.show(getContext(), "Loading Patients",
+                    "Retrieving Data. Please wait...", true);
+            loadingResults.setCancelable(true);
+        }*/
                             //patientInfo = new ArrayList<>();
                             totalStartTime = System.currentTimeMillis();
                             Log.wtf("-_--Total Start", "" + totalStartTime);
@@ -225,30 +218,23 @@ public class DoctorStatuses extends Fragment {
                             //size0 = queryDocumentSnapshots.size() - 1;
                             Log.wtf("*-_NESTED 0", "Size: " + size0);
                             if (size0 == 0) {
-                                // if (isSafe() && loadingResults != null) loadingResults.cancel();
-                                makeSnackBar(5200, "It appears there are no patients in your city. Share the app with others and wait for more users to create their accounts.");
+                                if (isSafe() && loadingResults != null) loadingResults.cancel();
+                                makeSnackBar(6100, "It appears there are no patients in your city. Share the app with others and wait for more users to create their accounts.");
                             } else {
-                                //if (size > 84) {
-                                //if (adapter != null) adapter.notifyDataSetChanged();
-                                // getfile();
+                                if (adapter != null) adapter.notifyDataSetChanged();
+                                getfile();
                             }
                             //    }
                             //README Size of specific city and state is smaller.
                             //INFO We are now going to read cities from state where cities are smaller than current city.
                             if (size0 < maxSize) {
-                                if (size0 == 0 && queryDocumentSnapshots.size() > 0) {
-                                    lastVisible = queryDocumentSnapshots.getDocuments()
-                                            .get(0);
-                                    firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                                } else if (size0 > 0) {
-                                    lastVisible = queryDocumentSnapshots.getDocuments()
-                                            .get(queryDocumentSnapshots.size() - 1);
-                                    firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                                } else {
-
-                                }
-                                Log.wtf("*-_FIRSTVISIBLE 1", firstVisible.get("City") + " " +
+                                lastVisible = queryDocumentSnapshots.getDocuments()
+                                        .get(queryDocumentSnapshots.size() - 1);
+                                firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                                Log.wtf("*-_FIRSTVISIBLE 0", firstVisible.get("City") + " " +
                                         firstVisible.get("State") + " "+firstVisible.get("Name"));
+                                Log.wtf("*-_LASTVISIBLE 0", lastVisible.get("City") + " " +
+                                        lastVisible.get("State") + " "+lastVisible.get("Name"));
 
                                 db.collection("userPass")
                                         .whereEqualTo("State", state)
@@ -278,20 +264,19 @@ public class DoctorStatuses extends Fragment {
                                                     }
                                                     //size1 = queryDocumentSnapshots.size();
                                                     if (size1 == 0) {
-                                                        // if (isSafe() && loadingResults != null)
-                                                        //     loadingResults.cancel();
+                                                        if (isSafe() && loadingResults != null)
+                                                            loadingResults.cancel();
                                                         //makeSnackBar(5000, "It appears there are no patients in your state.");
                                                     } else {
                                                         //INFO size2 is not 0 which means we just got the cities in same state that
                                                         // are smaller than current city.
                                                         //README Because we have smaller cities, we have to update firstVisible
                                                         firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                                                        Log.wtf("*-_FIRSTVISIBLE 2", firstVisible.get("City") + " " +
+                                                        Log.wtf("*-_FIRSTVISIBLE 1", firstVisible.get("City") + " " +
                                                                 firstVisible.get("State") + " "+firstVisible.get("Name"));
-
                                                         //if (adapter != null)
-                                                        //    adapter.notifyDataSetChanged();
-                                                        // getfile();
+                                                        //  adapter.notifyDataSetChanged();
+                                                        getfile();
                                                     }
                                                     //README Size of cities that are <= current city is not maximum
                                                     //INFO We are now going to read all cities after current city that are still same state
@@ -324,19 +309,21 @@ public class DoctorStatuses extends Fragment {
                                                                             }
                                                                             //size2 = queryDocumentSnapshots.size();
                                                                             if (size2 == 0) {
-                                                                                //             if (isSafe() && loadingResults != null)
-                                                                                //                 loadingResults.cancel();
+                                                                                if (isSafe() && loadingResults != null)
+                                                                                    loadingResults.cancel();
                                                                                 if (size0 == 0 && size1 == 0)
-                                                                                    makeSnackBar(5200, "It appears there are no patients in your state! Share the app with others and wait for more users to create their accounts.");
+                                                                                    makeSnackBar(6400, "It appears there are no patients in your state! Share the app with others and wait for more users to create their accounts.");
                                                                             } else {
                                                                                 //INFO size3 is not 0 which means we just got the cities in same state that
                                                                                 // are greater than current city.
                                                                                 //README Because we have larger cities, we have to update lastVisible
                                                                                 lastVisible = queryDocumentSnapshots.
                                                                                         getDocuments().get(queryDocumentSnapshots.size() - 1);
+                                                                                Log.wtf("*-_LASTVISIBLE 2", lastVisible.get("City") + " " +
+                                                                                        lastVisible.get("State") + " "+lastVisible.get("Name"));
                                                                                 //    if (adapter != null)
                                                                                 //        adapter.notifyDataSetChanged();
-                                                                                ////  getfile();
+                                                                                getfile();
                                                                             }
 
                                                                             //INFO Now we move onto querying in the whole nation.
@@ -384,8 +371,7 @@ public class DoctorStatuses extends Fragment {
                                                                                             }
                                                                                         });*/
                                                                                 Object[] objects = firstVisible.getData().values().toArray();
-                                                                                Log.wtf("*-_FIRSTVISIBLE b4 nested 3", firstVisible.get("City") + " " +
-                                                                                        firstVisible.get("State") + " "+firstVisible.get("Name"));
+                                                                                Log.wtf("*-_FIRSTVISIBLE", firstVisible.get("City") + " " + firstVisible.get("Name"));
                                                                                 db.collection("userPass")
                                                                                         .whereEqualTo("Country", country)
                                                                                         .orderBy("State")
@@ -416,8 +402,8 @@ public class DoctorStatuses extends Fragment {
                                                                                                     }
                                                                                                     //size3 = queryDocumentSnapshots.size();
                                                                                                     if (size3 == 0) {
-                                                                                                        //          if (isSafe() && loadingResults != null)
-                                                                                                        //              loadingResults.cancel();
+                                                                                                        if (isSafe() && loadingResults != null)
+                                                                                                            loadingResults.cancel();
                                                                                                         /*if (size == 0 && size2 == 0)
                                                                                                             makeSnackBar(5000, "It appears there are no patients in your state.");*/
                                                                                                     } else {
@@ -425,16 +411,13 @@ public class DoctorStatuses extends Fragment {
                                                                                                         // are greater than current city.
                                                                                                         //README Because we have larger cities, we have to update lastVisible
                                                                                                         //firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                                                                                                        Log.wtf("*-_FIRSTVISIBLE 3 unnecessary", firstVisible.get("City") + " " +
-                                                                                                                firstVisible.get("State") + " "+firstVisible.get("Name"));
-
                                                                                                         //                 if (adapter != null)
                                                                                                         //                     adapter.notifyDataSetChanged();
-                                                                                                        //                getfile();
+                                                                                                        getfile();
                                                                                                     }
 
                                                                                                     if (size3 + size2 + size1 + size0 < maxSize) {
-                                                                                                        Log.wtf("*-_LASTVISIBLE", lastVisible.get("City") + " " + lastVisible.get("State") + " " +lastVisible.get("Name"));
+                                                                                                        Log.wtf("*-_LASTVISIBLE", lastVisible.get("City") + " " + lastVisible.get("Name"));
                                                                                                         db.collection("userPass")
                                                                                                                 .whereEqualTo("Country", country)
                                                                                                                 .orderBy("State")
@@ -463,25 +446,18 @@ public class DoctorStatuses extends Fragment {
                                                                                                                                 // }
                                                                                                                             }
                                                                                                                             //size4 = queryDocumentSnapshots.size();
-                                                                                                                            //if (adapter != null)
-                                                                                                                            //    adapter.notifyDataSetChanged();
-                                                                                                                            getfile();
                                                                                                                             if (size4 == 0) {
-                                                                                                                                if (size0 == 0 && size1 == 0 && size2 == 0) {
+                                                                                                                                if (isSafe() && loadingResults != null)
+                                                                                                                                    loadingResults.cancel();
+                                                                                                                                if (size0 == 0 && size1 == 0 && size2 == 0)
                                                                                                                                     makeSnackBar(6200, "It appears there are no patients in your country! Share the app with others and wait for more users to create their accounts.");
-                                                                                                                                    if (isSafe() && loadingResults != null)
-                                                                                                                                        loadingResults.cancel();
-                                                                                                                                }
                                                                                                                             } else {
                                                                                                                                 //INFO size3 is not 0 which means we just got the cities in same state that
                                                                                                                                 // are greater than current city.
                                                                                                                                 //README Because we have larger cities, we have to update lastVisible
                                                                                                                                 //firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                                                                                                                                Log.wtf("*-_FIRSTVISIBLE 4 unneces", firstVisible.get("City") + " " +
-                                                                                                                                        firstVisible.get("State") + " "+firstVisible.get("Name"));
-
-                                                                                                                                //if (adapter != null)
-                                                                                                                                //    adapter.notifyDataSetChanged();
+                                                                                                                                //    if (adapter != null)
+                                                                                                                                //      adapter.notifyDataSetChanged();
                                                                                                                                 getfile();
                                                                                                                             }
 
@@ -511,7 +487,7 @@ public class DoctorStatuses extends Fragment {
 
     private void loadForeignPatientInfo() {
         //makeToast(city +":" + country);
-        listen = db.collection("userPass")
+        db.collection("userPass")
                 .whereEqualTo("Country", country)
                 .whereEqualTo("City", city)
                 .orderBy("Name")
@@ -524,11 +500,12 @@ public class DoctorStatuses extends Fragment {
                         if (e != null) {
                             Log.wtf("Loading Patient Snapshot ERROR", e.toString());
                         } else {
-                            /*loadingResults = ProgressDialog.show(getContext(), "Loading Patients",
+                            loadingResults = ProgressDialog.show(getContext(), "Loading Patients",
                                     "Retrieving Data. Please wait...", true);
-                            loadingResults.setCancelable(true);*/
-                            //totalStartTime = System.currentTimeMillis();
-                            //Log.wtf("-_--Total Start", "" + totalStartTime);
+                            loadingResults.setCancelable(true);
+                            patientInfo = new ArrayList<>();
+                            totalStartTime = System.currentTimeMillis();
+                            Log.wtf("-_--Total Start", "" + totalStartTime);
                             patientNested0 = new ArrayList<>();
                             size0 = 0;
                             for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
@@ -539,39 +516,26 @@ public class DoctorStatuses extends Fragment {
                                     size0++;
                                     patientNested0.add((HashMap<String, Object>) document.getData());
                                     //Log.wtf("*--READING ", document.getId() + " => " + document.getData());
-                                } else {
-
                                 }
                             }
-                            Log.wtf("*-_NESTED 0", "Size: " + size0 + " " + country + " Actual size: " + queryDocumentSnapshots.size());
+                            Log.wtf("*-_NESTED 0", "Size: " + size0);
                             if (size0 == 0) {
-                                //  if (isSafe() && loadingResults != null) loadingResults.cancel();
+                                if (isSafe() && loadingResults != null) loadingResults.cancel();
                                 makeSnackBar(6300, "It appears there are no patients in your city. Share the app with others and wait for more users to create their accounts.");
                             } else {
                                 //if (size > 84) {
-                                // if (adapter != null) adapter.notifyDataSetChanged();
+                                if (adapter != null) adapter.notifyDataSetChanged();
                                 getfile();
                             }
 
                             if (size0 < maxSize) {
-                                if (size0 == 0 && queryDocumentSnapshots.size() > 0) {
-                                    lastVisible = queryDocumentSnapshots.getDocuments()
-                                            .get(0);
-                                    firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                                } else if (size0 > 0) {
-                                    lastVisible = queryDocumentSnapshots.getDocuments()
-                                            .get(queryDocumentSnapshots.size() - 1);
-                                    firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                                } else {
-                                    /*Log.wtf("__COUNTRY: ", country);
-  new Handler().postDelayed(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            Log.wtf("COUNTRY: ", country);
-                                            loadForeignPatientInfo();
-                                        }
-                                    },1000);*/
-                                }
+                                lastVisible = queryDocumentSnapshots.getDocuments()
+                                        .get(queryDocumentSnapshots.size() - 1);
+                                firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                                Log.wtf("*-_FIRSTVISIBLE 2 unneces", firstVisible.get("City") + " " +
+                                        firstVisible.get("State") + " "+firstVisible.get("Name"));
+                                Log.wtf("*-_FIRSTVISIBLE 1", firstVisible.get("City") + " " +
+                                        firstVisible.get("State") + " "+firstVisible.get("Name"));
 
                                 db.collection("userPass")
                                         .whereEqualTo("Country", country)
@@ -611,9 +575,11 @@ public class DoctorStatuses extends Fragment {
                                                         // are greater than current city.
                                                         //README Because we have larger cities, we have to update lastVisible
                                                         firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                                                        /*if (adapter != null)
-                                                            adapter.notifyDataSetChanged();
-                                                        getfile();*/
+                                                        Log.wtf("*-_FIRSTVISIBLE 1", firstVisible.get("City") + " " +
+                                                                firstVisible.get("State") + " "+firstVisible.get("Name"));
+                                                        //if (adapter != null)
+                                                        //    adapter.notifyDataSetChanged();
+                                                        getfile();
                                                     }
                                                     if (size1 + size0 < maxSize) {
                                                         db.collection("userPass")
@@ -643,7 +609,6 @@ public class DoctorStatuses extends Fragment {
                                                                                 // }
                                                                             }
                                                                             //size1 = queryDocumentSnapshots.size();
-                                                                            getfile();
                                                                             if (size2 == 0) {
                                                                                 if (isSafe() && loadingResults != null)
                                                                                     loadingResults.cancel();
@@ -654,9 +619,9 @@ public class DoctorStatuses extends Fragment {
                                                                                 // are greater than current city.
                                                                                 //README Because we have larger cities, we have to update lastVisible
                                                                                 firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                                                                                /*if (adapter != null)
+                                                                                if (adapter != null)
                                                                                     adapter.notifyDataSetChanged();
-                                                                                getfile();*/
+                                                                                getfile();
                                                                             }
                                                                         }
                                                                     }
@@ -678,8 +643,8 @@ public class DoctorStatuses extends Fragment {
 
 
     public void getfile() {
-        //imageStartTime = System.currentTimeMillis();
-        //Log.wtf("-_--Image Start", "" + imageStartTime);
+        imageStartTime = System.currentTimeMillis();
+        Log.wtf("-_--Image Start", "" + imageStartTime);
         fileList = new ArrayList<>();
         File location = new File(directory);
         File[] files = location.listFiles();
@@ -709,9 +674,6 @@ public class DoctorStatuses extends Fragment {
         count = patientInfo.size();
         goodToGo = new ArrayList<>();
         Log.wtf("**List Size", "" + count);
-        if (patientInfo.size() == 0)
-            if (loadingResults != null && isSafe())
-                loadingResults.cancel();
         for (int i = 0; i < patientInfo.size(); i++) {
             //final String username = patientUsernames.get(i);
             final String username = patientInfo.get(i).get("User").toString();
@@ -738,17 +700,10 @@ public class DoctorStatuses extends Fragment {
                                 //setMaxHeight();
                                 if (isSafe() && loadingResults != null)
                                     if (isSafe() && loadingResults != null) loadingResults.cancel();
-                                //adapter.notifyDataSetChanged();
+                                adapter.notifyDataSetChanged();
                                 patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                                 patientRecycler.setAdapter(adapter);
-                                /*new Handler().postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        loadingResults.cancel();
-
-                                    }
-                                }, 1500);*/
-                                //long end = System.currentTimeMillis();
+                                long end = System.currentTimeMillis();
                                 //Log.wtf("-_--END ", "Docs: " + (totalStartTime - imageStartTime) + "  Image: " + imageStartTime + "  TOTAL: " + totalStartTime);
                                 set[0] = true;
                             /*Log.wtf("-_--Image Retrieval Time 1", "" + (end - totalStartTime));
@@ -777,18 +732,12 @@ public class DoctorStatuses extends Fragment {
             patientRecycler.setAdapter(adapter);*/
                 // if (!entered && !set[0] && i == patientUsernames.size() - 1) {
                 if (goodToGo.size() == patientInfo.size()) {
-                    //    if (isSafe() && loadingResults != null) loadingResults.cancel();
+                    if (isSafe() && loadingResults != null)
+                        if (isSafe() && loadingResults != null) loadingResults.cancel();
                     adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
                     patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                     patientRecycler.setAdapter(adapter);
-                    /*new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            loadingResults.cancel();
-
-                        }
-                    }, 900);*/
-                    // long end = System.currentTimeMillis();
+                    long end = System.currentTimeMillis();
                     //Log.wtf("-_--END", "" + end);
                     //Log.wtf("-_--Image Retrieval Time 2", "" + (end - totalStartTime));
                     set[0] = true;
@@ -872,6 +821,7 @@ public class DoctorStatuses extends Fragment {
                         if (!status.equals(snapshot.getString("Status"))) {
                             //TODO Status changed --> Consider making a notification. Do vibrations at very least.
                         }
+
                         Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + snapshot.getData());
                     } else if (snapshot == null) {
                         makeSnackBar(2000, "Could not load new data.");
@@ -929,9 +879,9 @@ public class DoctorStatuses extends Fragment {
     }
 
     private void writeNewInfo(Map<String, Object> data) {
-        String state2 = data.get("State").toString();
-        if (state2.isEmpty() || state2.length() == 0)
-            state2 = " ";
+        String state = data.get("State").toString();
+        if (state.isEmpty() || state.length() == 0)
+            state = " ";
         String e = data.get("Email").toString();
         if (e.isEmpty() || e.length() == 0)
             e = " ";
@@ -963,7 +913,7 @@ public class DoctorStatuses extends Fragment {
         toWrite += "___________";
         toWrite += data.get("City");
         toWrite += "___________";
-        toWrite += state2;
+        toWrite += state;
         toWrite += "___________";
         toWrite += data.get("Country");
         toWrite += "___________";
@@ -978,17 +928,8 @@ public class DoctorStatuses extends Fragment {
         accountCreated = data.get("Created").toString();
         statusLastUpdated = data.get("Updated").toString();
         phone = data.get("Phone").toString();
-        country = data.get("Country").toString();
-        city = data.get("City").toString();
-        state = data.get("State").toString();
         //email = data.get("Email").toString();
-        Log.wtf("__Updated COUNTRY: ", country);
 
-        /*if (foreign) {
-            loadForeignPatientInfo();
-        } else {
-            loadPatientInfo();
-        }*/
         status = tempStatus;
         writeToInfo(toWrite);
     }
@@ -998,9 +939,7 @@ public class DoctorStatuses extends Fragment {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getContext().openFileOutput("info.txt", Context.MODE_PRIVATE));
             outputStreamWriter.write(data);
             outputStreamWriter.close();
-
         } catch (IOException e) {
-            makeSnackBar(4000, "Could not load info. Try logging out and logging back in.");
             Log.e("Exception", "File write failed: " + e.toString());
         }
     }
@@ -1093,3 +1032,4 @@ public class DoctorStatuses extends Fragment {
         Toast.makeText(getContext(), s, Toast.LENGTH_LONG).show();
     }
 }
+

@@ -1,5 +1,6 @@
 package app.ij.covid_id;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -22,6 +24,8 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import app.ij.covid_id.ui.doctor_statuses.DoctorStatuses;
+import app.ij.covid_id.ui.doctor_statuses.DoctorStatuses3;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerViewAdapter.ViewHolder> {
@@ -75,7 +79,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         HashMap<String, Object> map = list.get(position);
         //Log.wtf(TAG, "onBindViewHolder List - " + list.toString() + " \n\t\t\\t\t\t\t\\t\tt\t\t\t\t\t" + map.toString());
 
-        holder.text.setText(map.get("City").toString() + " " +map.get("State").toString() + ", " +map.get("Country").toString() );
+        holder.text.setText(map.get("City").toString() + " " + map.get("State").toString() + ", " + map.get("Country").toString());
 
         //TODO See if there is a way to load all the text stuff first and then load images once it is retrieved.
         //INFO Right now we have to load all the stuff after images are retrieved and it takes a while for
@@ -83,6 +87,12 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         // 3 images = 1457
         holder.image.setImageBitmap(loadImageBitmap(context, map.get("User").toString(), "jpg"));
 
+        //TODO Uncomment this
+        if (DoctorStatuses3.loadingResults != null && position == (Math.min(list.size()-1, 12))
+        && DoctorStatuses3.loadingResults.isShowing()) {
+            Log.wtf("CANCELLED", "From inside Adapter");
+            DoctorStatuses3.loadingResults.cancel();
+        }
 
         final boolean isExpanded = position == mExpandedPosition;
         details.setVisibility(isExpanded ? View.VISIBLE : View.GONE);
