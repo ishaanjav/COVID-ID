@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,7 +42,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
     View view;
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        CircleImageView image;
+        ImageView image;
         RelativeLayout screen;
         TextView text;
 
@@ -74,13 +75,13 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         HashMap<String, Object> map = list.get(position);
         //Log.wtf(TAG, "onBindViewHolder List - " + list.toString() + " \n\t\t\\t\t\t\t\\t\tt\t\t\t\t\t" + map.toString());
 
-        holder.text.setText("TEST: " + map.get("Number").toString());
+        holder.text.setText(map.get("City").toString() + " " +map.get("State").toString() + ", " +map.get("Country").toString() );
 
         //TODO See if there is a way to load all the text stuff first and then load images once it is retrieved.
         //INFO Right now we have to load all the stuff after images are retrieved and it takes a while for
         // 3 images so search alternatives.
         // 3 images = 1457
-        holder.image.setImageBitmap(loadImageBitmap(context, map.get("Username").toString(), "jpg"));
+        holder.image.setImageBitmap(loadImageBitmap(context, map.get("User").toString(), "jpg"));
 
 
         final boolean isExpanded = position == mExpandedPosition;

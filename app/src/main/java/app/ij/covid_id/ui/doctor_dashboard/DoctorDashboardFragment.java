@@ -38,6 +38,7 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.io.BufferedReader;
@@ -126,7 +127,7 @@ public class DoctorDashboardFragment extends Fragment {
     }
 
     private void loadInformation() {
-        final CollectionReference updatesRef = db.collection(doctorPath + "/" + documentID + "/" + "Updates");
+        final Query updatesRef = db.collection(doctorPath + "/" + documentID + "/" + "Updates").whereEqualTo("3",3);
         updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
@@ -241,16 +242,24 @@ public class DoctorDashboardFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if(isSafe() && listener != null)
         listener.remove();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        listener.remove();
+        if(isSafe() && listener != null)
+            listener.remove();
     }
 
     private void writeNewInfo(Map<String, Object> data) {
+        String state = data.get("State").toString();
+        if (state.isEmpty() || state.length() == 0)
+            state = " ";
+        String e = data.get("Email").toString();
+        if (e.isEmpty() || e.length() == 0)
+            e = " ";
         String toWrite = "";
         String tempStatus = data.get("Status").toString();
         toWrite += data.get("Type");
@@ -276,6 +285,15 @@ public class DoctorDashboardFragment extends Fragment {
         toWrite += userPassID;
         toWrite += "___________";
         toWrite += data.get("Created");
+        toWrite += "___________";
+        toWrite += data.get("City");
+        toWrite += "___________";
+        toWrite += state;
+        toWrite += "___________";
+        toWrite += data.get("Country");
+        toWrite += "___________";
+        toWrite += e;
+
         username = data.get("User").toString();
         documentID = data.get("Doc ID").toString();
         userPassID = userPassID;

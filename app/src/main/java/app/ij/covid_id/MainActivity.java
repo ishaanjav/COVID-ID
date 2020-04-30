@@ -1,6 +1,7 @@
 package app.ij.covid_id;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
@@ -16,9 +17,11 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -58,7 +61,10 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -68,6 +74,7 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -97,6 +104,8 @@ public class MainActivity extends AppCompatActivity {
     boolean patientShowing;
 
     FirebaseFirestore db;
+    String sx, reader;
+    String readUpdate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
 
         overridePendingTransition(R.anim.fast_fade_in, R.anim.fast_fade_out);
 
+        //makeToast("REMOVED: " + removeFile("update"));
         String logged_in = readFromFile("login.txt", getApplicationContext());
         if (!logged_in.contains("fal") && !logged_in.isEmpty()) {
             //String info = readFromFile("info.txt", getApplicationContext());
@@ -118,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
                 next = new Intent(MainActivity.this, PatientDashboard.class);
             else
                 next = new Intent(MainActivity.this, DoctorDashboard.class);
-
+            //writeToUpdate("yes", getApplicationContext());
             /*Log.wtf("Username", contents[2]);
             next.putExtra("Type", contents[0]);
             next.putExtra("Document ID", contents[1]);
@@ -188,10 +198,13 @@ public class MainActivity extends AppCompatActivity {
         patientShowing = false;
 
         Intent intent = getIntent();
-        String s = intent.getStringExtra("Type");
-        String reader = readFromFile("firstAccountCreated.txt", getApplicationContext());
+        sx = intent.getStringExtra("Type");
+        reader = readFromFile("firstAccountCreated.txt", getApplicationContext());
 
-        if (s == null) {
+        readUpdate = readFromUpdate(getApplicationContext());
+        //makeToast("REMOVED: " + removeFile("update"));
+
+        if (sx == null) {
             //TODO Have to check if firstAccountCreated.txt exists. If it does, just make everything visible.
             // Otherwise call initialStuff()
             if (reader.isEmpty())
@@ -199,17 +212,19 @@ public class MainActivity extends AppCompatActivity {
             else {
                 //TODO Just make the stuff visible
                 //makeToast("Not null");
+                listenForUpdates();
                 justShowStuff();
             }
         } else {
             //TODO They just created their account.
             // Show dialog based on whether the are patient or doctor.
             justShowStuff();
+            listenForUpdates();
             //makeToast("MESSAGE: " + reader);
-            if (s.equals("Doctor")) {
+            if (sx.equals("Doctor")) {
                 doctorVerification();
                 writeToFile("Done", getApplicationContext());
-            } else if (s.equals("Patient")) {
+            } else if (sx.equals("Patient")) {
                 patientContinue();
                 writeToFile("Done", getApplicationContext());
             }
@@ -217,9 +232,131 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public boolean removeFile(String name) {
+        String directory = getApplicationContext().getApplicationInfo().dataDir + "/files";
+        File location = new File(directory);
+        File[] files = location.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            String n = files[i].getName();
+            if (n.substring(0, n.indexOf(".")).equals(name)) {
+                files[i].delete();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void listenForUpdates() {
+        //showUpdate();
+        //makeToast(readUpdate);
+        db.collection("Update").document("Update 1").addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot document, @Nullable FirebaseFirestoreException e) {
+                Vibrator vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                Boolean update = Boolean.parseBoolean(document.get("Update").toString());
+                if (update && sx == null && !reader.isEmpty()) {
+                    if (readUpdate == null || !readUpdate.contains("no")) {
+                        long[] pattern = {0, 100, 50, 100, 250, 100, 50, 100, 250, 100, 50, 100, 250, 100, 50, 100};
+                        //vib.vibrate(3000);
+                        if (vib.hasVibrator())
+                            vib.vibrate(pattern, -1);
+                        writeToUpdate("no", getApplicationContext());
+                        showUpdate();
+                    } else {
+                        longToast("COVID-ID app updates are available! Check the Play Store.");
+                    }
+                } else if (update && !sx.equals("Doctor") && !sx.equals("Patient") && !reader.isEmpty()) {
+                    if (readUpdate == null ||  !readUpdate.contains("no")) {
+                        long[] pattern = {0, 100, 50, 100, 250, 100, 50, 100, 250, 100, 50, 100, 250, 100, 50, 100};
+                        //vib.vibrate(3000);
+                        if (vib.hasVibrator())
+                            vib.vibrate(pattern, -1);
+                        writeToUpdate("no", getApplicationContext());
+                        showUpdate();
+                    } else {
+                        longToast("UCOVID-ID app updates are available! Check the Play Store.");
+                    }
+                } else if (update) {
+                    longToast("COVID-ID app updates are available! Check the Play Store.");
+                    //makeSnackBar(2120, "Sorry. No updates available yet.");
+                }
+            }
+        });
+    }
+
+    private void showUpdate() {
+        final Dialog dialog = new Dialog(MainActivity.this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setCancelable(true);
+        dialog.setContentView(R.layout.update_dialog);
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+        lp.copyFrom(dialog.getWindow().getAttributes());
+        lp.width = (int) (screenW * .875);
+        dialog.getWindow().setAttributes(lp);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+
+
+        Button btn = (Button) dialog.findViewById(R.id.btn);
+        ImageView image = (ImageView) dialog.findViewById(R.id.play);
+        View.OnClickListener listen = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final String appPackageName = getApplicationContext().getPackageName(); // getPackageName() from Context or Activity object
+                Log.wtf("Package name", appPackageName);
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                } catch (android.content.ActivityNotFoundException anfe) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                }
+            }
+        };
+        btn.setOnClickListener(listen);
+        image.setOnClickListener(listen);
+        dialog.show();
+    }
+
+    private String readFromUpdate(Context context) {
+
+        String ret = "";
+
+        try {
+            InputStream inputStream = context.openFileInput("update.txt");
+
+            if (inputStream != null) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ((receiveString = bufferedReader.readLine()) != null) {
+                    stringBuilder.append("\n").append(receiveString);
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+            }
+        } catch (FileNotFoundException e) {
+            Log.wtf("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.wtf("login activity", "Can not read file: " + e.toString());
+        }
+
+        return ret;
+    }
+
     private void writeLogin(String data, Context context) {
         try {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("login.txt", Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
+    }
+
+    private void writeToUpdate(String data, Context context) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("update.txt", Context.MODE_PRIVATE));
             outputStreamWriter.write(data);
             outputStreamWriter.close();
         } catch (IOException e) {
@@ -382,7 +519,7 @@ public class MainActivity extends AppCompatActivity {
                 loggedIn = false;
                 error.setText("");
                 if (mySnackbar != null) mySnackbar.dismiss();
-                                final String u = username.getText().toString();
+                final String u = username.getText().toString();
                 final String p = password.getText().toString();
                 if (u == null || p == null) {
                     makeSnackBar(3500, "Fill in the username and password.");
@@ -448,11 +585,14 @@ public class MainActivity extends AppCompatActivity {
                                                     //userType = document.get("Type").toString();
                                                     error.setText("");
                                                     Intent intent;
-                                                    if (userType.equals("Patient"))
+                                                    String remaining = "";
+                                                    if (userType.equals("Patient")) {
                                                         intent = new Intent(MainActivity.this, PatientDashboard.class);
-                                                    else //DONE Change to doctor dashboard
+                                                        remaining += "___________" + document.get("Donated").toString()
+                                                                + "___________" + document.get("Willing").toString();
+                                                    } else {//DONE Change to doctor dashboard
                                                         intent = new Intent(MainActivity.this, DoctorDashboard.class);
-
+                                                    }
                                                     String n = "Bob", p = "9999999999", city = "", state = "", country = "", docId;
                                                     docId = document.get("Doc ID").toString();
                                                     String userPassID = document.getId();
@@ -462,11 +602,18 @@ public class MainActivity extends AppCompatActivity {
                                                     String stat = document.get("Status").toString();
                                                     if (state.isEmpty() || state.length() == 0)
                                                         state = " ";
+                                                    String e = document.get("Email").toString();
+                                                    if (e.isEmpty() || e.length() == 0)
+                                                        e = " ";
 
                                                     writeToInfo(userType + "___________" + documentId + "___________" + user + "___________" +
                                                             pass + "___________" + document.get("Updated").toString()
                                                             + "___________" + n + "___________" + p + "___________" + docId
-                                                            + "___________" + stat + "___________" + userPassID + "___________" + document.get("Created").toString(), getApplicationContext());
+                                                            + "___________" + stat + "___________" + userPassID + "___________" + document.get("Created").toString()
+                                                            + "___________" + document.get("City").toString() + "___________" + document.get("State").toString()
+                                                            + "___________" + document.get("Country").toString() + "___________" +
+                                                            e + remaining, getApplicationContext());
+                                                    //writeToUpdate("yes", getApplicationContext());
                                                     if (!remember.isChecked())
                                                         writeLogin("false", getApplicationContext());
                                                     else if (userType.contains("octor"))

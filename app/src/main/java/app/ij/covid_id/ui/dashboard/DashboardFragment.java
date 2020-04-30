@@ -1,12 +1,16 @@
 package app.ij.covid_id.ui.dashboard;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -15,12 +19,17 @@ import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Pair;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -74,6 +83,8 @@ public class DashboardFragment extends Fragment {
     RecyclerView list;
     Button update;
     TextView message;
+    String updater;
+    double screenW;
 
     public View findViewById(int id) {
         return root.findViewById(id);
@@ -121,6 +132,106 @@ public class DashboardFragment extends Fragment {
 
         //makeToast("Inside doctor dashboard");
         updateInfoTxt();
+
+        WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+        DisplayMetrics metrics = new DisplayMetrics();
+        display.getMetrics(metrics);
+        screenW = metrics.widthPixels;
+        //updater = readFromFile(getContext());
+        //listenForUpdates();
+    }
+
+    private void writeToUpdate(String data, Context context) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("update.txt", Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
+    }
+
+    private void listenForUpdates() {
+        //showUpdate();
+        db.collection("Update").document("Update 1").addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot document, @Nullable FirebaseFirestoreException e) {
+                Vibrator vib = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+                Boolean update = Boolean.parseBoolean(document.get("Update").toString());
+                if (update && !updater.contains("no")) {
+                    long[] pattern = {0, 100, 50, 100, 250, 100, 50, 100, 250, 100, 50, 100, 250, 100, 50, 100};
+                    if (vib.hasVibrator())
+                        vib.vibrate(pattern, -1);
+                    showUpdate();
+                    writeToUpdate("no", getContext());
+                } else if (update) {
+                    writeToUpdate("no", getContext());
+                    makeToast("COVID-ID app updates are available! Check the Play Store.");
+                    //makeSnackBar(2120, "Sorry. No updates available yet.");
+                }
+            }
+        });
+    }
+
+    private void showUpdate() {
+        final Dialog dialog = new Dialog(getContext());
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setCancelable(true);
+        dialog.setContentView(R.layout.update_dialog);
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+        lp.copyFrom(dialog.getWindow().getAttributes());
+        lp.width = (int) (screenW * .875);
+        dialog.getWindow().setAttributes(lp);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+
+
+        Button btn = (Button) dialog.findViewById(R.id.btn);
+        ImageView image = (ImageView) dialog.findViewById(R.id.play);
+        View.OnClickListener listen = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final String appPackageName = getContext().getPackageName(); // getPackageName() from Context or Activity object
+                Log.wtf("Package name", appPackageName);
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                } catch (android.content.ActivityNotFoundException anfe) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                }
+            }
+        };
+        btn.setOnClickListener(listen);
+        image.setOnClickListener(listen);
+        dialog.show();
+    }
+
+    private String readFromFile(Context context) {
+
+        String ret = "";
+
+        try {
+            InputStream inputStream = context.openFileInput("update.txt");
+
+            if (inputStream != null) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ((receiveString = bufferedReader.readLine()) != null) {
+                    stringBuilder.append("\n").append(receiveString);
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+            }
+        } catch (FileNotFoundException e) {
+            Log.wtf("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.wtf("login activity", "Can not read file: " + e.toString());
+        }
+
+        return ret;
     }
 
     private void updateList() {
@@ -238,6 +349,12 @@ public class DashboardFragment extends Fragment {
     }
 
     private void writeNewInfo(Map<String, Object> data) {
+        String state = data.get("State").toString();
+        if (state.isEmpty() || state.length() == 0)
+            state = " ";
+        String e = data.get("Email").toString();
+        if (e.isEmpty() || e.length() == 0)
+            e = " ";
         String toWrite = "";
         String tempStatus = data.get("Status").toString();
         toWrite += data.get("Type");
@@ -263,6 +380,19 @@ public class DashboardFragment extends Fragment {
         toWrite += userPassID;
         toWrite += "___________";
         toWrite += data.get("Created");
+        toWrite += "___________";
+        toWrite += data.get("City");
+        toWrite += "___________";
+        toWrite += state;
+        toWrite += "___________";
+        toWrite += data.get("Country");
+        toWrite += "___________";
+        toWrite += e;
+        toWrite += "___________";
+        toWrite += data.get("Donated");
+        toWrite += "___________";
+        toWrite += data.get("Willing");
+
         username = data.get("User").toString();
         documentID = data.get("Doc ID").toString();
         userPassID = userPassID;
@@ -344,7 +474,7 @@ public class DashboardFragment extends Fragment {
         String[] split = statusLastUpdated.split(" ");
         String time = cleanTime(split[1]);
         if (currentDate.equals(split[0]))
-            return "Today, " + time;
+            return "Today," + time;
         return "Last Updated: " + split[0].substring(0, split[0].length() - 3) + time;
     }
 

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="16sp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:id="@+id/titleHolder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#4C4C4C"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_margin="7sp"
+                android:fontFamily="@font/ralewaybold"
+                android:text="Updates!"
+                android:textColor="#fff"
+                android:textSize="30sp" />
+
+        </RelativeLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/titleHolder"
+            android:layout_margin="6sp"
+            android:layout_marginTop="13sp"
+            android:id="@+id/text"
+            android:textColor="#000"
+            android:textStyle="bold"
+            android:fontFamily="@font/regular"
+            android:text="Great News:\nA new update for the COVID-ID app is available on the Google Play Store!"
+            android:textSize="24sp" />
+
+        <ImageView
+            android:layout_width="80sp"
+            android:layout_below="@id/text2"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/play"
+            android:id="@+id/play"
+            android:layout_marginTop="-4sp"
+            android:layout_height="80sp"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="23sp"
+            android:id="@+id/btn"
+            android:layout_below="@id/play"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="8sp"
+            android:textColor="#fff"
+            android:text="Update App"
+            android:layout_marginBottom="11sp"
+            android:textAllCaps="false"
+            android:paddingLeft="45sp"
+            android:background="@drawable/updatepurple"
+            android:paddingRight="45sp"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/text"
+            android:layout_margin="8sp"
+            android:layout_marginTop="5sp"
+            android:id="@+id/text2"
+            android:fontFamily="@font/regular"
+            android:text="Make sure to install it for the latest features."
+            android:textSize="20sp" />
+
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>
