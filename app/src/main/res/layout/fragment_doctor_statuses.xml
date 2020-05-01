@@ -35,6 +35,7 @@
                     android:fontFamily="@font/ralewaybold"
                     android:textSize="27sp" />
 
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:layout_width="match_parent"
                     android:id="@+id/patientRecycler"

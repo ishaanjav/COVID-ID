@@ -696,7 +696,7 @@ public class DoctorStatuses2 extends Fragment {
 
                             //if (username.equals(patientUsernames.get(0)) ) {
                             if (goodToGo.size() == patientInfo.size()) {
-                                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
+                               // adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
                                 //setMaxHeight();
                                 if (isSafe() && loadingResults != null)
                                     if (isSafe() && loadingResults != null) loadingResults.cancel();
@@ -734,7 +734,7 @@ public class DoctorStatuses2 extends Fragment {
                 if (goodToGo.size() == patientInfo.size()) {
                     if (isSafe() && loadingResults != null)
                         if (isSafe() && loadingResults != null) loadingResults.cancel();
-                    adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
+                    //adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
                     patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                     patientRecycler.setAdapter(adapter);
                     long end = System.currentTimeMillis();

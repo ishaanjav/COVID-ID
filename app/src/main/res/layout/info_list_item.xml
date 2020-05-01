@@ -6,8 +6,8 @@
 
     <ImageView
         android:id="@+id/image"
-        android:layout_width="90sp"
-        android:layout_height="90sp"
+        android:layout_width="93sp"
+        android:layout_height="93sp"
         android:layout_alignParentLeft="true"
         android:src="@drawable/usericon2"
         android:layout_margin="10sp" />

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.icu.text.IDNA;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Scroller;
 import android.widget.TextView;
@@ -27,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -47,6 +50,7 @@ import com.google.firebase.storage.StorageReference;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -60,6 +64,9 @@ import java.util.Map;
 
 import app.ij.covid_id.InfoRecyclerViewAdapter;
 import app.ij.covid_id.R;
+
+import static app.ij.covid_id.InfoRecyclerViewAdapter.lastPosition;
+import static app.ij.covid_id.InfoRecyclerViewAdapter.setAnimation;
 
 public class DoctorStatuses3 extends Fragment {
 
@@ -113,7 +120,7 @@ public class DoctorStatuses3 extends Fragment {
         patientUsernames = new ArrayList<>();
         patientInfo = new ArrayList<>();
         foreign = state.isEmpty() || state.length() < 2;
-        maxSize = 80;
+        maxSize = 22;
 
         WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
@@ -133,36 +140,65 @@ public class DoctorStatuses3 extends Fragment {
         //foreign = false;
         //removeUncessaryFiles();
 
-        //TODO Uncomment below
+        //TODO Have a feature where instead you use progressbar and
+        // based on number of images downloaded, it updates the completion percent to
+        // 50 then 100 then whatever.
         if (isSafe()) {
             loadingResults = ProgressDialog.show(getContext(), "Loading Patients",
                     "Retrieving Data. Please wait...", true);
             loadingResults.setCancelable(true);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (isSafe() && loadingResults != null && loadingResults.isShowing())
+                        if (isNetworkAvailable())
+                            loadingResults.setMessage("This appears to be taking some time.\nPlease wait...");
+                        else
+                            loadingResults.setMessage("You are not connected to the internet!!!\nConnect to the internet for updates.");
+                }
+            }, 6000);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (isSafe() && loadingResults != null && loadingResults.isShowing()) {
+                        if (isNetworkAvailable())
+                            loadingResults.setMessage("This seems to be take longer than usual.\n\nYou can visit other tabs by clicking outside this box.\nOR check your internet connection.");
+                        else
+                            loadingResults.setMessage("You are not connected to the internet!!!\nConnect to the internet please.");
+                    }
+                }
+            }, 12200);
         }
         updateInfoTxt();
 
-
+       /* adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+        patientRecycler.setAdapter(adapter);*/
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
+                //TODO Decide whether you should even have a SnapshotListener.
+                //INFO This is because the query will constantly change as users create accounts.
+                //  It is very distracting and slows it down for the doctor.
                 if (foreign) {
-                    db.collection("userPass")
+                 /*   db.collection("userPass")
                             .whereEqualTo("Country", country)
                             .addSnapshotListener(new EventListener<QuerySnapshot>() {
                                 @Override
                                 public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                                    loadForeignPatientInfo();
-                                }
-                            });
+*/
+                    loadForeignPatientInfo();
+                    //     }
+                    // });
                 } else {
-                    db.collection("userPass")
+                /*    db.collection("userPass")
                             .whereEqualTo("Country", country)
                             .addSnapshotListener(new EventListener<QuerySnapshot>() {
                                 @Override
                                 public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                                    loadPatientInfo();
-                                }
-                            });
+                          */
+                    loadPatientInfo();
+//                                }
+//                            });
                 }
             }
         }, 180);
@@ -233,6 +269,10 @@ public class DoctorStatuses3 extends Fragment {
                     if (!document.get("User").equals(username)) {
                         size0++;
                         patientNested0.add((HashMap<String, Object>) document.getData());
+                        bitmaps = null;
+//adapter.notifyItemChanged();
+                        //adapter.notifyItem
+                        //adapter.notif
                         Log.wtf("*--READING ", document.getId() + " => " + document.getData());
                     }
                 }
@@ -656,11 +696,22 @@ public class DoctorStatuses3 extends Fragment {
         File location = new File(directory);
         File[] files = location.listFiles();
         //Log.wtf("** Files", "Path: " + directory + "  # of files: " + files.length);
+        bitmaps = new HashMap<>();
         for (int i = 0; i < files.length; i++) {
             String name = files[i].getName();
             if (name.endsWith(".jpg")) {
                 //Log.wtf("**Files", "FileName:" + name);
                 fileList.add(name.substring(0, name.length() - 4));
+                FileInputStream fileInputStream;
+                Bitmap bitmap = null;
+                try {
+                    fileInputStream = getContext().openFileInput(name);
+                    bitmap = BitmapFactory.decodeStream(fileInputStream);
+                    fileInputStream.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                bitmaps.put(name.substring(0, name.length() - 4), bitmap);
                 //files[i].delete();
             }
         }
@@ -676,6 +727,7 @@ public class DoctorStatuses3 extends Fragment {
 
     int count = 0;
     ArrayList<Boolean> goodToGo;
+    HashMap<String, Bitmap> bitmaps;
 
     public void writeImages() {
         final boolean[] set = {false};
@@ -685,7 +737,7 @@ public class DoctorStatuses3 extends Fragment {
         if (patientInfo.size() == 0) {
             if (loadingResults != null && isSafe())
                 loadingResults.cancel();
-            adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
+            adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
             patientRecycler.setAdapter(adapter);
         }
         for (int i = 0; i < patientInfo.size(); i++) {
@@ -703,14 +755,15 @@ public class DoctorStatuses3 extends Fragment {
                         @Override
                         public void onSuccess(byte[] bytes) {
                             Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                            saveImage(getContext(), bm, username, "jpg");
+                            bitmaps.put(username, bm);
+                            //saveImage(getContext(), bm, username, "jpg");
                             count++;
                             //Log.wtf("**SAVED IMAGE", "IMAGE " + username + " SAVED  " + count + "  " + fileList.toString());
                             goodToGo.add(true);
 
                             //if (username.equals(patientUsernames.get(0)) ) {
                             if (goodToGo.size() == patientInfo.size()) {
-                                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
+                                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
                                 //setMaxHeight();
                                 /*if (isSafe() && loadingResults != null)
                                     if (isSafe() && loadingResults != null) loadingResults.cancel();*/
@@ -753,7 +806,7 @@ public class DoctorStatuses3 extends Fragment {
                 // if (!entered && !set[0] && i == patientUsernames.size() - 1) {
                 if (goodToGo.size() == patientInfo.size()) {
                     //    if (isSafe() && loadingResults != null) loadingResults.cancel();
-                    adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
+                    adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
                     patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                     patientRecycler.setAdapter(adapter);
                     /*new Handler().postDelayed(new Runnable() {
