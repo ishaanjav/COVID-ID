@@ -295,7 +295,7 @@ public class DashboardFragment extends Fragment {
     }
 
     int counter = 0;
-    ListenerRegistration listener;
+   public static ListenerRegistration listener, listener2;
 
     //IMPORTANT If you do decide on writing Hello "NAME" on dashboard, then you have to listen to local changes
     //  and update UI for local changes to say Hello "new name" or whatever.
@@ -324,7 +324,7 @@ public class DashboardFragment extends Fragment {
                             long[] pattern = {0, 800, 250, 800, 250, 800, 250, 800, 250};
                             if (vib.hasVibrator())
                                 vib.vibrate(pattern, -1);
-                            makeToast("Your COVID Status was updated!");
+                            largeToast("Your COVID Status was updated!");
                         }
                         writeNewInfo(snapshot.getData());
                         updateLayout();
@@ -352,13 +352,19 @@ public class DashboardFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        listener.remove();
+        /*if(listener != null)
+            listener.remove();
+        if(listener2 != null)
+            listener2.remove();*/
         super.onDestroyView();
     }
 
     @Override
     public void onDestroy() {
-        listener.remove();
+       /* if(listener != null)
+            listener.remove();
+        if(listener2 != null)
+            listener2.remove();*/
         super.onDestroy();
     }
 
@@ -595,7 +601,7 @@ public class DashboardFragment extends Fragment {
                 }
                 counter++;
 
-                updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
+               listener2 = updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
                     public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
                         statusUpdates = new ArrayList<>();
@@ -681,7 +687,21 @@ public class DashboardFragment extends Fragment {
         mySnackbar.show();
     }
 
+    Toast toast;
+
     public void makeToast(String s) {
-        Toast.makeText(getContext(), s, Toast.LENGTH_LONG).show();
+        if (toast != null) toast.cancel();
+        toast = Toast.makeText(getContext(), s, Toast.LENGTH_LONG);
+        toast.show();
+    }
+
+    private void largeToast(String s) {
+        if (toast != null) toast.cancel();
+        toast = Toast.makeText(getContext(), s, Toast.LENGTH_LONG);
+        ViewGroup group = (ViewGroup) toast.getView();
+        TextView messageTextView = (TextView) group.getChildAt(0);
+        messageTextView.setTextSize(25);
+        toast.show();
+
     }
 }

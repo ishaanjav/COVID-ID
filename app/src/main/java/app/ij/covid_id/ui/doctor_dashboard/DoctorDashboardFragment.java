@@ -183,7 +183,7 @@ public class DoctorDashboardFragment extends Fragment {
     }
 
     int counter = 0;
-    ListenerRegistration listener;
+    public static ListenerRegistration listener, listener2;
 
     //IMPORTANT If you do decide on writing Hello "NAME" on dashboard, then you have to listen to local changes
     //  and update UI for local changes to say Hello "new name" or whatever.
@@ -211,8 +211,9 @@ public class DoctorDashboardFragment extends Fragment {
                             long[] pattern = {0, 800, 250, 800, 250, 800, 250, 800, 250};
                             if (vib.hasVibrator())
                                 vib.vibrate(pattern, -1);
-                            makeToast("Your COVID Status was updated!");
+                            largeToast("Your COVID Status was updated!");
                         }
+                        status = snapshot.get("Status").toString();
                         writeNewInfo(snapshot.getData());
                         updateLayout();
                         Log.wtf("*------ INFO RETRIEVED (Doctor) -----", source + " data: " + snapshot.getData());
@@ -479,14 +480,22 @@ public class DoctorDashboardFragment extends Fragment {
 
     @Override
     public void onDestroy() {
+        Log.wtf("INFO", "DoctorDashboardFragment: removing:");
+        /*if (listener != null)
+            listener.remove();
+        if (listener2 != null)
+            listener2.remove();*/
         super.onDestroy();
-        listener.remove();
     }
 
     @Override
     public void onDestroyView() {
+        Log.wtf("INFO", "DoctorDashboardFragment: removing:");
+       /* if (listener != null)
+            listener.remove();
+        if (listener2 != null)
+            listener2.remove();*/
         super.onDestroyView();
-        listener.remove();
     }
 
     public void loadInformationOld() {
@@ -507,7 +516,7 @@ public class DoctorDashboardFragment extends Fragment {
                 }
                 counter++;
 
-                updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
+                listener2 = updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
                     public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
                         statusUpdates = new ArrayList<>();
@@ -586,5 +595,15 @@ public class DoctorDashboardFragment extends Fragment {
         if (toast != null) toast.cancel();
         toast = Toast.makeText(getContext(), s, Toast.LENGTH_LONG);
         toast.show();
+    }
+
+    private void largeToast(String s) {
+        if (toast != null) toast.cancel();
+        toast = Toast.makeText(getContext(), s, Toast.LENGTH_LONG);
+        ViewGroup group = (ViewGroup) toast.getView();
+        TextView messageTextView = (TextView) group.getChildAt(0);
+        messageTextView.setTextSize(25);
+        toast.show();
+
     }
 }

@@ -45,6 +45,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
+import app.ij.covid_id.ui.dashboard.DashboardFragment;
+import app.ij.covid_id.ui.doctor_dashboard.DoctorDashboardFragment;
+import app.ij.covid_id.ui.doctor_statuses.DoctorStatuses3;
+import app.ij.covid_id.ui.map.MapFragment;
+import app.ij.covid_id.ui.settings.SettingsFragment;
+
 public class PatientDashboard extends AppCompatActivity {
     FirebaseFirestore db;
     RelativeLayout screen;
@@ -67,7 +73,28 @@ public class PatientDashboard extends AppCompatActivity {
         overridePendingTransition(R.anim.medium_fade_in, R.anim.fast_fade_out);
         variable = 3;
     }
-
+    @Override
+    protected void onUserLeaveHint() {
+        removeListeners();
+        super.onUserLeaveHint();
+    }
+    public void removeListeners() {
+        Log.wtf("INFO", "Patient Dashboard: Removing Listeners");
+        if(DoctorDashboardFragment.listener != null)
+            DoctorDashboardFragment.listener.remove();
+        if(DoctorDashboardFragment.listener2 != null)
+            DoctorDashboardFragment.listener2.remove();
+        if(DashboardFragment.listener != null)
+            DashboardFragment.listener.remove();
+        if(DashboardFragment.listener2 != null)
+            DashboardFragment.listener2.remove();
+        if(DoctorStatuses3.userPassListener != null)
+            DoctorStatuses3.userPassListener.remove();
+        if(MapFragment.listener != null)
+            MapFragment.listener.remove();
+        if(SettingsFragment.listener != null)
+            SettingsFragment.listener.remove();
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
@@ -106,6 +133,7 @@ public class PatientDashboard extends AppCompatActivity {
     }
 
     private void signOut() {
+        removeListeners();
         writeLogin("false", getApplicationContext());
         startActivity(new Intent(PatientDashboard.this, MainActivity.class));
     }

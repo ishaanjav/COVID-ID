@@ -65,8 +65,9 @@ public class MapFragment extends Fragment {
     }
 
     FirebaseFirestore db;
-String userPassID;
-String status;
+    String userPassID;
+    String status;
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         mapViewModel =
@@ -75,29 +76,33 @@ String status;
         update = (Button) findViewById(R.id.update);
         screen = (RelativeLayout) findViewById(R.id.screen);
         db = FirebaseFirestore.getInstance();
-       DoctorDashboard.variable = 3;
+        DoctorDashboard.variable = 3;
         PatientDashboard.variable = 3;
         readStorage();
         updateInfoTxt();
         return root;
     }
+
     protected boolean isSafe() {
         return !(this.isRemoving() || this.getActivity() == null || this.isDetached() || !this.isAdded() || this.getView() == null);
     }
 
-    ListenerRegistration listener;
+    public static ListenerRegistration listener;
 
     @Override
     public void onDestroy() {
+        if(listener != null)
+            listener.remove();
         super.onDestroy();
-        listener.remove();
     }
 
     @Override
     public void onDestroyView() {
+        if(listener != null)
+            listener.remove();
         super.onDestroyView();
-        listener.remove();
     }
+
     public void updateInfoTxt() {
         final DocumentReference docRef = db.collection("userPass").document(userPassID);
         listener = docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
@@ -124,7 +129,7 @@ String status;
                             long[] pattern = {0, 800, 250, 800, 250, 800, 250, 800, 250};
                             if (vib.hasVibrator())
                                 vib.vibrate(pattern, -1);
-                            makeToast("Your COVID Status was updated! Check the dashboard.");
+                            largeToast("Your COVID Status was updated! Check the dashboard.");
                         }
                         //writeNewInfo(snapshot.getData());
                         Log.wtf("*------ INFO RETRIEVED (Map) -----", source + " data: " + snapshot.getData());
@@ -157,6 +162,7 @@ String status;
         });
 
     }
+
     private void readStorage() {
         String info = readFromFile("info.txt", getContext());
         String[] contents = info.split("___________");
@@ -164,6 +170,7 @@ String status;
         userPassID = (contents[9]);
         status = (contents[8]);
     }
+
     private String readFromFile(String file, Context context) {
         String ret = "";
 
@@ -242,7 +249,9 @@ String status;
             }
         });
     }
+
     Snackbar mySnackbar;
+
     private void makeSnackBar(int duration, String s) {
         mySnackbar = Snackbar.make(screen, s, duration);
         View snackbarView = mySnackbar.getView();
@@ -258,7 +267,21 @@ String status;
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
+    Toast toast;
+
     public void makeToast(String s) {
-        Toast.makeText(getContext(), s, Toast.LENGTH_LONG).show();
+        if (toast != null) toast.cancel();
+        toast = Toast.makeText(getContext(), s, Toast.LENGTH_LONG);
+        toast.show();
+    }
+
+    private void largeToast(String s) {
+        if (toast != null) toast.cancel();
+        toast = Toast.makeText(getContext(), s, Toast.LENGTH_LONG);
+        ViewGroup group = (ViewGroup) toast.getView();
+        TextView messageTextView = (TextView) group.getChildAt(0);
+        messageTextView.setTextSize(25);
+        toast.show();
+
     }
 }

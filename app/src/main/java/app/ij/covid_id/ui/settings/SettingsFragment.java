@@ -32,6 +32,17 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+import app.ij.covid_id.DoctorDashboard;
+import app.ij.covid_id.PatientDashboard;
+import app.ij.covid_id.ui.doctor_dashboard.DoctorDashboardFragment;
+
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -79,18 +90,20 @@ public class SettingsFragment extends Fragment {
     protected boolean isSafe() {
         return !(this.isRemoving() || this.getActivity() == null || this.isDetached() || !this.isAdded() || this.getView() == null);
     }
-ListenerRegistration listener;
+public static ListenerRegistration listener;
 
     @Override
     public void onDestroy() {
+        if(listener != null)
+            listener.remove();
         super.onDestroy();
-        listener.remove();
     }
 
     @Override
     public void onDestroyView() {
+        if(listener != null)
+            listener.remove();
         super.onDestroyView();
-        listener.remove();
     }
 
     public void updateInfoTxt() {
@@ -119,7 +132,7 @@ ListenerRegistration listener;
                             long[] pattern = {0, 800, 250, 800, 250, 800, 250, 800, 250};
                             if (vib.hasVibrator())
                                 vib.vibrate(pattern, -1);
-                            makeToast("Your COVID Status was updated! Check the dashboard.");
+                            largeToast("Your COVID Status was updated! Check the dashboard.");
                         }
                         //writeNewInfo(snapshot.getData());
                         Log.wtf("*------ INFO RETRIEVED (Settings) -----", source + " data: " + snapshot.getData());
@@ -264,7 +277,21 @@ ListenerRegistration listener;
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
+    Toast toast;
+
     public void makeToast(String s) {
-        Toast.makeText(getContext(), s, Toast.LENGTH_LONG).show();
+        if (toast != null) toast.cancel();
+        toast = Toast.makeText(getContext(), s, Toast.LENGTH_LONG);
+        toast.show();
+    }
+
+    private void largeToast(String s) {
+        if (toast != null) toast.cancel();
+        toast = Toast.makeText(getContext(), s, Toast.LENGTH_LONG);
+        ViewGroup group = (ViewGroup) toast.getView();
+        TextView messageTextView = (TextView) group.getChildAt(0);
+        messageTextView.setTextSize(25);
+        toast.show();
+
     }
 }

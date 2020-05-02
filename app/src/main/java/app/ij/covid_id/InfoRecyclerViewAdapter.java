@@ -58,12 +58,14 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
     static RecyclerView recyclerView;
     public String TAG = "RecyclerViewAdapter";
     ArrayList<Boolean> bools;
+    String doctorID;
 
-    public InfoRecyclerViewAdapter(Context context, ArrayList<HashMap<String, Object>> list, RecyclerView recyclerView, HashMap<String, Bitmap> bitmaps) {
+    public InfoRecyclerViewAdapter(Context context, ArrayList<HashMap<String, Object>> list, RecyclerView recyclerView, HashMap<String, Bitmap> bitmaps, String doctorID) {
         this.context = context;
         this.list = list;
         this.recyclerView = recyclerView;
         bitmapList = bitmaps;
+        this.doctorID = doctorID;
     }
 
     View view;
@@ -176,7 +178,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         if (foreign)
             holder.location.setText(map.get("City").toString() + ", " + country.substring(country.indexOf(":") + 1));
         else
-            holder.location.setText(map.get("City").toString() + " " + map.get("State").toString());
+            holder.location.setText(map.get("City").toString() + ", " + map.get("State").toString());
         holder.status.setText(status);
 
 

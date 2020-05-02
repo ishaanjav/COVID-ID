@@ -258,9 +258,464 @@ public class DoctorStatuses3 extends Fragment {
     //IDEA What I am thinking is just have this 1 time function, set a listener. If listener changes, call 1 time function
     int maxSize;
     DocumentSnapshot lastVisible, firstVisible;
-    ListenerRegistration listen;
-
     private void loadPatientInfo() {
+        //maxSize = 1;
+        db.collection("userPass")
+                .whereEqualTo("State", state)
+                //.orderBy("State")
+                .whereEqualTo("City", city)
+                .orderBy("Name")
+                //.orderBy("Status", Query.Direction.DESCENDING)
+                .limit(maxSize)
+                .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+            @Override
+            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                //makeSnackBar(3000, "CHANGE");
+                Log.wtf("*-_FIRSTVISIBLE -----------", "-----------------------------------------------------------------------------");
+                Log.wtf("*______________", "-----------------------------------------------------------------------------");
+                Log.wtf("*______________", "-----------------------------------------------------------------------------");
+
+                //patientInfo = new ArrayList<>();
+                totalStartTime = System.currentTimeMillis();
+                Log.wtf("*-_--Total Start", "" + totalStartTime);
+                patientNested0 = new ArrayList<>();
+                size0 = 0;
+                for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                    //patientInfo.add((HashMap<String, Object>) document.getData());
+                    //patientUsernames.add(document.get("User").toString());
+                    if (!document.get("User").equals(username)) {
+                        size0++;
+                        patientNested0.add((HashMap<String, Object>) document.getData());
+                        bitmaps = null;
+//adapter.notifyItemChanged();
+                        //adapter.notifyItem
+                        //adapter.notif
+                        Log.wtf("*--READING ", document.getId() + " => " + document.getData());
+                    }
+                }
+                //size0 = queryDocumentSnapshots.size() - 1;
+                Log.wtf("*-_NESTED 0", "Size: " + size0);
+                if (size0 == 0) {
+                    // if (isSafe() && loadingResults != null) loadingResults.cancel();
+                    makeSnackBar(5200, "It appears there are no patients in your city. Share the app with others and wait for more users to create their accounts.");
+                } else {
+                    //if (size > 84) {
+                    //if (adapter != null) adapter.notifyDataSetChanged();
+                    //getfile();
+                }
+                //    }
+                //README Size of specific city and state is smaller.
+                //INFO We are now going to read cities from state where cities are smaller than current city.
+                // if (size0 < maxSize) {
+                if (size0 == 0 && queryDocumentSnapshots.size() > 0) {
+                    lastVisible = queryDocumentSnapshots.getDocuments()
+                            .get(0);
+                    firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                } else if (size0 > 0) {
+                    lastVisible = queryDocumentSnapshots.getDocuments()
+                            .get(queryDocumentSnapshots.size() - 1);
+                    firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                } else {
+
+                }
+                Log.wtf("*-_FIRSTVISIBLE 1", firstVisible.get("City") + " " +
+                        firstVisible.get("State") + " " + firstVisible.get("Name"));
+
+                if (size0 == maxSize) {
+                    getfile();
+                } else {
+                    db.collection("userPass")
+                            .whereEqualTo("State", state)
+                            .orderBy("City")
+                            .orderBy("Name")
+                            .limit(Math.max(maxSize - size0, 1))
+                            .endBefore(firstVisible)
+                            .get()
+                            .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                @Override
+                                public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                    Log.wtf("*-_NESTED 1", "Size: " + queryDocumentSnapshots.size());
+                                    patientNested1 = new ArrayList<>();
+                                    size1 = 0;
+                                    for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                                        if (!document.get("User").equals(username)) {
+                                            size1++;
+                                            patientNested1.add((HashMap<String, Object>) document.getData());
+                                            Log.wtf("*--READING 1 ", document.getId() + " => " + document.getData());
+                                        }
+                                    }
+                                    if (size1 == 0) {
+                                        // if (isSafe() && loadingResults != null)
+                                        //     loadingResults.cancel();
+                                        //makeSnackBar(5000, "It appears there are no patients in your state.");
+                                    } else {
+                                        //INFO size2 is not 0 which means we just got the cities in same state that
+                                        // are smaller than current city.
+                                        //README Because we have smaller cities, we have to update firstVisible
+                                        firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                                        Log.wtf("*-_FIRSTVISIBLE 2", firstVisible.get("City") + " " +
+                                                firstVisible.get("State") + " " + firstVisible.get("Name"));
+
+                                        //if (adapter != null)
+                                        //    adapter.notifyDataSetChanged();
+                                        //getfile();
+                                    }
+                                    //README Size of cities that are <= current city is not maximum
+                                    //INFO We are now going to read all cities after current city that are still same state
+                                    if (size1 + size0 == maxSize) {
+                                        getfile();
+                                    } else {
+                                        db.collection("userPass")
+                                                .whereEqualTo("State", state)
+                                                .orderBy("City")
+                                                .orderBy("Name")
+                                                .limit((int) Math.max(maxSize - size0 - size1, 1))
+                                                .startAfter(lastVisible)
+                                                .get()
+                                                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                                    @Override
+                                                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                                        Log.wtf("*-_NESTED 2", "Size: " + queryDocumentSnapshots.size());
+                                                        patientNested2 = new ArrayList<>();
+                                                        size2 = 0;
+                                                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                                                            //patientInfo.add((HashMap<String, Object>) document.getData());
+                                                            //patientUsernames.add(document.get("User").toString());
+                                                            if (!document.get("User").equals(username)) {
+                                                                size2++;
+                                                                patientNested2.add((HashMap<String, Object>) document.getData());
+                                                                Log.wtf("*--READING 2 ", document.getId() + " => " + document.getData());
+                                                            }    //size++;
+                                                            // }
+                                                        }
+                                                        //size2 = queryDocumentSnapshots.size();
+                                                        if (size2 == 0) {
+                                                            //             if (isSafe() && loadingResults != null)
+                                                            //                 loadingResults.cancel();
+                                                            if (size0 == 0 && size1 == 0)
+                                                                makeSnackBar(5200, "It appears there are no patients in your state! Share the app with others and wait for more users to create their accounts.");
+                                                        } else {
+                                                            //INFO size3 is not 0 which means we just got the cities in same state that
+                                                            // are greater than current city.
+                                                            //README Because we have larger cities, we have to update lastVisible
+                                                            lastVisible = queryDocumentSnapshots.
+                                                                    getDocuments().get(queryDocumentSnapshots.size() - 1);
+                                                            //    if (adapter != null)
+                                                            //        adapter.notifyDataSetChanged();
+                                                            //getfile();
+                                                        }
+
+                                                        //INFO Now we move onto querying in the whole nation.
+                                                        if (size2 + size1 + size0 == maxSize) {
+                                                            getfile();
+                                                        } else {
+                                                            Object[] objects = firstVisible.getData().values().toArray();
+                                                            Log.wtf("*-_FIRSTVISIBLE b4 nested 3", firstVisible.get("City") + " " +
+                                                                    firstVisible.get("State") + " " + firstVisible.get("Name"));
+                                                            db.collection("userPass")
+                                                                    .whereEqualTo("Country", country)
+                                                                    .orderBy("State")
+                                                                    .orderBy("City")
+                                                                    .orderBy("Name")
+                                                                    .limit((int) Math.max(maxSize - size0 - size1 - size2, 1))
+                                                                    //.endBefore("ZZZZ", "ZZZ")
+                                                                    .endBefore(firstVisible)
+                                                                    .get()
+                                                                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                                                        @Override
+                                                                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                                                            Log.wtf("*-_NESTED 3", "Size: " + queryDocumentSnapshots.size());
+                                                                            patientNested3 = new ArrayList<>();
+                                                                            size3 = 0;
+                                                                            for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                                                                                //patientInfo.add((HashMap<String, Object>) document.getData());
+                                                                                //patientUsernames.add(document.get("User").toString());
+                                                                                if (!document.get("User").equals(username)) {
+                                                                                    size3++;
+                                                                                    patientNested3.add((HashMap<String, Object>) document.getData());
+                                                                                    Log.wtf("*--READING 3 ", document.getId() + " => " + document.getData());
+                                                                                }            //size++;
+                                                                                // }
+                                                                            }
+                                                                            //size3 = queryDocumentSnapshots.size();
+                                                                            if (size3 == 0) {
+                                                                                //          if (isSafe() && loadingResults != null)
+                                                                                //              loadingResults.cancel();
+                                                                                                      /*if (size == 0 && size2 == 0)
+                                                                                                          makeSnackBar(5000, "It appears there are no patients in your state.");*/
+                                                                            } else {
+                                                                                //INFO size3 is not 0 which means we just got the cities in same state that
+                                                                                // are greater than current city.
+                                                                                //README Because we have larger cities, we have to update lastVisible
+                                                                                //firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                                                                                Log.wtf("*-_FIRSTVISIBLE 3 unnecessary", firstVisible.get("City") + " " +
+                                                                                        firstVisible.get("State") + " " + firstVisible.get("Name"));
+
+                                                                                //                 if (adapter != null)
+                                                                                //                     adapter.notifyDataSetChanged();
+                                                                                //getfile();
+                                                                            }
+
+                                                                            if (size3 + size2 + size1 + size0 == maxSize) {
+                                                                                getfile();
+                                                                            } else {
+                                                                                Log.wtf("*-_LASTVISIBLE", lastVisible.get("City") + " " + lastVisible.get("State") + " " + lastVisible.get("Name"));
+                                                                                db.collection("userPass")
+                                                                                        .whereEqualTo("Country", country)
+                                                                                        .orderBy("State")
+                                                                                        .orderBy("City")
+                                                                                        .orderBy("Name")
+                                                                                        .limit((int) Math.max(maxSize - size3 - size0 - size1 - size2, 1))
+                                                                                        .startAfter(lastVisible)
+                                                                                        .get()
+                                                                                        .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                                                                            @Override
+                                                                                            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                                                                                Log.wtf("*-_NESTED 4", "Size: " + queryDocumentSnapshots.size());
+                                                                                                patientNested4 = new ArrayList<>();
+                                                                                                size4 = 0;
+                                                                                                for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                                                                                                    //patientInfo.add((HashMap<String, Object>) document.getData());
+                                                                                                    //patientUsernames.add(document.get("User").toString());
+                                                                                                    if (!document.get("User").equals(username)) {
+                                                                                                        size4++;
+                                                                                                        patientNested4.add((HashMap<String, Object>) document.getData());
+                                                                                                        Log.wtf("*--READING 4 ", document.getId() + " => " + document.getData());
+                                                                                                    }  //size++;
+                                                                                                    // }
+                                                                                                }
+                                                                                                //size4 = queryDocumentSnapshots.size();
+                                                                                                //if (adapter != null)
+                                                                                                //    adapter.notifyDataSetChanged();
+                                                                                                getfile();
+                                                                                                if (size4 == 0) {
+                                                                                                    if (size0 == 0 && size1 == 0 && size2 == 0) {
+                                                                                                        makeSnackBar(6200, "It appears there are no patients in your country! Share the app with others and wait for more users to create their accounts.");
+                                                                                                        if (isSafe() && loadingResults != null)
+                                                                                                            loadingResults.cancel();
+                                                                                                    }
+                                                                                                } else {
+                                                                                                    //INFO size3 is not 0 which means we just got the cities in same state that
+                                                                                                    // are greater than current city.
+                                                                                                    //README Because we have larger cities, we have to update lastVisible
+                                                                                                    //firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                                                                                                    Log.wtf("*-_FIRSTVISIBLE 4 unneces", firstVisible.get("City") + " " +
+                                                                                                            firstVisible.get("State") + " " + firstVisible.get("Name"));
+
+                                                                                                    //if (adapter != null)
+                                                                                                    //    adapter.notifyDataSetChanged();
+                                                                                                    //getfile();
+                                                                                                }
+
+
+                                                                                            }
+                                                                                        }).addOnFailureListener(new OnFailureListener() {
+                                                                                    @Override
+                                                                                    public void onFailure(@NonNull Exception e) {
+                                                                                        Log.wtf("*Erorr:", e.getMessage());
+                                                                                        makeSnackBar(3000, "Error getting information. Plesae try again.");
+                                                                                    }
+                                                                                });
+                                                                            }
+
+                                                                        }
+                                                                    }).addOnFailureListener(new OnFailureListener() {
+                                                                @Override
+                                                                public void onFailure(@NonNull Exception e) {
+                                                                    Log.wtf("*Erorr:", e.getMessage());
+                                                                    makeSnackBar(3000, "Error getting information. Plesae try again.");
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+
+                                                }).addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                Log.wtf("*Erorr:", e.getMessage());
+                                                makeSnackBar(3000, "Error getting information. Plesae try again.");
+                                            }
+                                        });
+                                    }
+
+                                }
+
+                            }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.wtf("*Erorr:", e.getMessage());
+                            makeSnackBar(3000, "Error getting information. Plesae try again.");
+                        }
+                    });
+
+                }
+            }
+
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.wtf("*Erorr:", e.getMessage());
+                makeSnackBar(3000, "Error getting information. Plesae try again.");
+            }
+        });
+        //db.collection("userPass").add
+    }
+
+    private void loadForeignPatientInfo() {
+        //makeToast(city +":" + country);
+        db.collection("userPass")
+                .whereEqualTo("Country", country)
+                .whereEqualTo("City", city)
+                .orderBy("Name")
+                //.orderBy("Status", Query.Direction.DESCENDING)
+                .limit(maxSize)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        patientNested0 = new ArrayList<>();
+                        size0 = 0;
+                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                              /*patientInfo.add((HashMap<String, Object>) document.getData());
+                              patientUsernames.add(document.get("User").toString());*/
+                            Log.wtf("*--READING ", document.getId() + " => " + document.getData());
+                            if (!document.get("User").equals(username)) {
+                                size0++;
+                                patientNested0.add((HashMap<String, Object>) document.getData());
+                                //Log.wtf("*--READING ", document.getId() + " => " + document.getData());
+                            } else {
+
+                            }
+                        }
+                        Log.wtf("*-_NESTED 0", "Size: " + size0 + " " + country + " Actual size: " + queryDocumentSnapshots.size());
+                        if (size0 == 0) {
+                            //  if (isSafe() && loadingResults != null) loadingResults.cancel();
+                            makeSnackBar(7000, "It appears there are no patients in your city. Share the app with others and wait for more users to create their accounts.");
+                        } else {
+                            //if (size > 84) {
+                            // if (adapter != null) adapter.notifyDataSetChanged();
+                            //getfile();
+                        }
+
+                        //if (size0 < maxSize) {
+                        if (size0 == 0 && queryDocumentSnapshots.size() > 0) {
+                            lastVisible = queryDocumentSnapshots.getDocuments()
+                                    .get(0);
+                            firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                        } else if (size0 > 0) {
+                            lastVisible = queryDocumentSnapshots.getDocuments()
+                                    .get(queryDocumentSnapshots.size() - 1);
+                            firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                        } else {
+                                  /*Log.wtf("__COUNTRY: ", country);
+new Handler().postDelayed(new Runnable() {
+                                      @Override
+                                      public void run() {
+                                          Log.wtf("COUNTRY: ", country);
+                                          loadForeignPatientInfo();
+                                      }
+                                  },1000);*/
+                        }
+                        if (size0 == maxSize) {
+                            getfile();
+                        } else {
+                            db.collection("userPass")
+                                    .whereEqualTo("Country", country)
+                                    .orderBy("City")
+                                    .orderBy("Name")
+                                    .limit(Math.max(maxSize - size0, 1))
+                                    .endBefore(firstVisible)
+                                    .get()
+                                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                        @Override
+                                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                            Log.wtf("*-_NESTED 1", "Size: " + queryDocumentSnapshots.size());
+                                            patientNested1 = new ArrayList<>();
+                                            size1 = 0;
+                                            for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                                                //patientInfo.add((HashMap<String, Object>) document.getData());
+                                                //patientUsernames.add(document.get("User").toString());
+                                                if (!document.get("User").equals(username)) {
+                                                    size1++;
+                                                    patientNested1.add((HashMap<String, Object>) document.getData());
+                                                    Log.wtf("*--READING 1 ", document.getId() + " => " + document.getData());
+                                                }  //size++;
+                                                // }
+                                            }
+                                            //size1 = queryDocumentSnapshots.size();
+                                            if (size1 == 0) {
+                                                     /* if (isSafe() && loadingResults != null)
+                                                          loadingResults.cancel();*/
+                                                      /*if (size0 == 0 && size1 == 0 && size2 == 0)
+                                                          makeSnackBar(7000, "It appears there are no patients in your country! Wait for more users to create their accounts.");
+                                                  */
+                                            } else {
+                                                //INFO size3 is not 0 which means we just got the cities in same state that
+                                                // are greater than current city.
+                                                //README Because we have larger cities, we have to update lastVisible
+                                                firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                                                      /*if (adapter != null)
+                                                          adapter.notifyDataSetChanged();*/
+                                                //getfile();
+                                            }
+                                            if (size1 + size0 == maxSize) {
+                                                getfile();
+                                            } else {
+                                                db.collection("userPass")
+                                                        .whereEqualTo("Country", country)
+                                                        .orderBy("City")
+                                                        .orderBy("Name")
+                                                        .limit(Math.max(maxSize - size0 - size1, 1))
+                                                        .startAfter(lastVisible)
+                                                        .get()
+                                                        .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                                            @Override
+                                                            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                                                Log.wtf("*-_NESTED 2", "Size: " + queryDocumentSnapshots.size());
+                                                                patientNested2 = new ArrayList<>();
+                                                                size2 = 0;
+                                                                for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                                                                    //patientInfo.add((HashMap<String, Object>) document.getData());
+                                                                    //patientUsernames.add(document.get("User").toString());
+                                                                    if (!document.get("User").equals(username)) {
+                                                                        size2++;
+                                                                        patientNested2.add((HashMap<String, Object>) document.getData());
+                                                                        Log.wtf("*--READING 2 ", document.getId() + " => " + document.getData());
+                                                                    }  //size++;
+                                                                    // }
+                                                                }
+                                                                //size1 = queryDocumentSnapshots.size();
+                                                                getfile();
+                                                                if (size2 == 0) {
+                                                                    if (isSafe() && loadingResults != null)
+                                                                        loadingResults.cancel();
+                                                                    if (size0 == 0 && size1 == 0 && size2 == 0)
+                                                                        makeSnackBar(7300, "It appears there are no patients in your country! Share the app with others and wait for more users to create their accounts.");
+                                                                } else {
+                                                                    //INFO size3 is not 0 which means we just got the cities in same state that
+                                                                    // are greater than current city.
+                                                                    //README Because we have larger cities, we have to update lastVisible
+                                                                    //firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                                                                              /*if (adapter != null)
+                                                                                  adapter.notifyDataSetChanged();*/
+                                                                    //getfile();
+
+                                                                }
+                                                            }
+                                                        });
+
+                                            }
+
+                                        }
+                                    });
+
+                        }
+
+                    }
+                });
+        //db.collection("userPass").add
+    }
+   /* private void loadPatientInfo() {
         //city = "Allen";
         maxSize = 19;
         db.collection("userPass")
@@ -448,8 +903,8 @@ public class DoctorStatuses3 extends Fragment {
                                                                             if (size3 == 0) {
                                                                                 //          if (isSafe() && loadingResults != null)
                                                                                 //              loadingResults.cancel();
-                                                                                                       /*if (size == 0 && size2 == 0)
-                                                                                                           makeSnackBar(5000, "It appears there are no patients in your state.");*/
+                                                                                                       *//*if (size == 0 && size2 == 0)
+                                                                                                           makeSnackBar(5000, "It appears there are no patients in your state.");*//*
                                                                             } else {
                                                                                 //INFO size3 is not 0 which means we just got the cities in same state that
                                                                                 // are greater than current city.
@@ -567,161 +1022,7 @@ public class DoctorStatuses3 extends Fragment {
             }
         });
         //db.collection("userPass").add
-    }
-
-    private void loadForeignPatientInfo() {
-        //makeToast(city +":" + country);
-        db.collection("userPass")
-                .whereEqualTo("Country", country)
-                .whereEqualTo("City", city)
-                .orderBy("Name")
-                //.orderBy("Status", Query.Direction.DESCENDING)
-                .limit(maxSize)
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                    @Override
-                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                        patientNested0 = new ArrayList<>();
-                        size0 = 0;
-                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
-                               /*patientInfo.add((HashMap<String, Object>) document.getData());
-                               patientUsernames.add(document.get("User").toString());*/
-                            Log.wtf("*--READING ", document.getId() + " => " + document.getData());
-                            if (!document.get("User").equals(username)) {
-                                size0++;
-                                patientNested0.add((HashMap<String, Object>) document.getData());
-                                //Log.wtf("*--READING ", document.getId() + " => " + document.getData());
-                            } else {
-
-                            }
-                        }
-                        Log.wtf("*-_NESTED 0", "Size: " + size0 + " " + country + " Actual size: " + queryDocumentSnapshots.size());
-                        if (size0 == 0) {
-                            //  if (isSafe() && loadingResults != null) loadingResults.cancel();
-                            makeSnackBar(6300, "It appears there are no patients in your city. Share the app with others and wait for more users to create their accounts.");
-                        } else {
-                            //if (size > 84) {
-                            // if (adapter != null) adapter.notifyDataSetChanged();
-                            //getfile();
-                        }
-
-                        //if (size0 < maxSize) {
-                        if (size0 == 0 && queryDocumentSnapshots.size() > 0) {
-                            lastVisible = queryDocumentSnapshots.getDocuments()
-                                    .get(0);
-                            firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                        } else if (size0 > 0) {
-                            lastVisible = queryDocumentSnapshots.getDocuments()
-                                    .get(queryDocumentSnapshots.size() - 1);
-                            firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                        } else {
-                                   /*Log.wtf("__COUNTRY: ", country);
- new Handler().postDelayed(new Runnable() {
-                                       @Override
-                                       public void run() {
-                                           Log.wtf("COUNTRY: ", country);
-                                           loadForeignPatientInfo();
-                                       }
-                                   },1000);*/
-                        }
-                        if (size0 == maxSize) {
-                            getfile();
-                        } else {
-                            db.collection("userPass")
-                                    .whereEqualTo("Country", country)
-                                    .orderBy("City")
-                                    .orderBy("Name")
-                                    .limit(Math.max(maxSize - size0, 1))
-                                    .endBefore(firstVisible)
-                                    .get()
-                                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                                        @Override
-                                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                                            Log.wtf("*-_NESTED 1", "Size: " + queryDocumentSnapshots.size());
-                                            patientNested1 = new ArrayList<>();
-                                            size1 = 0;
-                                            for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
-                                                //patientInfo.add((HashMap<String, Object>) document.getData());
-                                                //patientUsernames.add(document.get("User").toString());
-                                                if (!document.get("User").equals(username)) {
-                                                    size1++;
-                                                    patientNested1.add((HashMap<String, Object>) document.getData());
-                                                    Log.wtf("*--READING 1 ", document.getId() + " => " + document.getData());
-                                                }  //size++;
-                                                // }
-                                            }
-                                            //size1 = queryDocumentSnapshots.size();
-                                            if (size1 == 0) {
-                                                      /* if (isSafe() && loadingResults != null)
-                                                           loadingResults.cancel();*/
-                                                       /*if (size0 == 0 && size1 == 0 && size2 == 0)
-                                                           makeSnackBar(7000, "It appears there are no patients in your country! Wait for more users to create their accounts.");
-                                                   */
-                                            } else {
-                                                //INFO size3 is not 0 which means we just got the cities in same state that
-                                                // are greater than current city.
-                                                //README Because we have larger cities, we have to update lastVisible
-                                                firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                                                       /*if (adapter != null)
-                                                           adapter.notifyDataSetChanged();*/
-                                                //getfile();
-                                            }
-                                            if (size1 + size0 == maxSize) {
-                                            } else {
-                                                db.collection("userPass")
-                                                        .whereEqualTo("Country", country)
-                                                        .orderBy("City")
-                                                        .orderBy("Name")
-                                                        .limit(Math.max(maxSize - size0 - size1, 1))
-                                                        .startAfter(lastVisible)
-                                                        .get()
-                                                        .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                                                            @Override
-                                                            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                                                                Log.wtf("*-_NESTED 2", "Size: " + queryDocumentSnapshots.size());
-                                                                patientNested2 = new ArrayList<>();
-                                                                size2 = 0;
-                                                                for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
-                                                                    //patientInfo.add((HashMap<String, Object>) document.getData());
-                                                                    //patientUsernames.add(document.get("User").toString());
-                                                                    if (!document.get("User").equals(username)) {
-                                                                        size2++;
-                                                                        patientNested2.add((HashMap<String, Object>) document.getData());
-                                                                        Log.wtf("*--READING 2 ", document.getId() + " => " + document.getData());
-                                                                    }  //size++;
-                                                                    // }
-                                                                }
-                                                                //size1 = queryDocumentSnapshots.size();
-                                                                getfile();
-                                                                if (size2 == 0) {
-                                                                    if (isSafe() && loadingResults != null)
-                                                                        loadingResults.cancel();
-                                                                    if (size0 == 0 && size1 == 0 && size2 == 0)
-                                                                        makeSnackBar(6600, "It appears there are no patients in your country! Share the app with others and wait for more users to create their accounts.");
-                                                                } else {
-                                                                    //INFO size3 is not 0 which means we just got the cities in same state that
-                                                                    // are greater than current city.
-                                                                    //README Because we have larger cities, we have to update lastVisible
-                                                                    //firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                                                                               /*if (adapter != null)
-                                                                                   adapter.notifyDataSetChanged();*/
-                                                                    //getfile();
-
-                                                                }
-                                                            }
-                                                        });
-
-                                            }
-
-                                        }
-                                    });
-
-                        }
-
-                    }
-                });
-        //db.collection("userPass").add
-    }
+    }*/
 
     public static ArrayList<String> fileList;
 
@@ -759,6 +1060,7 @@ public class DoctorStatuses3 extends Fragment {
         patientInfo.addAll(patientNested2);
         patientInfo.addAll(patientNested3);
         patientInfo.addAll(patientNested4);
+
         //Log.wtf("*-_PATIENTINFP:", patientInfo.toString());
         Log.wtf("*-_ File List:", fileList.toString());
         writeImages();
@@ -777,13 +1079,13 @@ public class DoctorStatuses3 extends Fragment {
         if (patientInfo.size() == 0) {
             if (loadingResults != null && isSafe())
                 loadingResults.cancel();
-            adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+            adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
             patientRecycler.setAdapter(adapter);
         } else {
             boolean haveAllFiles = haveAllfiles();
             if (fileList.size() == 0 && !isNetworkAvailable()) {
                 makeSnackBar(5000, "Could not load images since you are not connected to the internet.");
-                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
                 patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                 patientRecycler.setAdapter(adapter);
                 for (int i = 0; i < patientInfo.size(); i++) {
@@ -793,7 +1095,7 @@ public class DoctorStatuses3 extends Fragment {
                 }
             } else if (!haveAllFiles && !isNetworkAvailable()) {
                 makeSnackBar(5000, "Could not load all images since you are not connected to the internet.");
-                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
                 patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                 patientRecycler.setAdapter(adapter);
                 for (int i = 0; i < patientInfo.size(); i++) {
@@ -802,7 +1104,7 @@ public class DoctorStatuses3 extends Fragment {
                     userString += "-------" + username;
                 }
             } else if (haveAllFiles) {
-                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
                 patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                 patientRecycler.setAdapter(adapter);
                 for (int i = 0; i < patientInfo.size(); i++) {
@@ -837,7 +1139,7 @@ public class DoctorStatuses3 extends Fragment {
 
                                     //if (username.equals(patientUsernames.get(0)) ) {
                                     if (goodToGo.size() == patientInfo.size()) {
-                                        adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+                                        adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
                                         //setMaxHeight();
                                /*if (isSafe() && loadingResults != null)
                                    if (isSafe() && loadingResults != null) loadingResults.cancel();*/
@@ -870,7 +1172,7 @@ public class DoctorStatuses3 extends Fragment {
                                     goodToGo.add(false);
                                     Log.wtf("*Image Failure", "gSize: " + goodToGo.size() + " " + "listSize: " + patientInfo.size());
                                     if (goodToGo.size() == patientInfo.size()) {
-                                        adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+                                        adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
                                         patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                                         patientRecycler.setAdapter(adapter);
                                         if (isSafe())
@@ -901,7 +1203,7 @@ public class DoctorStatuses3 extends Fragment {
                         // if (!entered && !set[0] && i == patientUsernames.size() - 1) {
                         if (goodToGo.size() == patientInfo.size()) {
                             //    if (isSafe() && loadingResults != null) loadingResults.cancel();
-                            adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+                            adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
                             patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                             patientRecycler.setAdapter(adapter);
                    /*new Handler().postDelayed(new Runnable() {
@@ -924,6 +1226,7 @@ public class DoctorStatuses3 extends Fragment {
 
 
             }
+            if(isSafe())
             writeToUsers(userString);
         }
     }
@@ -983,7 +1286,7 @@ public class DoctorStatuses3 extends Fragment {
     }
 
     int counter = 0;
-    ListenerRegistration userPassListener;
+  public static ListenerRegistration userPassListener;
 
     public void updateInfoTxt() {
         final DocumentReference docRef = db.collection("userPass").document(userPassID);
@@ -1010,7 +1313,7 @@ public class DoctorStatuses3 extends Fragment {
                             long[] pattern = {0, 800, 250, 800, 250, 800, 250, 800, 250};
                             if (vib.hasVibrator())
                                 vib.vibrate(pattern, -1);
-                            makeToast("Your COVID Status was updated! Check the dashboard.");
+                            largeToast("Your COVID Status was updated! Check the dashboard.");
                         }
                         //writeNewInfo(snapshot.getData());
                         Log.wtf("*------ INFO RETRIEVED (DoctorStatuses) -----", source + " data: " + snapshot.getData());
@@ -1029,15 +1332,17 @@ public class DoctorStatuses3 extends Fragment {
 
     @Override
     public void onDestroyView() {
+        if(userPassListener != null)
+            userPassListener.remove();
         super.onDestroyView();
-        userPassListener.remove();
     }
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
-        userPassListener.remove();
+        if(userPassListener != null)
+            userPassListener.remove();
         Log.wtf("*-*REMOVING UNCESSARY", "" + removeUncessaryFiles());
+        super.onDestroy();
     }
 
 
@@ -1258,7 +1563,21 @@ public class DoctorStatuses3 extends Fragment {
         }
     }
 
+    Toast toast;
+
     public void makeToast(String s) {
-        Toast.makeText(getContext(), s, Toast.LENGTH_LONG).show();
+        if (toast != null) toast.cancel();
+        toast = Toast.makeText(getContext(), s, Toast.LENGTH_LONG);
+        toast.show();
+    }
+
+    private void largeToast(String s) {
+        if (toast != null) toast.cancel();
+        toast = Toast.makeText(getContext(), s, Toast.LENGTH_LONG);
+        ViewGroup group = (ViewGroup) toast.getView();
+        TextView messageTextView = (TextView) group.getChildAt(0);
+        messageTextView.setTextSize(25);
+        toast.show();
+
     }
 }

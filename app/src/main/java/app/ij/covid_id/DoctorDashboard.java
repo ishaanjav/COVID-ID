@@ -49,6 +49,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import app.ij.covid_id.ui.dashboard.DashboardFragment;
+import app.ij.covid_id.ui.doctor_dashboard.DoctorDashboardFragment;
+import app.ij.covid_id.ui.doctor_statuses.DoctorStatuses3;
+import app.ij.covid_id.ui.map.MapFragment;
+import app.ij.covid_id.ui.settings.SettingsFragment;
+
 public class DoctorDashboard extends AppCompatActivity {
 
     FirebaseFirestore db;
@@ -221,7 +227,26 @@ public class DoctorDashboard extends AppCompatActivity {
     private void signOut() {
         writeLogin("false", getApplicationContext());
         removeUncessaryFiles();
+        removeListeners();
         startActivity(new Intent(DoctorDashboard.this, MainActivity.class));
+    }
+
+    public void removeListeners() {
+        Log.wtf("INFO", "Doctor Dashboard: Removing Listeners");
+        if(DoctorDashboardFragment.listener != null)
+            DoctorDashboardFragment.listener.remove();
+        if(DoctorDashboardFragment.listener2 != null)
+            DoctorDashboardFragment.listener2.remove();
+        if(DashboardFragment.listener != null)
+            DashboardFragment.listener.remove();
+        if(DashboardFragment.listener2 != null)
+            DashboardFragment.listener2.remove();
+        if(DoctorStatuses3.userPassListener != null)
+            DoctorStatuses3.userPassListener.remove();
+        if(MapFragment.listener != null)
+            MapFragment.listener.remove();
+        if(SettingsFragment.listener != null)
+            SettingsFragment.listener.remove();
     }
 
     public static int variable = 3;
@@ -286,11 +311,14 @@ public class DoctorDashboard extends AppCompatActivity {
         toast = Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT);
         toast.show();
     }
+
     @Override
     protected void onUserLeaveHint() {
         removeUncessaryFiles();
+        removeListeners();
         super.onUserLeaveHint();
     }
+
     public boolean removeUncessaryFiles() {
         String directory = getApplicationContext().getApplicationInfo().dataDir + "/files";
         String readUsers = readUsers(getApplicationContext());
@@ -305,11 +333,11 @@ public class DoctorDashboard extends AppCompatActivity {
         for (int i = 0; i < files.length; i++) {
             String name = files[i].getName();
             if (name.endsWith(".jpg")) {
-                count ++;
+                count++;
                 if (!users.contains(name.substring(0, name.length() - 4))) {
                     files[i].delete();
-                    Log.wtf("*-* Deleting", users.contains(name.substring(0, name.length()-4)) + " " + name);
-                    count --;
+                    Log.wtf("*-* Deleting", users.contains(name.substring(0, name.length() - 4)) + " " + name);
+                    count--;
                 }
                 //locations.add(name);
             }
