@@ -260,6 +260,8 @@ public class MainActivity extends AppCompatActivity {
                         //vib.vibrate(3000);
                         if (vib.hasVibrator())
                             vib.vibrate(pattern, -1);
+                        else longToast("COVID-ID app updates are available! Check the Play Store.");
+
                         writeToUpdate("no", getApplicationContext());
                         showUpdate();
                     } else {
@@ -271,6 +273,7 @@ public class MainActivity extends AppCompatActivity {
                         //vib.vibrate(3000);
                         if (vib.hasVibrator())
                             vib.vibrate(pattern, -1);
+                        else longToast("COVID-ID app updates are available! Check the Play Store.");
                         writeToUpdate("no", getApplicationContext());
                         showUpdate();
                     } else {
@@ -592,7 +595,9 @@ public class MainActivity extends AppCompatActivity {
                                                                 + "___________" + document.get("Willing").toString();
                                                     } else {//DONE Change to doctor dashboard
                                                         intent = new Intent(MainActivity.this, DoctorDashboard.class);
+                                                        remaining += "___________" + document.get("Center").toString();
                                                     }
+                                                    remaining += "___________" + document.get("CityU").toString() + "___________" + document.get("CenterU").toString();
                                                     String n = "Bob", p = "9999999999", city = "", state = "", country = "", docId;
                                                     docId = document.get("Doc ID").toString();
                                                     String userPassID = document.getId();

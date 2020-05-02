@@ -21,6 +21,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
@@ -45,6 +46,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class DoctorDashboard extends AppCompatActivity {
 
@@ -52,6 +55,8 @@ public class DoctorDashboard extends AppCompatActivity {
     RelativeLayout screen;
     double screenW;
     String updater;
+
+    String firstDoctor = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +82,19 @@ public class DoctorDashboard extends AppCompatActivity {
         //updater = readFromFile(getApplicationContext());
         //listenForUpdates();
 
+        variable = 3;
+        firstDoctor = readFirstDoctor(getApplicationContext());
+        if (firstDoctor == null || firstDoctor.isEmpty() || firstDoctor.length() < 2) {
+            //TODO This is the first time a doctor is signing in --> TourGuide and explanation of how to use app.
+
+            //TODO Uncomment below when done testing TourGuide
+            //writeToFirstDoctor("Doctor Finished");
+        } else if (firstDoctor.contains("yes")) {
+            //TODO This is the first time a doctor is signing in --> after creating an account.
+
+            //TODO Uncomment below when done testing TourGuide
+            //writeToFirstDoctor("Doctor Finished");
+        }
     }
 
     private void writeToUpdate(String data, Context context) {
@@ -144,12 +162,12 @@ public class DoctorDashboard extends AppCompatActivity {
         dialog.show();
     }
 
-    private String readFromFile(Context context) {
+    private String readUsers(Context context) {
 
         String ret = "";
 
         try {
-            InputStream inputStream = context.openFileInput("update.txt");
+            InputStream inputStream = context.openFileInput("users.txt");
 
             if (inputStream != null) {
                 InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
@@ -206,16 +224,94 @@ public class DoctorDashboard extends AppCompatActivity {
         startActivity(new Intent(DoctorDashboard.this, MainActivity.class));
     }
 
+    public static int variable = 3;
+
+    @Override
+    public void onBackPressed() {
+        variable--;
+        String time = (variable == 1) ? " more time " : " more times ";
+        if (variable == 0)
+            signOut();
+        else makeToast("Press back " + variable + time + "to sign out.");
+    }
+
+    Toast toast;
+
+    private String readFirstDoctor(Context context) {
+
+        String ret = "";
+
+        try {
+            InputStream inputStream = context.openFileInput("firstDoctor.txt");
+
+            if (inputStream != null) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ((receiveString = bufferedReader.readLine()) != null) {
+                    stringBuilder.append("\n").append(receiveString);
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+            }
+        } catch (FileNotFoundException e) {
+            Log.wtf("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.wtf("login activity", "Can not read file: " + e.toString());
+        }
+
+        return ret;
+    }
+
+
+    //README "firstDoctor.txt" is used to check whether this is the first time a doctor is signing in.
+    private void writeToFirstDoctor(String data) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getApplicationContext().openFileOutput("firstDoctor.txt", Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+
+        } catch (IOException e) {
+            //makeSnackBar(4000, "Could not load info. Try logging out and logging back in.");
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
+    }
+
+    private void makeToast(String s) {
+        if (toast != null)
+            toast.cancel();
+        toast = Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT);
+        toast.show();
+    }
+    @Override
+    protected void onUserLeaveHint() {
+        removeUncessaryFiles();
+        super.onUserLeaveHint();
+    }
     public boolean removeUncessaryFiles() {
         String directory = getApplicationContext().getApplicationInfo().dataDir + "/files";
+        String readUsers = readUsers(getApplicationContext());
+        List<String> users = Arrays.asList(readUsers.split("-------"));
 
+        Log.wtf("*-* Users List:", "SIZE: " + users.size() + " " + users.toString());
         File location = new File(directory);
         File[] files = location.listFiles();
         ArrayList<String> locations = new ArrayList<>();
+        //TODO See if below code works.
+        int count = 0;
         for (int i = 0; i < files.length; i++) {
             String name = files[i].getName();
             if (name.endsWith(".jpg")) {
-                locations.add(name);
+                count ++;
+                if (!users.contains(name.substring(0, name.length() - 4))) {
+                    files[i].delete();
+                    Log.wtf("*-* Deleting", users.contains(name.substring(0, name.length()-4)) + " " + name);
+                    count --;
+                }
+                //locations.add(name);
             }
         }
         for (String s : locations) {
@@ -225,7 +321,7 @@ public class DoctorDashboard extends AppCompatActivity {
         }
         //TODO Remove Below 2 lines and basically all Log.wtf() that are not needed for deployment.
         files = location.listFiles();
-        Log.wtf("*-* Files", "Path: " + directory + "  # of files: " + files.length);
+        Log.wtf("*-* Files", "Path: " + directory + "  # of files: " + files.length + "   # of images: " + count);
         return true;
     }
 

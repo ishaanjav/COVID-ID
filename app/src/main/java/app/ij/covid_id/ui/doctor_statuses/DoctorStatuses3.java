@@ -10,6 +10,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -32,6 +33,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnCanceledListener;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -61,9 +63,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
+import app.ij.covid_id.DoctorDashboard;
 import app.ij.covid_id.InfoRecyclerViewAdapter;
 import app.ij.covid_id.R;
+import app.ij.covid_id.ui.doctor_dashboard.DoctorDashboardFragment;
 
 import static app.ij.covid_id.InfoRecyclerViewAdapter.lastPosition;
 import static app.ij.covid_id.InfoRecyclerViewAdapter.setAnimation;
@@ -73,7 +78,7 @@ public class DoctorStatuses3 extends Fragment {
     FirebaseFirestore db;
     ScrollView screen;
     View root;
-    public String documentID, username, name, userPassID, type, password, accountCreated, phone, email, status;
+    public String documentID, username, name, userPassID, type, password, accountCreated, phone, email, status, medicalProvider;
     String statusLastUpdated;
     String doctorsPath;
     public RecyclerView patientRecycler;
@@ -101,7 +106,9 @@ public class DoctorStatuses3 extends Fragment {
         patientNested2 = new ArrayList<>();
         patientNested3 = new ArrayList<>();
         patientNested4 = new ArrayList<>();
+        patientUsernames = new ArrayList<>();
         readStorage();
+        DoctorDashboard.variable = 3;
         return root;
     }
 
@@ -120,7 +127,7 @@ public class DoctorStatuses3 extends Fragment {
         patientUsernames = new ArrayList<>();
         patientInfo = new ArrayList<>();
         foreign = state.isEmpty() || state.length() < 2;
-        maxSize = 22;
+        maxSize = 25;
 
         WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
@@ -132,7 +139,7 @@ public class DoctorStatuses3 extends Fragment {
         maxHeightPatient = screenH * 3f / 5f;
         screenH = metrics.heightPixels;
         maxHeightDoctor = screenH * 11f / 20f;
-        Log.wtf("HEIGHT", "" + screenH);
+        Log.wtf("*HEIGHT", "" + screenH);
 
         p1 = p2 = p3 = p4 = p5 = false;
         //foreign = true;
@@ -168,11 +175,22 @@ public class DoctorStatuses3 extends Fragment {
                     }
                 }
             }, 12200);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (isSafe() && loadingResults != null && loadingResults.isShowing()) {
+                        if (isNetworkAvailable())
+                            loadingResults.setMessage("Try closing the app from memory and reopen it.\nOr you can visit other tabs by clicking outside the box.");
+                        else
+                            loadingResults.setMessage("You are not connected to the internet!!!\nConnect to the internet please or click outside the box.");
+                    }
+                }
+            }, 20000);
         }
         updateInfoTxt();
 
-       /* adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
-        patientRecycler.setAdapter(adapter);*/
+      /* adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+       patientRecycler.setAdapter(adapter);*/
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -180,49 +198,52 @@ public class DoctorStatuses3 extends Fragment {
                 //INFO This is because the query will constantly change as users create accounts.
                 //  It is very distracting and slows it down for the doctor.
                 if (foreign) {
-                 /*   db.collection("userPass")
-                            .whereEqualTo("Country", country)
-                            .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                                @Override
-                                public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                /*   db.collection("userPass")
+                           .whereEqualTo("Country", country)
+                           .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                               @Override
+                               public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
 */
                     loadForeignPatientInfo();
                     //     }
                     // });
                 } else {
-                /*    db.collection("userPass")
-                            .whereEqualTo("Country", country)
-                            .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                                @Override
-                                public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                          */
+               /*    db.collection("userPass")
+                           .whereEqualTo("Country", country)
+                           .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                               @Override
+                               public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                         */
                     loadPatientInfo();
 //                                }
 //                            });
                 }
             }
         }, 180);
-        /*HashMap<String, Object> temp = new HashMap<>();
-        temp.put("Number", 7);
-        temp.put("Username", "patient7");
-        patientInfo.add(temp);
-        HashMap<String, Object> temp2 = new HashMap<>();
-        temp2.put("Number", 8);
-        temp2.put("Username", "patient4");
-        patientInfo.add(temp2);
-        HashMap<String, Object> temp3 = new HashMap<>();
-        temp3.put("Number", 9);
-        temp3.put("Username", "patient6");
-        patientInfo.add(temp3);
-        Log.wtf(TAG, "LIST: " + patientInfo.toString());
-        startTime = System.currentTimeMillis();
-        patientUsernames.add("patient7");
-        patientUsernames.add("patient4");
-        patientUsernames.add("patient6");
-        Log.wtf("-_--START", "" + startTime);*/
+       /*HashMap<String, Object> temp = new HashMap<>();
+       temp.put("Number", 7);
+       temp.put("Username", "patient7");
+       patientInfo.add(temp);
+       HashMap<String, Object> temp2 = new HashMap<>();
+       temp2.put("Number", 8);
+       temp2.put("Username", "patient4");
+       patientInfo.add(temp2);
+       HashMap<String, Object> temp3 = new HashMap<>();
+       temp3.put("Number", 9);
+       temp3.put("Username", "patient6");
+       patientInfo.add(temp3);
+       Log.wtf(TAG, "LIST: " + patientInfo.toString());
+       startTime = System.currentTimeMillis();
+       patientUsernames.add("patient7");
+       patientUsernames.add("patient4");
+       patientUsernames.add("patient6");
+       Log.wtf("-_--START", "" + startTime);*/
 
         //OLD
         //getfile();
+
+        //TODO FInd out if there is a way to not have to keep refreshing the recyclerView.
+        // Try making it static or seeing if you don't need to load it each time user switches between tabs
 
         if (!isNetworkAvailable())
             makeSnackBar(6000, "You are not connected to the internet. Therefore, you will not receive updates unless you connect.");
@@ -240,8 +261,8 @@ public class DoctorStatuses3 extends Fragment {
     ListenerRegistration listen;
 
     private void loadPatientInfo() {
-        maxSize = 30;
         //city = "Allen";
+        maxSize = 19;
         db.collection("userPass")
                 .whereEqualTo("State", state)
                 //.orderBy("State")
@@ -252,15 +273,14 @@ public class DoctorStatuses3 extends Fragment {
                 .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-
                 //makeSnackBar(3000, "CHANGE");
                 Log.wtf("*-_FIRSTVISIBLE -----------", "-----------------------------------------------------------------------------");
-                Log.wtf("______________", "-----------------------------------------------------------------------------");
-                Log.wtf("______________", "-----------------------------------------------------------------------------");
+                Log.wtf("*______________", "-----------------------------------------------------------------------------");
+                Log.wtf("*______________", "-----------------------------------------------------------------------------");
 
                 //patientInfo = new ArrayList<>();
                 totalStartTime = System.currentTimeMillis();
-                Log.wtf("-_--Total Start", "" + totalStartTime);
+                Log.wtf("*-_--Total Start", "" + totalStartTime);
                 patientNested0 = new ArrayList<>();
                 size0 = 0;
                 for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
@@ -289,26 +309,30 @@ public class DoctorStatuses3 extends Fragment {
                 //    }
                 //README Size of specific city and state is smaller.
                 //INFO We are now going to read cities from state where cities are smaller than current city.
-                if (size0 < maxSize) {
-                    if (size0 == 0 && queryDocumentSnapshots.size() > 0) {
-                        lastVisible = queryDocumentSnapshots.getDocuments()
-                                .get(0);
-                        firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                    } else if (size0 > 0) {
-                        lastVisible = queryDocumentSnapshots.getDocuments()
-                                .get(queryDocumentSnapshots.size() - 1);
-                        firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                    } else {
+                // if (size0 < maxSize) {
+                if (size0 == 0 && queryDocumentSnapshots.size() > 0) {
+                    lastVisible = queryDocumentSnapshots.getDocuments()
+                            .get(0);
+                    firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                } else if (size0 > 0) {
+                    lastVisible = queryDocumentSnapshots.getDocuments()
+                            .get(queryDocumentSnapshots.size() - 1);
+                    firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                } else {
 
-                    }
-                    Log.wtf("*-_FIRSTVISIBLE 1", firstVisible.get("City") + " " +
-                            firstVisible.get("State") + " " + firstVisible.get("Name"));
+                }
+                Log.wtf("*-_FIRSTVISIBLE 1", firstVisible.get("City") + " " +
+                        firstVisible.get("State") + " " + firstVisible.get("Name"));
 
+                if (0 + size0 <= maxSize) {
+                    getfile();
+                }
+                if (0 + size0 < maxSize) {
                     db.collection("userPass")
                             .whereEqualTo("State", state)
                             .orderBy("City")
                             .orderBy("Name")
-                            .limit(maxSize - size0)
+                            .limit(Math.max(maxSize - size0, 1))
                             .endBefore(firstVisible)
                             .get()
                             .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
@@ -342,12 +366,15 @@ public class DoctorStatuses3 extends Fragment {
                                     }
                                     //README Size of cities that are <= current city is not maximum
                                     //INFO We are now going to read all cities after current city that are still same state
+                                    if (size1 + size0 <= maxSize) {
+                                        getfile();
+                                    }
                                     if (size1 + size0 < maxSize) {
                                         db.collection("userPass")
                                                 .whereEqualTo("State", state)
                                                 .orderBy("City")
                                                 .orderBy("Name")
-                                                .limit(maxSize - size0 - size1)
+                                                .limit((int) Math.max(maxSize - size0 - size1, 1))
                                                 .startAfter(lastVisible)
                                                 .get()
                                                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
@@ -384,7 +411,11 @@ public class DoctorStatuses3 extends Fragment {
                                                         }
 
                                                         //INFO Now we move onto querying in the whole nation.
-                                                        if (size2 + size1 + size0 < maxSize) {
+                                                        //INFO We are now going to read all cities after current city that are still same state
+                                                        if (size1 + size2 + size0 <= maxSize) {
+                                                            getfile();
+                                                        }
+                                                        if (size1 + size2 + size0 < maxSize) {
                                                             Object[] objects = firstVisible.getData().values().toArray();
                                                             Log.wtf("*-_FIRSTVISIBLE b4 nested 3", firstVisible.get("City") + " " +
                                                                     firstVisible.get("State") + " " + firstVisible.get("Name"));
@@ -393,7 +424,7 @@ public class DoctorStatuses3 extends Fragment {
                                                                     .orderBy("State")
                                                                     .orderBy("City")
                                                                     .orderBy("Name")
-                                                                    .limit(maxSize - size0 - size1 - size2)
+                                                                    .limit((int) Math.max(maxSize - size0 - size1 - size2, 1))
                                                                     //.endBefore("ZZZZ", "ZZZ")
                                                                     .endBefore(firstVisible)
                                                                     .get()
@@ -417,8 +448,8 @@ public class DoctorStatuses3 extends Fragment {
                                                                             if (size3 == 0) {
                                                                                 //          if (isSafe() && loadingResults != null)
                                                                                 //              loadingResults.cancel();
-                                                                                                        /*if (size == 0 && size2 == 0)
-                                                                                                            makeSnackBar(5000, "It appears there are no patients in your state.");*/
+                                                                                                       /*if (size == 0 && size2 == 0)
+                                                                                                           makeSnackBar(5000, "It appears there are no patients in your state.");*/
                                                                             } else {
                                                                                 //INFO size3 is not 0 which means we just got the cities in same state that
                                                                                 // are greater than current city.
@@ -432,14 +463,17 @@ public class DoctorStatuses3 extends Fragment {
                                                                                 //getfile();
                                                                             }
 
-                                                                            if (size3 + size2 + size1 + size0 < maxSize) {
+                                                                            if (size3 + size1 + size2 + size0 <= maxSize) {
+                                                                                getfile();
+                                                                            }
+                                                                            if (size3 + size1 + size2 + size0 < maxSize) {
                                                                                 Log.wtf("*-_LASTVISIBLE", lastVisible.get("City") + " " + lastVisible.get("State") + " " + lastVisible.get("Name"));
                                                                                 db.collection("userPass")
                                                                                         .whereEqualTo("Country", country)
                                                                                         .orderBy("State")
                                                                                         .orderBy("City")
                                                                                         .orderBy("Name")
-                                                                                        .limit(maxSize - size0)
+                                                                                        .limit((int) Math.max(maxSize - size3 - size0 - size1 - size2, 1))
                                                                                         .startAfter(lastVisible)
                                                                                         .get()
                                                                                         .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
@@ -486,7 +520,7 @@ public class DoctorStatuses3 extends Fragment {
                                                                                         }).addOnFailureListener(new OnFailureListener() {
                                                                                     @Override
                                                                                     public void onFailure(@NonNull Exception e) {
-                                                                                        Log.wtf("Erorr:", e.getMessage());
+                                                                                        Log.wtf("*Erorr:", e.getMessage());
                                                                                         makeSnackBar(3000, "Error getting information. Plesae try again.");
                                                                                     }
                                                                                 });
@@ -496,7 +530,7 @@ public class DoctorStatuses3 extends Fragment {
                                                                     }).addOnFailureListener(new OnFailureListener() {
                                                                 @Override
                                                                 public void onFailure(@NonNull Exception e) {
-                                                                    Log.wtf("Erorr:", e.getMessage());
+                                                                    Log.wtf("*Erorr:", e.getMessage());
                                                                     makeSnackBar(3000, "Error getting information. Plesae try again.");
                                                                 }
                                                             });
@@ -506,7 +540,7 @@ public class DoctorStatuses3 extends Fragment {
                                                 }).addOnFailureListener(new OnFailureListener() {
                                             @Override
                                             public void onFailure(@NonNull Exception e) {
-                                                Log.wtf("Erorr:", e.getMessage());
+                                                Log.wtf("*Erorr:", e.getMessage());
                                                 makeSnackBar(3000, "Error getting information. Plesae try again.");
                                             }
                                         });
@@ -517,7 +551,7 @@ public class DoctorStatuses3 extends Fragment {
                             }).addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            Log.wtf("Erorr:", e.getMessage());
+                            Log.wtf("*Erorr:", e.getMessage());
                             makeSnackBar(3000, "Error getting information. Plesae try again.");
                         }
                     });
@@ -528,7 +562,7 @@ public class DoctorStatuses3 extends Fragment {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Log.wtf("Erorr:", e.getMessage());
+                Log.wtf("*Erorr:", e.getMessage());
                 makeSnackBar(3000, "Error getting information. Plesae try again.");
             }
         });
@@ -550,8 +584,8 @@ public class DoctorStatuses3 extends Fragment {
                         patientNested0 = new ArrayList<>();
                         size0 = 0;
                         for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
-                                /*patientInfo.add((HashMap<String, Object>) document.getData());
-                                patientUsernames.add(document.get("User").toString());*/
+                               /*patientInfo.add((HashMap<String, Object>) document.getData());
+                               patientUsernames.add(document.get("User").toString());*/
                             Log.wtf("*--READING ", document.getId() + " => " + document.getData());
                             if (!document.get("User").equals(username)) {
                                 size0++;
@@ -571,31 +605,33 @@ public class DoctorStatuses3 extends Fragment {
                             //getfile();
                         }
 
-                        if (size0 < maxSize) {
-                            if (size0 == 0 && queryDocumentSnapshots.size() > 0) {
-                                lastVisible = queryDocumentSnapshots.getDocuments()
-                                        .get(0);
-                                firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                            } else if (size0 > 0) {
-                                lastVisible = queryDocumentSnapshots.getDocuments()
-                                        .get(queryDocumentSnapshots.size() - 1);
-                                firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                            } else {
-                                    /*Log.wtf("__COUNTRY: ", country);
-  new Handler().postDelayed(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            Log.wtf("COUNTRY: ", country);
-                                            loadForeignPatientInfo();
-                                        }
-                                    },1000);*/
-                            }
-
+                        //if (size0 < maxSize) {
+                        if (size0 == 0 && queryDocumentSnapshots.size() > 0) {
+                            lastVisible = queryDocumentSnapshots.getDocuments()
+                                    .get(0);
+                            firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                        } else if (size0 > 0) {
+                            lastVisible = queryDocumentSnapshots.getDocuments()
+                                    .get(queryDocumentSnapshots.size() - 1);
+                            firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                        } else {
+                                   /*Log.wtf("__COUNTRY: ", country);
+ new Handler().postDelayed(new Runnable() {
+                                       @Override
+                                       public void run() {
+                                           Log.wtf("COUNTRY: ", country);
+                                           loadForeignPatientInfo();
+                                       }
+                                   },1000);*/
+                        }
+                        if (size0 == maxSize) {
+                            getfile();
+                        } else {
                             db.collection("userPass")
                                     .whereEqualTo("Country", country)
                                     .orderBy("City")
                                     .orderBy("Name")
-                                    .limit(maxSize - size0)
+                                    .limit(Math.max(maxSize - size0, 1))
                                     .endBefore(firstVisible)
                                     .get()
                                     .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
@@ -616,26 +652,27 @@ public class DoctorStatuses3 extends Fragment {
                                             }
                                             //size1 = queryDocumentSnapshots.size();
                                             if (size1 == 0) {
-                                                       /* if (isSafe() && loadingResults != null)
-                                                            loadingResults.cancel();*/
-                                                        /*if (size0 == 0 && size1 == 0 && size2 == 0)
-                                                            makeSnackBar(7000, "It appears there are no patients in your country! Wait for more users to create their accounts.");
-                                                    */
+                                                      /* if (isSafe() && loadingResults != null)
+                                                           loadingResults.cancel();*/
+                                                       /*if (size0 == 0 && size1 == 0 && size2 == 0)
+                                                           makeSnackBar(7000, "It appears there are no patients in your country! Wait for more users to create their accounts.");
+                                                   */
                                             } else {
                                                 //INFO size3 is not 0 which means we just got the cities in same state that
                                                 // are greater than current city.
                                                 //README Because we have larger cities, we have to update lastVisible
                                                 firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                                                        /*if (adapter != null)
-                                                            adapter.notifyDataSetChanged();*/
+                                                       /*if (adapter != null)
+                                                           adapter.notifyDataSetChanged();*/
                                                 //getfile();
                                             }
-                                            if (size1 + size0 < maxSize) {
+                                            if (size1 + size0 == maxSize) {
+                                            } else {
                                                 db.collection("userPass")
                                                         .whereEqualTo("Country", country)
                                                         .orderBy("City")
                                                         .orderBy("Name")
-                                                        .limit(maxSize - size0 - size1)
+                                                        .limit(Math.max(maxSize - size0 - size1, 1))
                                                         .startAfter(lastVisible)
                                                         .get()
                                                         .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
@@ -665,9 +702,9 @@ public class DoctorStatuses3 extends Fragment {
                                                                     //INFO size3 is not 0 which means we just got the cities in same state that
                                                                     // are greater than current city.
                                                                     //README Because we have larger cities, we have to update lastVisible
-                                                                    firstVisible = queryDocumentSnapshots.getDocuments().get(0);
-                                                                                /*if (adapter != null)
-                                                                                    adapter.notifyDataSetChanged();*/
+                                                                    //firstVisible = queryDocumentSnapshots.getDocuments().get(0);
+                                                                               /*if (adapter != null)
+                                                                                   adapter.notifyDataSetChanged();*/
                                                                     //getfile();
 
                                                                 }
@@ -686,12 +723,13 @@ public class DoctorStatuses3 extends Fragment {
         //db.collection("userPass").add
     }
 
-    private ArrayList<String> fileList;
+    public static ArrayList<String> fileList;
 
 
     public void getfile() {
-        //imageStartTime = System.currentTimeMillis();
-        //Log.wtf("-_--Image Start", "" + imageStartTime);
+        Log.wtf("*------------Images---------------------Images------------------------", "----------------------------------------");
+        imageStartTime = System.currentTimeMillis();
+        Log.wtf("*-_--Image Start", "" + imageStartTime);
         fileList = new ArrayList<>();
         File location = new File(directory);
         File[] files = location.listFiles();
@@ -721,7 +759,8 @@ public class DoctorStatuses3 extends Fragment {
         patientInfo.addAll(patientNested2);
         patientInfo.addAll(patientNested3);
         patientInfo.addAll(patientNested4);
-        Log.wtf("*-_PATIENTINFP:", patientInfo.toString());
+        //Log.wtf("*-_PATIENTINFP:", patientInfo.toString());
+        Log.wtf("*-_ File List:", fileList.toString());
         writeImages();
     }
 
@@ -734,104 +773,173 @@ public class DoctorStatuses3 extends Fragment {
         count = patientInfo.size();
         goodToGo = new ArrayList<>();
         Log.wtf("**List Size", "" + count);
+        String userString = "";
         if (patientInfo.size() == 0) {
             if (loadingResults != null && isSafe())
                 loadingResults.cancel();
             adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
             patientRecycler.setAdapter(adapter);
-        }
-        for (int i = 0; i < patientInfo.size(); i++) {
-            //final String username = patientUsernames.get(i);
-            final String username = patientInfo.get(i).get("User").toString();
-            try {
-                final StorageReference mImageRef = FirebaseStorage.getInstance().getReference(username + ".jpg");
-                final long ONE_MEGABYTE = 1300 * 1300;
-                boolean entered = false;
-                if (fileList.isEmpty() || !fileList.contains(username)) {
-                    //TODO Take a look into getBytes and whether it can be used to get smaller images.
-                    final int finalI = i;
-                    //entered = i == patientUsernames.size() - 1;
-                    mImageRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                        @Override
-                        public void onSuccess(byte[] bytes) {
-                            Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                            bitmaps.put(username, bm);
-                            //saveImage(getContext(), bm, username, "jpg");
-                            count++;
-                            //Log.wtf("**SAVED IMAGE", "IMAGE " + username + " SAVED  " + count + "  " + fileList.toString());
-                            goodToGo.add(true);
+        } else {
+            boolean haveAllFiles = haveAllfiles();
+            if (fileList.size() == 0 && !isNetworkAvailable()) {
+                makeSnackBar(5000, "Could not load images since you are not connected to the internet.");
+                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+                patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+                patientRecycler.setAdapter(adapter);
+                for (int i = 0; i < patientInfo.size(); i++) {
+                    //final String username = patientUsernames.get(i);
+                    final String username = patientInfo.get(i).get("User").toString();
+                    userString += "-------" + username;
+                }
+            } else if (!haveAllFiles && !isNetworkAvailable()) {
+                makeSnackBar(5000, "Could not load all images since you are not connected to the internet.");
+                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+                patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+                patientRecycler.setAdapter(adapter);
+                for (int i = 0; i < patientInfo.size(); i++) {
+                    //final String username = patientUsernames.get(i);
+                    final String username = patientInfo.get(i).get("User").toString();
+                    userString += "-------" + username;
+                }
+            } else if (haveAllFiles) {
+                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+                patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+                patientRecycler.setAdapter(adapter);
+                for (int i = 0; i < patientInfo.size(); i++) {
+                    //final String username = patientUsernames.get(i);
+                    final String username = patientInfo.get(i).get("User").toString();
+                    userString += "-------" + username;
+                }
+            } else {
+                count = 0;
+                for (int i = 0; i < patientInfo.size(); i++) {
+                    //final String username = patientUsernames.get(i);
+                    final String username = patientInfo.get(i).get("User").toString();
+                    userString += "-------" + username;
+                    try {
+                        final StorageReference mImageRef = FirebaseStorage.getInstance().getReference(username + ".jpg");
+                        final long ONE_MEGABYTE = 1300 * 1300;
+                        boolean entered = false;
+                        if (fileList.isEmpty() || !fileList.contains(username)) {
+                            //TODO Take a look into getBytes and whether it can be used to get smaller images.
+                            final int finalI = i;
+                            //entered = i == patientUsernames.size() - 1;
+                            Log.wtf("*-_Loading Firebase Images:", "Username: " + username + "  File list: " + fileList.contains(username));
+                            mImageRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                                @Override
+                                public void onSuccess(byte[] bytes) {
+                                    Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                                    bitmaps.put(username, bm);
+                                    saveImage(getContext(), bm, username, "jpg");
+                                    count++;
+                                    Log.wtf("**Downloaded IMAGE", "IMAGE " + username + " SAVED  " + count + "  " + fileList.toString());
+                                    goodToGo.add(true);
 
-                            //if (username.equals(patientUsernames.get(0)) ) {
-                            if (goodToGo.size() == patientInfo.size()) {
-                                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
-                                //setMaxHeight();
-                                /*if (isSafe() && loadingResults != null)
-                                    if (isSafe() && loadingResults != null) loadingResults.cancel();*/
-                                //adapter.notifyDataSetChanged();
-                                patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
-                                patientRecycler.setAdapter(adapter);
-                                /*new Handler().postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        loadingResults.cancel();
+                                    //if (username.equals(patientUsernames.get(0)) ) {
+                                    if (goodToGo.size() == patientInfo.size()) {
+                                        adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+                                        //setMaxHeight();
+                               /*if (isSafe() && loadingResults != null)
+                                   if (isSafe() && loadingResults != null) loadingResults.cancel();*/
+                                        //adapter.notifyDataSetChanged();
+                                        patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+                                        patientRecycler.setAdapter(adapter);
+                               /*new Handler().postDelayed(new Runnable() {
+                                   @Override
+                                   public void run() {
+                                       loadingResults.cancel();
+
+                                   }
+                               }, 1500);*/
+                                        long end = System.currentTimeMillis();
+                                        Log.wtf("*-_--END ", "Docs: " + (totalStartTime - imageStartTime) + "  Image: " + imageStartTime + "  TOTAL: " + totalStartTime);
+                                        set[0] = true;
+                           /*Log.wtf("-_--Image Retrieval Time 1", "" + (end - totalStartTime));
+                           Log.wtf("**CONTAINS IMAGES: ", containsFile("patient1")
+                                   + " " + containsFile("patient2")
+                                   + " " + containsFile("patient3"))*/
+                                        ;
 
                                     }
-                                }, 1500);*/
-                                //long end = System.currentTimeMillis();
-                                //Log.wtf("-_--END ", "Docs: " + (totalStartTime - imageStartTime) + "  Image: " + imageStartTime + "  TOTAL: " + totalStartTime);
-                                set[0] = true;
-                            /*Log.wtf("-_--Image Retrieval Time 1", "" + (end - totalStartTime));
-                            Log.wtf("**CONTAINS IMAGES: ", containsFile("patient1")
-                                    + " " + containsFile("patient2")
-                                    + " " + containsFile("patient3"))*/
-                                ;
-
-                            }
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception exception) {
-                            //     if (isSafe() && loadingResults != null) loadingResults.cancel();
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    //     if (isSafe() && loadingResults != null) loadingResults.cancel();
 //                            Toast.makeText(getContext(), "FAILED", Toast.LENGTH_LONG).show();
-                            Log.wtf("**FAILED 2 SAVE IMAGE", exception.toString());
+                                    goodToGo.add(false);
+                                    Log.wtf("*Image Failure", "gSize: " + goodToGo.size() + " " + "listSize: " + patientInfo.size());
+                                    if (goodToGo.size() == patientInfo.size()) {
+                                        adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+                                        patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+                                        patientRecycler.setAdapter(adapter);
+                                        if (isSafe())
+                                            makeSnackBar(4000, "Sorry, could not load patient images.");
+                                        set[0] = true;
+                                    }
+                                    Log.wtf("**FAILED 2 SAVE IMAGE", exception.toString());
+                                    //HttpResult: 402
+                                }
+                            }).addOnCanceledListener(new OnCanceledListener() {
+                                @Override
+                                public void onCanceled() {
+                                    Log.wtf("*-_CANCELED LISTENER", "CANCELD: " + username);
+                                }
+                            }).addOnCompleteListener(new OnCompleteListener<byte[]>() {
+                                @Override
+                                public void onComplete(@NonNull Task<byte[]> task) {
+                                    Log.wtf("*-_COMPLETE LISTENER", "COMPLETED: " + username);
+                                }
+                            });
+                        } else {
+                            goodToGo.add(true);
                         }
-                    });
-                } else {
-                    goodToGo.add(true);
-                }
-            /*adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
-            adapter.notifyDataSetChanged();
-            patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
-            patientRecycler.setAdapter(adapter);*/
-                // if (!entered && !set[0] && i == patientUsernames.size() - 1) {
-                if (goodToGo.size() == patientInfo.size()) {
-                    //    if (isSafe() && loadingResults != null) loadingResults.cancel();
-                    adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
-                    patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
-                    patientRecycler.setAdapter(adapter);
-                    /*new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            loadingResults.cancel();
+           /*adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
+           adapter.notifyDataSetChanged();
+           patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+           patientRecycler.setAdapter(adapter);*/
+                        // if (!entered && !set[0] && i == patientUsernames.size() - 1) {
+                        if (goodToGo.size() == patientInfo.size()) {
+                            //    if (isSafe() && loadingResults != null) loadingResults.cancel();
+                            adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
+                            patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+                            patientRecycler.setAdapter(adapter);
+                   /*new Handler().postDelayed(new Runnable() {
+                       @Override
+                       public void run() {
+                           loadingResults.cancel();
 
+                       }
+                   }, 900);*/
+                            // long end = System.currentTimeMillis();
+                            //Log.wtf("-_--END", "" + end);
+                            //Log.wtf("-_--Image Retrieval Time 2", "" + (end - totalStartTime));
+                            set[0] = true;
                         }
-                    }, 900);*/
-                    // long end = System.currentTimeMillis();
-                    //Log.wtf("-_--END", "" + end);
-                    //Log.wtf("-_--Image Retrieval Time 2", "" + (end - totalStartTime));
-                    set[0] = true;
+                    } catch (Exception e) {
+                        //makeSnackBar(16000, e.toString());
+                        Log.wtf("**EXCEPTION IN STORAGE READING", e.toString());
+                    }
                 }
-            } catch (Exception e) {
-                //makeSnackBar(16000, e.toString());
-                Log.wtf("**EXCEPTION IN STORAGE READING", e.toString());
+
+
             }
+            writeToUsers(userString);
         }
-
     }
+
 
     float height;
 
-
+    public boolean haveAllfiles() {
+        for (int i = 0; i < patientInfo.size(); i++) {
+            //final String username = patientUsernames.get(i);
+            String username = patientInfo.get(i).get("User").toString();
+            if (!fileList.contains(username))
+                return false;
+        }
+        return true;
+    }
     //IDEA error will come up when results not loaded yet --> Progressdialog will officially dismiss in
     //  another fragment --> null
 
@@ -884,28 +992,33 @@ public class DoctorStatuses3 extends Fragment {
             public void onEvent(@Nullable DocumentSnapshot snapshot, @Nullable FirebaseFirestoreException e) {
                 if (isSafe() && screen != null) {
                     if (e != null) {
-                        Log.wtf("USERPATH ERROR", "Listen failed.", e);
+                        Log.wtf("*USERPATH ERROR", "Listen failed.", e);
                         makeSnackBar(3000, "Could not load your data. Are you connected to the internet?");
                         return;
                     }
 
                     String source = snapshot != null && snapshot.getMetadata().hasPendingWrites()
                             ? "Local" : "Server";
-
                     //README Local changes (taking place in Settings) will update info.txt in Settings
                     if (snapshot != null && snapshot.exists() && source.equals("Server")) {
-                        //TODO Write new info to info.txt
-                        writeNewInfo(snapshot.getData());
+                        //DONE Write new info to info.txt
                         //makeToast("Hi");
                         if (!status.equals(snapshot.getString("Status"))) {
+                            DoctorDashboardFragment.status = snapshot.getString("Status");
                             //TODO Status changed --> Consider making a notification. Do vibrations at very least.
+                            Vibrator vib = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+                            long[] pattern = {0, 800, 250, 800, 250, 800, 250, 800, 250};
+                            if (vib.hasVibrator())
+                                vib.vibrate(pattern, -1);
+                            makeToast("Your COVID Status was updated! Check the dashboard.");
                         }
-                        Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + snapshot.getData());
+                        //writeNewInfo(snapshot.getData());
+                        Log.wtf("*------ INFO RETRIEVED (DoctorStatuses) -----", source + " data: " + snapshot.getData());
                     } else if (snapshot == null) {
                         makeSnackBar(2000, "Could not load new data.");
-                        Log.wtf("ERROR", source + " data: null");
+                        Log.wtf("*ERROR", source + " data: null");
                     } else {
-                        Log.wtf("ERROR", source + " data: null");
+                        Log.wtf("*ERROR", source + " data: null");
                     }
                 }
 
@@ -918,31 +1031,6 @@ public class DoctorStatuses3 extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         userPassListener.remove();
-        Log.wtf("*-*REMOVING UNCESSARY", "" + removeUncessaryFiles());
-    }
-
-    public boolean removeUncessaryFiles() {
-        if (patientUsernames.isEmpty() || fileList.isEmpty())
-            return false;
-        File location = new File(directory);
-        File[] files = location.listFiles();
-        Log.wtf("*-* Files", "Path: " + directory + "  # of files: " + files.length + " " + patientUsernames);
-        ArrayList<String> locations = new ArrayList<>();
-        for (int i = 0; i < files.length; i++) {
-            String name = files[i].getName();
-            if (name.endsWith(".jpg") && !patientUsernames.contains(name.substring(0, name.length() - 4))) {
-                locations.add(name);
-            }
-        }
-        for (String s : locations) {
-            File temp = new File(directory + "/" + s);
-            Log.wtf("*-* REMOVING", s);
-            temp.delete();
-        }
-        //TODO Remove Below 2 lines and basically all Log.wtf() that are not needed for deployment.
-        files = location.listFiles();
-        Log.wtf("*-* Files", "Path: " + directory + "  # of files: " + files.length);
-        return true;
     }
 
     @Override
@@ -952,8 +1040,52 @@ public class DoctorStatuses3 extends Fragment {
         Log.wtf("*-*REMOVING UNCESSARY", "" + removeUncessaryFiles());
     }
 
+
+    public boolean removeUncessaryFiles() {
+        if (patientInfo.isEmpty() || fileList.isEmpty())
+            return false;
+        File location = new File(directory);
+        File[] files = location.listFiles();
+        ArrayList<String> locations = new ArrayList<>();
+        patientUsernames = new ArrayList<>();
+        for (HashMap<String, Object> map : patientInfo) {
+            patientUsernames.add(map.get("User").toString());
+        }
+        Log.wtf("*-* Files", "Path: " + directory + "  # of files: " + files.length + " " + patientUsernames);
+        //TODO See if below code works.
+        for (int i = 0; i < files.length; i++) {
+            String name = files[i].getName();
+            if (name.endsWith(".jpg") && !patientUsernames.contains(name.substring(0, name.length() - 4))) {
+                //locations.add(name);
+                Log.wtf("*-* Removing", name);
+                files[i].delete();
+            }
+        }
+        for (String s : locations) {
+            File temp = new File(directory + "/" + s);
+            Log.wtf("*-* REMOVING", s);
+            temp.delete();
+        }
+        files = location.listFiles();
+        Log.wtf("*-* Files", "Path: " + directory + "  # of files: " + files.length);
+        return true;
+    }
+
+
     protected boolean isSafe() {
         return !(this.isRemoving() || this.getActivity() == null || this.isDetached() || !this.isAdded() || this.getView() == null);
+    }
+
+    private void writeToUsers(String data) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getContext().openFileOutput("users.txt", Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+
+        } catch (IOException e) {
+            //makeSnackBar(4000, "Could not load info. Try logging out and logging back in.");
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
     }
 
     private void writeNewInfo(Map<String, Object> data) {
@@ -979,8 +1111,8 @@ public class DoctorStatuses3 extends Fragment {
         toWrite += "___________";
         toWrite += data.get("Phone");
         toWrite += "___________";
-        /*toWrite += data.get("Email");
-        toWrite += "___________";*/
+       /*toWrite += data.get("Email");
+       toWrite += "___________";*/
         toWrite += data.get("Doc ID");
         toWrite += "___________";
         toWrite += tempStatus;
@@ -996,6 +1128,9 @@ public class DoctorStatuses3 extends Fragment {
         toWrite += data.get("Country");
         toWrite += "___________";
         toWrite += e;
+        toWrite += "___________";
+        toWrite += data.get("Center");
+        toWrite += "___________" + data.get("CityU").toString() + "___________" + data.get("CenterU").toString();
 
         username = data.get("User").toString();
         documentID = data.get("Doc ID").toString();
@@ -1009,14 +1144,15 @@ public class DoctorStatuses3 extends Fragment {
         country = data.get("Country").toString();
         city = data.get("City").toString();
         state = data.get("State").toString();
+        medicalProvider = data.get("Center").toString();
         //email = data.get("Email").toString();
-        Log.wtf("__Updated COUNTRY: ", country);
+        Log.wtf("*__Updated COUNTRY: ", country);
 
-        /*if (foreign) {
-            loadForeignPatientInfo();
-        } else {
-            loadPatientInfo();
-        }*/
+       /*if (foreign) {
+           loadForeignPatientInfo();
+       } else {
+           loadPatientInfo();
+       }*/
         status = tempStatus;
         writeToInfo(toWrite);
     }
@@ -1033,10 +1169,12 @@ public class DoctorStatuses3 extends Fragment {
         }
     }
 
+    String lastCity, lastCenter;
+
     private void readStorage() {
         String info = readFromFile("info.txt", getContext());
         String[] contents = info.split("___________");
-        Log.wtf("Read Status-", contents[8]);
+        Log.wtf("*Read Status-", contents[8]);
         type = (contents[0]);
         documentID = (contents[1]);
         username = (contents[2]);
@@ -1053,6 +1191,9 @@ public class DoctorStatuses3 extends Fragment {
         state = (contents[12]);
         country = (contents[13]);
         email = (contents[14]);
+        medicalProvider = (contents[15]);
+        lastCity = (contents[16]);
+        lastCenter = (contents[17]);
     }
 
     private String readFromFile(String file, Context context) {
@@ -1075,9 +1216,9 @@ public class DoctorStatuses3 extends Fragment {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-            Log.wtf("login activity", "File not found: " + e.toString());
+            Log.wtf("*login activity", "File not found: " + e.toString());
         } catch (IOException e) {
-            Log.wtf("login activity", "Can not read file: " + e.toString());
+            Log.wtf("*login activity", "Can not read file: " + e.toString());
         }
 
         return ret;

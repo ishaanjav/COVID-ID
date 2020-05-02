@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/screen"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#6C6C6C">
     <!--android:background="#424242"-->
 
     <RelativeLayout
@@ -16,34 +17,40 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="7sp"
             android:layout_marginTop="12sp"
+            android:layout_marginRight="7sp"
             android:layout_marginBottom="20sp"
-            app:cardElevation="10sp"
             app:cardCornerRadius="18sp"
-            android:layout_marginRight="7sp">
+            app:cardElevation="10sp">
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <TextView
-                    android:id="@+id/patientTitle"
-                    android:layout_width="wrap_content"
+                <RelativeLayout
+                    android:id="@+id/patientContainer"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/patientTitle"
-                    android:layout_centerHorizontal="true"
-                    android:layout_marginTop="12sp"
-                    android:fontFamily="@font/ralewaybold"
-                    android:textSize="27sp" />
+                    android:background="#E2C9FF">
 
+                    <TextView
+                        android:id="@+id/patientTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginTop="12sp"
+                        android:textColor="#000"
+                        android:layout_marginBottom="12sp"
+                        android:fontFamily="@font/ralewaybold"
+                        android:text="@string/patientTitle"
+                        android:textSize="28sp" />
+                </RelativeLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
-                    android:layout_width="match_parent"
                     android:id="@+id/patientRecycler"
-                    android:layout_below="@+id/patientTitle"
-                    android:layoutAnimation="@anim/layout_animation"
-                    android:layout_marginBottom="10sp"
-                    android:layout_marginTop="12sp"
-                    android:layout_height="wrap_content"/>
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/patientContainer"
+                    android:layoutAnimation="@anim/layout_animation" />
             </RelativeLayout>
 
         </androidx.cardview.widget.CardView>

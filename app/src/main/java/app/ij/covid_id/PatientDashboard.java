@@ -21,6 +21,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
@@ -64,6 +65,7 @@ public class PatientDashboard extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
         overridePendingTransition(R.anim.medium_fade_in, R.anim.fast_fade_out);
+        variable = 3;
     }
 
     @Override
@@ -72,6 +74,26 @@ public class PatientDashboard extends AppCompatActivity {
         menuInflater.inflate(R.menu.dashboard_menu, menu);
 
         return super.onCreateOptionsMenu(menu);
+    }
+
+    public static int variable = 3;
+
+    @Override
+    public void onBackPressed() {
+        variable--;
+        String time = (variable == 1) ? " more time " : " more times ";
+        if (variable == 0)
+            signOut();
+        else makeToast("Press back " + variable + time + "to sign out.");
+    }
+
+    Toast toast;
+
+    private void makeToast(String s) {
+        if (toast != null)
+            toast.cancel();
+        toast = Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT);
+        toast.show();
     }
 
     @Override

@@ -8,6 +8,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
@@ -54,6 +55,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import app.ij.covid_id.DoctorDashboard;
 import app.ij.covid_id.R;
 import app.ij.covid_id.ui.dashboard.DashboardViewModel;
 
@@ -66,14 +68,17 @@ public class DoctorDashboardFragment extends Fragment {
     HashMap<String, Object> generalInfo;
     ArrayList<HashMap<String, Object>> statusUpdates;
     Pair<HashMap<String, Object>, ArrayList<HashMap<String, Object>>> pair;
-    public String documentID, username, name, userPassID, type, password, accountCreated, phone, email, status;
+    public String documentID, username, name, userPassID, medicalCenter, type, password, accountCreated, phone, email;
+    public static String status;
     String statusLastUpdated;
-    TextView statusTextView, lastUpdated;
+    TextView statusTextView, lastUpdated, city;
     String doctorPath;
     RelativeLayout statusColor1/*, statuScolor2*/;
     RecyclerView list;
     Button update;
     TextView message;
+    TextView lastCity, lastMedicalCenter;
+    String cityLast, centerLast;
 
     public View findViewById(int id) {
         return root.findViewById(id);
@@ -93,13 +98,14 @@ public class DoctorDashboardFragment extends Fragment {
         //textView = (TextView) findViewById(R.id.text_dashboard);
         statusTextView = (TextView) findViewById(R.id.status);
         lastUpdated = (TextView) findViewById(R.id.lastUpdated);
+        lastCity = (TextView) findViewById(R.id.providerCity);
+        lastMedicalCenter = (TextView) findViewById(R.id.providerCenter);
         statusColor1 = (RelativeLayout) findViewById(R.id.statusColor1);
         //statuScolor2 = (RelativeLayout) findViewById(R.id.statusColor2);
-        //TODO Change below to Patient after deleting collection and creating new dummy accounts.
-        doctorPath = "Doctor";
         update = (Button) findViewById(R.id.update);
         status = "";
         readStorage();
+        DoctorDashboard.variable = 3;
 
         //dashboardViewModel = ViewModelProviders.of(this, new DashboardViewModelFactory(getActivity(), username, documentID, db, root)).get(DashboardViewModel.class);
         return root;
@@ -127,7 +133,7 @@ public class DoctorDashboardFragment extends Fragment {
     }
 
     private void loadInformation() {
-        final Query updatesRef = db.collection(doctorPath + "/" + documentID + "/" + "Updates").whereEqualTo("3",3);
+        final Query updatesRef = db.collection(doctorPath + "/" + documentID + "/" + "Updates").whereEqualTo("3", 3);
         updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
@@ -170,6 +176,8 @@ public class DoctorDashboardFragment extends Fragment {
         if (isSafe()) {
             statusTextView.setText(cleanStatus());
             lastUpdated.setText(cleanDate());
+            lastCity.setText("City: " + cityLast);
+            lastMedicalCenter.setText("Center: " + centerLast);
         }
         //TODO use info from ArrayList to fill recycler.
     }
@@ -191,18 +199,23 @@ public class DoctorDashboardFragment extends Fragment {
                         makeSnackBar(3000, "Could not load your data. Are you connected to the internet?");
                         return;
                     }
-
                     String source = snapshot != null && snapshot.getMetadata().hasPendingWrites()
                             ? "Local" : "Server";
                     String source2 = snapshot.getMetadata().isFromCache() ?
                             "local cache" : "server";
                     //README Local changes (taking place in Settings) will update info.txt in Settings
                     if (snapshot != null && snapshot.exists() && source.equals("Server")) {
-                        //TODO Write new info to info.txt
-                        //makeToast("HI");
+                        if (!status.equals(snapshot.getString("Status"))) {
+                            //TODO Status changed --> Consider making a notification. Do vibrations at very least.
+                            Vibrator vib = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+                            long[] pattern = {0, 800, 250, 800, 250, 800, 250, 800, 250};
+                            if (vib.hasVibrator())
+                                vib.vibrate(pattern, -1);
+                            makeToast("Your COVID Status was updated!");
+                        }
                         writeNewInfo(snapshot.getData());
                         updateLayout();
-                        Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + snapshot.getData());
+                        Log.wtf("*------ INFO RETRIEVED (Doctor) -----", source + " data: " + snapshot.getData());
                     } else if (source2.contains("cach")) {
                         makeSnackBar(4000, "Loaded offline data. Connect to the internet for updated information.");
                         writeNewInfo(snapshot.getData());
@@ -239,20 +252,19 @@ public class DoctorDashboardFragment extends Fragment {
         return !(this.isRemoving() || this.getActivity() == null || this.isDetached() || !this.isAdded() || this.getView() == null);
     }
 
-    @Override
+    /*@Override
     public void onDestroyView() {
         super.onDestroyView();
-        if(isSafe() && listener != null)
-        listener.remove();
+        if (isSafe() && listener != null)
+            listener.remove();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(isSafe() && listener != null)
+        if (isSafe() && listener != null)
             listener.remove();
-    }
-
+    }*/
     private void writeNewInfo(Map<String, Object> data) {
         String state = data.get("State").toString();
         if (state.isEmpty() || state.length() == 0)
@@ -293,6 +305,9 @@ public class DoctorDashboardFragment extends Fragment {
         toWrite += data.get("Country");
         toWrite += "___________";
         toWrite += e;
+        toWrite += "___________";
+        toWrite += data.get("Center");
+        toWrite += "___________" + data.get("CityU").toString() + "___________" + data.get("CenterU").toString();
 
         username = data.get("User").toString();
         documentID = data.get("Doc ID").toString();
@@ -304,7 +319,9 @@ public class DoctorDashboardFragment extends Fragment {
         statusLastUpdated = data.get("Updated").toString();
         phone = data.get("Phone").toString();
         //email = data.get("Email").toString();
-
+        medicalCenter = data.get("Center").toString();
+        cityLast = data.get("CityU").toString();
+        centerLast = data.get("CenterU").toString();
         status = tempStatus;
         writeToInfo(toWrite);
     }
@@ -375,8 +392,12 @@ public class DoctorDashboardFragment extends Fragment {
         String[] split = statusLastUpdated.split(" ");
         String time = cleanTime(split[1]);
         if (currentDate.equals(split[0]))
-            return "Today, " + time;
-        return "Last Updated: " + split[0].substring(0, split[0].length() - 3) + time;
+            return "Today," + time;
+        int curDay = Integer.parseInt(currentDate.substring(currentDate.indexOf("/") + 1, currentDate.indexOf("/", currentDate.indexOf("/") + 1)));
+        int previousDay = Integer.parseInt(split[0].substring(split[0].indexOf("/") + 1, split[0].indexOf("/", split[0].indexOf("/") + 1)));
+        if (curDay == previousDay + 1)
+            return "Yesterday," + time;
+        return split[0].substring(0, split[0].length() - 3) + "," + time;
     }
 
     public String cleanTime(String s) {
@@ -420,8 +441,12 @@ public class DoctorDashboardFragment extends Fragment {
         phone = (contents[6]);
         //next.putExtra("Email", contents[7]);
         documentID = (contents[7]);
-        status = (contents[8]);
+        if (status == null || status.length() < 1)
+            status = (contents[8]);
         userPassID = (contents[9]);
+        medicalCenter = (contents[15]);
+        cityLast = (contents[16]);
+        centerLast = (contents[17]);
     }
 
     private String readFromFile(String file, Context context) {
@@ -452,6 +477,18 @@ public class DoctorDashboardFragment extends Fragment {
         return ret;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        listener.remove();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        listener.remove();
+    }
+
     public void loadInformationOld() {
         generalInfo = new HashMap<>();
         statusUpdates = new ArrayList<>();
@@ -459,7 +496,7 @@ public class DoctorDashboardFragment extends Fragment {
         //TODO Make notification onEvent
         final DocumentReference docRef = db.collection(doctorPath).document(documentID);
         final CollectionReference updatesRef = db.collection(doctorPath + "/" + documentID + "/" + "Updates");
-        docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+        listener = docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot snapshot,
                                 @Nullable FirebaseFirestoreException e) {
@@ -543,7 +580,11 @@ public class DoctorDashboardFragment extends Fragment {
         }
     }
 
+    Toast toast;
+
     public void makeToast(String s) {
-        Toast.makeText(getContext(), s, Toast.LENGTH_LONG).show();
+        if (toast != null) toast.cancel();
+        toast = Toast.makeText(getContext(), s, Toast.LENGTH_LONG);
+        toast.show();
     }
 }

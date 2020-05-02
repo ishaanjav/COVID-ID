@@ -53,7 +53,10 @@ dependencies {
     //implementation 'com.android.support:recyclerview-v7:28.0.0'
     implementation 'androidx.cardview:cardview:1.0.0'
 
-
+    //TourGuide
+    implementation('com.github.worker8:tourguide:2.0.0-SNAPSHOT@aar') {
+        transitive = true
+    }
     implementation 'com.google.firebase:firebase-analytics:17.2.2'
     implementation 'com.google.android.gms:play-services-auth:18.0.0'
 
@@ -67,3 +70,10 @@ dependencies {
     //Remove this if errors occur. It is supposed to be for Motion Layout
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-beta3'
 }
+repositories {
+    mavenCentral()
+    maven() {
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+    }
+}
+apply plugin: 'com.google.gms.google-services'

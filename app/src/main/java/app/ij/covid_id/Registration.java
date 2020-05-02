@@ -115,13 +115,13 @@ public class Registration extends AppCompatActivity {
 
     public enum Page {PAGE1, PATIENT1, DOCTOR1, PATIENT2, DOCTOR2}
 
-    ImageView phoneHelp, locationHelp, photoHelp;
+    ImageView phoneHelp, locationHelp, photoHelp, medicalCenterHelp;
     CardView takePicture, deletePicture;
     Button patientContinue, patientFinish, doctorContinue, doctorFinish;
     Button patientBack1, patientBack2, doctorBack1, doctorBack2;
     ImageView photo;
     boolean userGood, passGood, nameGood, phoneGood, emailGood, cityGood, stateGood, countryGood;
-    EditText user, pass, name, phone, email, city;
+    EditText user, pass, name, phone, email, city, medicalCenter;
     String sUser, sPass, sName, sPhone, sEmail, sCity, sState, sCountry;
     int backCounter;
     RadioButton unknown, covidPositive, covidRecovered, covidNegative;
@@ -299,6 +299,8 @@ public class Registration extends AppCompatActivity {
         phone = doctorCard1.findViewById(R.id.phone);
         email = doctorCard1.findViewById(R.id.email);
         city = doctorCard1.findViewById(R.id.city);
+        medicalCenter = doctorCard1.findViewById(R.id.medicalCenterName);
+        medicalCenterHelp = doctorCard1.findViewById(R.id.medicalCenterHelp);
         state = doctorCard1.findViewById(R.id.state);
         confirmPass = doctorCard1.findViewById(R.id.confirmpass);
         country = doctorCard1.findViewById(R.id.country);
@@ -325,7 +327,7 @@ public class Registration extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if (backCounter < 3)
-            makeSnackBar(5500, "Going back will delete your progress. Instead, use the buttons or swipe to navigate between pages.\nIf you want to return to the Welcome Page, continue the same motion " + (3 - backCounter) + " times.");
+            makeSnackBar(5500, "Going back will delete your progress. Instead, use the buttons or swipe to navigate between pages.\nIf you want to return to the Welcome Page, press back " + (3 - backCounter) + " times.");
         else super.onBackPressed();
         backCounter++;
     }
@@ -463,6 +465,8 @@ public class Registration extends AppCompatActivity {
                                                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                                                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
                                                 final byte[] data2 = baos.toByteArray();
+                                                final Map<String, Object> data = new HashMap<>();
+                                                data.put("Doc ID", userPassDocumentID);
 
                                                 map.put("userPass", userPassDocumentID);
                                                 UploadTask uploadTask = storageReference2.putBytes(data2);
@@ -488,10 +492,8 @@ public class Registration extends AppCompatActivity {
                                                                                         final String mainDocumentID = documentReference.getId();
 
                                                                                         DocumentReference doc = db.document(userPassDocumentID);
-                                                                                        Map<String, Object> data = new HashMap<>();
                                                                                         //data.put("Doc ID", mainDocumentID);
                                                                                         //IMPORTANT Change it to below because Patient/Doctor will not be used anymore.
-                                                                                        data.put("Doc ID", userPassDocumentID);
                                                                                         //IMPORTANT After adding the main info, get the ID and go back to userPass to add it there.
                                                                                         doc.set(data, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                                             @Override
@@ -761,7 +763,12 @@ public class Registration extends AppCompatActivity {
         if (!doctor) {
             userPass.put("Donated", (haveDonatedPlasma));
             userPass.put("Willing", (willDonatePlasma));
+            userPass.put("CenterU", "n/a");
+        } else {
+            userPass.put("Center", medicalCenter.getText().toString().trim());
+            userPass.put("CenterU", medicalCenter.getText().toString().trim());
         }
+        userPass.put("CityU", city.getText().toString().trim());
         userPass.put("City", city.getText().toString().trim());
         userPass.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
         userPass.put("Country", (country.getSelectedItem().toString()));
@@ -787,29 +794,34 @@ public class Registration extends AppCompatActivity {
                             }*/
                             if (unique) {
                                 //INFO Username is unique.
-                                db.collection("userPass")
+                                /*db.collection("userPass")
                                         .add(userPass)
                                         .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                                             @Override
-                                            public void onSuccess(DocumentReference documentReference) {
-                                                String s = user.getText().toString().trim().trim() + ".jpg";
-                                                StorageReference storageReference2 = FirebaseStorage.getInstance().getReference(s);
-                                                final String userPassDocumentID = documentReference.getPath();
-                                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                                                final byte[] data2 = baos.toByteArray();
+                                            public void onSuccess(DocumentReference documentReference) {*/
+                                String s = user.getText().toString().trim().trim() + ".jpg";
+                                StorageReference storageReference2 = FirebaseStorage.getInstance().getReference(s);
+                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                                final byte[] data2 = baos.toByteArray();
 
-                                                map.put("userPass", userPassDocumentID);
-                                                UploadTask uploadTask = storageReference2.putBytes(data2);
-                                                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                UploadTask uploadTask = storageReference2.putBytes(data2);
+                                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                        //INFO Adding the maint content
+                                        db.collection("userPass")
+                                                .add(userPass)
+                                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                                                     @Override
-                                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                                        //INFO Adding the maint content
+                                                    public void onSuccess(DocumentReference documentReference) {
                                                         HashMap<String, String> hashMap = new HashMap<>();
                                                         hashMap.put("Status", status);
                                                         hashMap.put("City", city.getText().toString().trim());
                                                         hashMap.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
                                                         hashMap.put("Country", (country.getSelectedItem().toString()));
+                                                        final String userPassDocumentID = documentReference.getPath();
+                                                        map.put("userPass", userPassDocumentID);
                                                         db.collection("Map").document(user.getText().toString().trim())
                                                                 .set(hashMap)
                                                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -828,9 +840,10 @@ public class Registration extends AppCompatActivity {
                                                                                 HashMap<String, Object> dates = new HashMap<>();
                                                                                 dates.put("Status", status);
                                                                                 dates.put("Prev", "n/a");
-                                                                                dates.put("City", "n/a");
+                                                                                dates.put("City", city.getText().toString());
                                                                                 dates.put("Date", currentDate + " " + time);
                                                                                 dates.put("Doc", (doctor) ? "You" : "n/a");
+                                                                                dates.put("Center", "n/a");
                                                                                 dates.put("Ph", (doctor) ? phone.getText().toString().trim() : "n/a");
                                                                                 String em = email.getText().toString();
                                                                                 if (em.isEmpty())
@@ -851,6 +864,11 @@ public class Registration extends AppCompatActivity {
                                                                                                 long end = System.currentTimeMillis();
                                                                                                 Log.wtf("-_--END", "" + end);
                                                                                                 Log.wtf("-_--Upload Time", "" + (end - start));
+                                                                                                //DONE Uncomment if you want TourGuide each time doctor account is created.
+                                                                                                if (reference.contains("Doc"))
+                                                                                                    writeToFirstDoctor("yes");
+                                                                                                else
+                                                                                                    writeToFirstPatient("yes");
                                                                                                 startActivity(finish);
                                                                                                 Log.wtf("TESTING", "DocumentSnapshot added with ID: " + userPassDocumentID);
                                                                                             }
@@ -883,19 +901,6 @@ public class Registration extends AppCompatActivity {
                                                         });
                                                     }
                                                 }).addOnFailureListener(new OnFailureListener() {
-                                                    @Override
-                                                    public void onFailure(@NonNull Exception exception) {
-                                                        dialog.cancel();
-                                                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document" + exception.toString());
-                                                        makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
-                                                    }
-                                                });
-
-
-                                                Log.wtf("TESTING", "DocumentSnapshot added with ID: " + documentReference.getId());
-                                            }
-                                        })
-                                        .addOnFailureListener(new OnFailureListener() {
                                             @Override
                                             public void onFailure(@NonNull Exception e) {
                                                 dialog.cancel();
@@ -903,23 +908,45 @@ public class Registration extends AppCompatActivity {
                                                 makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
                                             }
                                         });
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception exception) {
+                                        dialog.cancel();
+                                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document" + exception.toString());
+                                        makeSnackBar(5000, "Failed to upload information. Make sure you have a stable internet connection and try again.");
+                                    }
+                                });
+
+
                             } else {
                                 makeSnackBar(3700, "Your username was just taken. Please choose another username.");
                                 unique = false;
                                 dialog.cancel();
                             }
+                                      /*  })
+                                        .addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                dialog.cancel();
+                                                Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
+                                            }
+                                        });*/
                         } else {
                             dialog.cancel();
+                            makeSnackBar(6000, "Could not process whether your username is unique. Please have a stable internet connection.");
                             Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
                         }
                     }
-                }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                dialog.cancel();
-                makeSnackBar(6000, "Could not process whether your username is unique. Please have a stable internet connection.");
-            }
-        });
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        dialog.cancel();
+                        makeSnackBar(6000, "Could not process whether your username is unique. Please have a stable internet connection.");
+                    }
+                });
 
 
         //TODO Have a DB called userPassword that stores just username and password,
@@ -1028,6 +1055,8 @@ public class Registration extends AppCompatActivity {
         });
     }
 
+    String sMedicalCenterName;
+
     private void goToDoctor2() {
         sUser = user.getText().toString().trim();
         sPass = pass.getText().toString().trim();
@@ -1038,18 +1067,19 @@ public class Registration extends AppCompatActivity {
         sCity = city.getText().toString().trim();
         sState = state.getSelectedItem().toString();
         sCountry = state.getSelectedItem().toString();
+        sMedicalCenterName = medicalCenter.getText().toString().trim();
         if (sUser.length() < 6)
             makeSnackBar(2000, "Please make your username longer.");
         else if (!uniqueUsername())
             makeSnackBar(2600, "This username already exists. Please choose another.");
         else if (sPass.length() < 6)
             makeSnackBar(2000, "Please make your password longer.");
-        else if (confirm.length() < 6)
-            makeSnackBar(2000, "Confirm your password by retyping it.");
-        else if (!confirm.equals(sPass))
+        else if (!confirm.matches(sPass))
             makeSnackBar(2000, "Your passwords do not match.");
         else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
             makeSnackBar(2000, "Please enter your full name.");
+        else if (sMedicalCenterName.length() <= 3)
+            makeSnackBar(3000, "Please enter a valid medical center name.");
         else if (sPhone.length() < 10)
             makeSnackBar(2000, "Please enter a valid phone #.");
         else if (sEmail.length() > 0 && !isValid(sEmail))
@@ -1108,6 +1138,15 @@ public class Registration extends AppCompatActivity {
         }
     }
 
+    private boolean validCity(String city) {
+        if(city.length() < 2) return false;
+        for (char c : city.toCharArray())
+            if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' || c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U')
+                return true;
+
+        return false;
+    }
+
     private void goToPatient2() {
         sUser = user.getText().toString().trim();
         sPass = pass.getText().toString().trim();
@@ -1124,8 +1163,6 @@ public class Registration extends AppCompatActivity {
             makeSnackBar(2600, "This username already exists. Please choose another.");
         else if (sPass.length() < 6)
             makeSnackBar(2000, "Please make your password longer.");
-        else if (confirm.length() < 6)
-            makeSnackBar(2000, "Confirm your password by retyping it.");
         else if (!confirm.equals(sPass))
             makeSnackBar(2000, "Your passwords do not match.");
         else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
@@ -1134,7 +1171,7 @@ public class Registration extends AppCompatActivity {
             makeSnackBar(2000, "Please enter a valid phone #.");
         else if (sEmail.length() > 0 && !isValid(sEmail))
             makeSnackBar(2000, "Please enter a valid email.");
-        else if (sCity.length() < 2)
+        else if (!validCity(sCity))
             makeSnackBar(2000, "Please enter a valid city.");
         else if (!pictureGood)
             makeSnackBar(2000, "Please take a picture of your face.");
@@ -1297,11 +1334,11 @@ public class Registration extends AppCompatActivity {
         covidPositive = doctorCard2.findViewById(R.id.covidpositive);
         covidRecovered = doctorCard2.findViewById(R.id.covidnegative);
         covidNegative = doctorCard2.findViewById(R.id.covidn);
-        try {
+        /*try {
             getImageSize();
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
         doctor2Helpers();
         doctorDone();
     }
@@ -1321,11 +1358,11 @@ public class Registration extends AppCompatActivity {
         covidStatus = patientCard2.findViewById(R.id.covidStatus);
         haveDonatedGroup = patientCard2.findViewById(R.id.donationgroupStatus);
         willDonateGroup = patientCard2.findViewById(R.id.willdonategroupstatus);
-        try {
+       /* try {
             getImageSize();
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
         patient2Helpers();
         patientDone();
     }
@@ -1618,7 +1655,7 @@ public class Registration extends AppCompatActivity {
     int count = 21;
 
     private void doUpload(Bitmap bitmap, String id, ProgressDialog dialog) {
-        String s =  id + ".jpg";
+        String s = id + ".jpg";
         StorageReference storageReference2 = FirebaseStorage.getInstance().getReference(s);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -1705,7 +1742,7 @@ public class Registration extends AppCompatActivity {
 
     private long getImageSize() throws IOException {
         long lengthbmp = 0;
-        if (toCompress) {
+        /*if (toCompress) {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
             byte[] imageInByte = stream.toByteArray();
@@ -1736,7 +1773,7 @@ public class Registration extends AppCompatActivity {
                 photo.setImageBitmap(bitmap);
             }
             toCompress = false;
-        }
+        }*/
         return lengthbmp;
     }
 
@@ -1875,10 +1912,30 @@ public class Registration extends AppCompatActivity {
 },2000);*/
                 //saveImage(getApplicationContext(), bitmap, "temp", "jpg");
 
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                //README Step 1 - Resize image
+                int targetDimension = 560;
+                bitmap = Bitmap.createScaledBitmap(bitmap, targetDimension, targetDimension, true);
+
+                //README Step 2 - Compress Image
+                long lengthbmp;
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                byte[] imageInByte = stream.toByteArray();
+                lengthbmp = imageInByte.length;
+                Log.wtf("-_- BEFORE IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
+
+                stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
+                imageInByte = stream.toByteArray();
+                lengthbmp = imageInByte.length;
+                Log.wtf("-_- AFTER IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
+
+                photo.setImageBitmap(bitmap);
+
+                /*ByteArrayOutputStream out = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.PNG, 70, out);
                 bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));
-                photo.setImageBitmap(bitmap);
+                photo.setImageBitmap(bitmap);*/
                 makeToast("Double tap or long press the image to rotate it.");
 
 
@@ -2110,14 +2167,16 @@ public class Registration extends AppCompatActivity {
                     if (view.getId() == R.id.phoneHelp)
                         makeSnackBar(3000, "The phone # is used to authenticate your account.");
                     if (view.getId() == R.id.locationHelp)
-                        makeSnackBar(3000, "The location is used to authenticate your account.");
+                        makeSnackBar(11000, "The location is used to display a list of your patients in your area. If you don't provide an accurate location, you may not see your patients or related results at all.");
                     if (view.getId() == R.id.photohelp)
                         makeSnackBar(4000, "Please take a picture of your ID as verification of your profession.");
+                    if (view.getId() == R.id.medicalCenterHelp)
+                        makeSnackBar(3700, "This is the name of the medical center or hospital where you work.");
                 } else {
                     if (view.getId() == R.id.phoneHelp)
                         makeSnackBar(3500, "Your phone # is required for doctors to contact you.");
                     if (view.getId() == R.id.locationHelp)
-                        makeSnackBar(6000, "Your location is visible only by medical professionals to monitor COVID statuses in a particular area.");
+                        makeSnackBar(11000, "The location is used to show your COVID status to medical professionals in your area. If you don't provide your actual location, doctors may not be able to view or update your status.");
                     if (view.getId() == R.id.photohelp)
                         makeSnackBar(9000, "Please take a close picture of only your face. Your photo is only visible to doctors and can be used as verification (if allowed).");
                 }
@@ -2126,6 +2185,8 @@ public class Registration extends AppCompatActivity {
         photoHelp.setOnClickListener(listener);
         phoneHelp.setOnClickListener(listener);
         locationHelp.setOnClickListener(listener);
+        if (medicalCenterHelp != null)
+            medicalCenterHelp.setOnClickListener(listener);
 
         photo.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -2171,7 +2232,9 @@ public class Registration extends AppCompatActivity {
         Snackbar mySnackbar = Snackbar.make(findViewById(R.id.registration), s, duration);
         View snackbarView = mySnackbar.getView();
         TextView tv = (TextView) snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
-        tv.setMaxLines(4);
+        tv.setMaxLines(5);
+        if (!s.contains("Going back"))
+            tv.setTextSize(15);
         mySnackbar.show();
     }
 
@@ -2666,6 +2729,30 @@ public class Registration extends AppCompatActivity {
             }
         });
         dialog.show();
+    }
+
+    private void writeToFirstPatient(String data) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getApplicationContext().openFileOutput("firstPatient.txt", Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+
+        } catch (IOException e) {
+            //makeSnackBar(4000, "Could not load info. Try logging out and logging back in.");
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
+    }
+
+    private void writeToFirstDoctor(String data) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getApplicationContext().openFileOutput("firstDoctor.txt", Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+
+        } catch (IOException e) {
+            //makeSnackBar(4000, "Could not load info. Try logging out and logging back in.");
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
     }
 
     public void showRegister() {

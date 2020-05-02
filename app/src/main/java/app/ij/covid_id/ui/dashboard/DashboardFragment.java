@@ -64,6 +64,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import app.ij.covid_id.PatientDashboard;
 import app.ij.covid_id.R;
 
 public class DashboardFragment extends Fragment {
@@ -85,6 +86,7 @@ public class DashboardFragment extends Fragment {
     TextView message;
     String updater;
     double screenW;
+    TextView lastCity, lastMedicalCenter;
 
     public View findViewById(int id) {
         return root.findViewById(id);
@@ -104,15 +106,15 @@ public class DashboardFragment extends Fragment {
         //textView = (TextView) findViewById(R.id.text_dashboard);
         statusTextView = (TextView) findViewById(R.id.status);
         lastUpdated = (TextView) findViewById(R.id.lastUpdated);
+        lastCity = (TextView) findViewById(R.id.providerCity);
+        lastMedicalCenter = (TextView) findViewById(R.id.providerCenter);
         statusColor1 = (RelativeLayout) findViewById(R.id.statusColor1);
         //statuScolor2 = (RelativeLayout) findViewById(R.id.statusColor2);
         list = (RecyclerView) findViewById(R.id.list);
-        //TODO Change below to Doctor after deleting collection and creating new dummy accounts.
-        patientsPath = "Doctors";
         update = (Button) findViewById(R.id.update);
         status = "";
         readStorage();
-
+        PatientDashboard.variable = 3;
         //dashboardViewModel = ViewModelProviders.of(this, new DashboardViewModelFactory(getActivity(), username, documentID, db, root)).get(DashboardViewModel.class);
         return root;
     }
@@ -127,7 +129,7 @@ public class DashboardFragment extends Fragment {
             makeSnackBar(6000, "You are not connected to the internet. Therefore, you will not receive updates unless you connect.");
         } else {
         }
-        //TODO Uncomment below when you release update with recyclerview.
+        //FUTURE FILES Uncomment below when you release update with recyclerview.
         //loadInformation();
 
         //makeToast("Inside doctor dashboard");
@@ -235,7 +237,7 @@ public class DashboardFragment extends Fragment {
     }
 
     private void updateList() {
-        //TODO Write code to set Adapter on recyclerview
+        //FUTURE FILES Write code to set Adapter on recyclerview
     }
 
     private void loadInformation() {
@@ -282,6 +284,12 @@ public class DashboardFragment extends Fragment {
         if (isSafe()) {
             statusTextView.setText(cleanStatus());
             lastUpdated.setText(cleanDate());
+            SpannableString ss = new SpannableString("City: " + cityLast);
+            SpannableString ss2 = new SpannableString("Center: " + centerLast);
+            ss.setSpan(new StyleSpan(Typeface.BOLD), 0, 5, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            ss2.setSpan(new StyleSpan(Typeface.BOLD), 0, 7, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            lastCity.setText("City: " + cityLast);
+            lastMedicalCenter.setText("Center: " + centerLast);
         }
         //TODO use info from ArrayList to fill recycler.
     }
@@ -310,11 +318,17 @@ public class DashboardFragment extends Fragment {
                             "local cache" : "server";
                     //README Local changes (taking place in Settings) will update info.txt in Settings
                     if (snapshot != null && snapshot.exists() && source.equals("Server")) {
-                        //TODO Write new info to info.txt
-                        //makeToast("HI");
+                        if (!status.equals(snapshot.getString("Status"))) {
+                            //TODO Status changed --> Consider making a notification. Do vibrations at very least.
+                            Vibrator vib = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+                            long[] pattern = {0, 800, 250, 800, 250, 800, 250, 800, 250};
+                            if (vib.hasVibrator())
+                                vib.vibrate(pattern, -1);
+                            makeToast("Your COVID Status was updated!");
+                        }
                         writeNewInfo(snapshot.getData());
                         updateLayout();
-                        Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + snapshot.getData());
+                        Log.wtf("*------ INFO RETRIEVED (Patient) -----", source + " data: " + snapshot.getData());
                     } else if (source2.contains("cach")) {
                         makeSnackBar(4000, "Loaded offline data. Connect to the internet for updated information.");
                         writeNewInfo(snapshot.getData());
@@ -338,15 +352,17 @@ public class DashboardFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        super.onDestroyView();
         listener.remove();
+        super.onDestroyView();
     }
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         listener.remove();
+        super.onDestroy();
     }
+
+    String cityLast, centerLast;
 
     private void writeNewInfo(Map<String, Object> data) {
         String state = data.get("State").toString();
@@ -392,6 +408,7 @@ public class DashboardFragment extends Fragment {
         toWrite += data.get("Donated");
         toWrite += "___________";
         toWrite += data.get("Willing");
+        toWrite += "___________" + data.get("CityU").toString() + "___________" + data.get("CenterU").toString();
 
         username = data.get("User").toString();
         documentID = data.get("Doc ID").toString();
@@ -404,6 +421,8 @@ public class DashboardFragment extends Fragment {
         phone = data.get("Phone").toString();
         //email = data.get("Email").toString();
 
+        cityLast = data.get("CityU").toString();
+        centerLast = data.get("CenterU").toString();
         status = tempStatus;
         writeToInfo(toWrite);
     }
@@ -475,7 +494,11 @@ public class DashboardFragment extends Fragment {
         String time = cleanTime(split[1]);
         if (currentDate.equals(split[0]))
             return "Today," + time;
-        return "Last Updated: " + split[0].substring(0, split[0].length() - 3) + time;
+        int curDay = Integer.parseInt(currentDate.substring(currentDate.indexOf("/")+1, currentDate.indexOf("/", currentDate.indexOf("/")+1)));
+        int previousDay = Integer.parseInt(split[0].substring(split[0].indexOf("/")+1, split[0].indexOf("/", split[0].indexOf("/")+1)));
+        if (curDay == previousDay + 1)
+            return "Yesterday,"+time;
+        return split[0].substring(0, split[0].length() - 3) +","+ time;
     }
 
     public String cleanTime(String s) {
@@ -522,6 +545,8 @@ public class DashboardFragment extends Fragment {
         documentID = (contents[7]);
         status = (contents[8]);
         userPassID = (contents[9]);
+        cityLast = (contents[15]);
+        centerLast = (contents[16]);
     }
 
     private String readFromFile(String file, Context context) {

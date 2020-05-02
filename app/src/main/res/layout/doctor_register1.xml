@@ -157,16 +157,48 @@
                 android:layout_height="24sp"
                 android:layout_below="@id/name"
                 android:layout_marginTop="15sp"
-                android:id="@+id/phoneHelp"
+                android:id="@+id/medicalCenterHelp"
                 android:src="@drawable/helpicon"
                 android:layout_marginLeft="6sp"
                 />
 
             <TextView
-                android:id="@+id/phoneText"
+                android:id="@+id/medicalCenterNameText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/name"
+                android:layout_marginLeft="32sp"
+                android:layout_marginTop="15sp"
+                android:fontFamily="@font/remedium"
+                android:text="Medical Center Name *"
+                android:textSize="22sp" />
+
+            <EditText
+                android:id="@+id/medicalCenterName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/medicalCenterNameText"
+                android:layout_marginLeft="36sp"
+                android:layout_marginTop="-7sp"
+                android:backgroundTint="#9547CD"
+                android:ems="7"
+                android:inputType="textCapWords"
+                android:textCursorDrawable="@null"/>
+
+            <ImageView
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_below="@id/medicalCenterName"
+                android:layout_marginTop="15sp"
+                android:id="@+id/phoneHelp"
+                android:src="@drawable/helpicon"
+                android:layout_marginLeft="6sp"
+                />
+            <TextView
+                android:id="@+id/phoneText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/medicalCenterName"
                 android:layout_marginLeft="32sp"
                 android:layout_marginTop="15sp"
                 android:fontFamily="@font/remedium"
@@ -211,21 +243,20 @@
                 android:textSize="20sp" />
 
             <ImageView
-                android:layout_width="24sp"
-                android:layout_height="24sp"
-                android:layout_below="@id/email"
-                android:layout_marginTop="19sp"
                 android:id="@+id/locationHelp"
-                android:src="@drawable/helpicon"
+                android:layout_width="26sp"
+                android:layout_height="26sp"
+                android:layout_below="@id/email"
                 android:layout_marginLeft="6sp"
-                />
+                android:layout_marginTop="20sp"
+                android:src="@drawable/helpicon" />
 
             <EditText
                 android:id="@+id/city"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/email"
-                android:layout_marginLeft="31sp"
+                android:layout_marginLeft="34sp"
                 android:layout_marginTop="9sp"
                 android:backgroundTint="#9547CD"
                 android:ems="4"
@@ -254,8 +285,6 @@
                 android:layout_marginLeft="0sp"
                 android:layout_marginTop="18sp"
                 android:layout_toRightOf="@id/state" />
-
-
 
             <ImageView
                 android:id="@+id/photohelp"

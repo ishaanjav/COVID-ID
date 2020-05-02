@@ -213,11 +213,11 @@
 
             <ImageView
                 android:id="@+id/locationHelp"
-                android:layout_width="24sp"
-                android:layout_height="24sp"
+                android:layout_width="26sp"
+                android:layout_height="26sp"
                 android:layout_below="@id/email"
                 android:layout_marginLeft="6sp"
-                android:layout_marginTop="19sp"
+                android:layout_marginTop="20sp"
                 android:src="@drawable/helpicon" />
 
             <EditText
@@ -225,14 +225,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/email"
-                android:layout_marginLeft="31sp"
+                android:layout_marginLeft="34sp"
                 android:layout_marginTop="9sp"
                 android:backgroundTint="#9547CD"
                 android:ems="4"
-                android:fontFamily="@font/remedium"
+                android:singleLine="true"
                 android:hint="City *"
                 android:inputType="textCapWords"
-                android:singleLine="true"
+                android:fontFamily="@font/remedium"
                 android:textColorHint="#956DAE"
                 android:textCursorDrawable="@null"
                 android:textSize="20sp" />
