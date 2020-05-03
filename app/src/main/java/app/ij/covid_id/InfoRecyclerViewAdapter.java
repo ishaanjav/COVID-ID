@@ -94,7 +94,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         ImageView image;
         RelativeLayout screen, bar1;
         TextView name, status, location;
-        //TextView details;
+        TextView details;
         RelativeLayout statusBox;
 
         public ViewHolder(final View itemView, final int pos) {
@@ -106,7 +106,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
             location = itemView.findViewById(R.id.location);
             screen = itemView.findViewById(R.id.screen);
             mExpandedPosition = -1;
-            //details = itemView.findViewById(R.id.details);
+            details = itemView.findViewById(R.id.details);
             statusBox = itemView.findViewById(R.id.statusBox);
             bools = new ArrayList<>();
             notesSaved = new HashMap<>();
@@ -193,6 +193,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
 
         if (type.equals("Doctor"))
             name = "Dr. " + name;
+        if(position == list.size()-1) holder.details.setVisibility(View.GONE);
 
         holder.name.setText(map.get("Name").toString());
         boolean foreign = map.get("State").toString().length() < 2;

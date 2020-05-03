@@ -30,7 +30,7 @@
                     android:id="@+id/patientContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="#E2C9FF">
+                    android:background="@drawable/patient_statuses_top">
 
                     <TextView
                         android:id="@+id/patientTitle"
