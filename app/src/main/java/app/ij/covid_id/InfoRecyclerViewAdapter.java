@@ -1,22 +1,26 @@
 package app.ij.covid_id;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
+import android.text.Editable;
+import android.text.InputFilter;
 import android.text.SpannableString;
+import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
-import android.transition.TransitionManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,28 +29,36 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 
 import java.io.FileInputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Locale;
 
-import app.ij.covid_id.ui.doctor_statuses.DoctorStatuses;
 import app.ij.covid_id.ui.doctor_statuses.DoctorStatuses3;
-import de.hdodenhof.circleimageview.CircleImageView;
-import kotlin.Unit;
 
 public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerViewAdapter.ViewHolder> {
 
@@ -58,14 +70,21 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
     static RecyclerView recyclerView;
     public String TAG = "RecyclerViewAdapter";
     ArrayList<Boolean> bools;
+    ArrayList<String> patientIDs;
     String doctorID;
+    FirebaseFirestore db;
+    static HashMap<Integer, Pair<String, Integer>> notesSaved;
+    public HashMap<String, Object> doctorInfo;
 
-    public InfoRecyclerViewAdapter(Context context, ArrayList<HashMap<String, Object>> list, RecyclerView recyclerView, HashMap<String, Bitmap> bitmaps, String doctorID) {
+    public InfoRecyclerViewAdapter(Context context, ArrayList<HashMap<String, Object>> list, RecyclerView recyclerView, HashMap<String, Bitmap> bitmaps, String doctorID, FirebaseFirestore db, HashMap<String, Object> info) {
         this.context = context;
         this.list = list;
         this.recyclerView = recyclerView;
         bitmapList = bitmaps;
         this.doctorID = doctorID;
+        this.patientIDs = patientIDs;
+        this.db = db;
+        this.doctorInfo = info;
     }
 
     View view;
@@ -89,6 +108,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
             //details = itemView.findViewById(R.id.details);
             statusBox = itemView.findViewById(R.id.statusBox);
             bools = new ArrayList<>();
+            notesSaved = new HashMap<>();
             //Log.wtf("*CALLED", "VIEWHOLDER");
             for (int i = 0; i < list.size() / 2; i++) {
                 bools.add(false);
@@ -100,10 +120,11 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                 @Override
                 public void onClick(View view) {
                     if (isNetworkAvailable()) {
-                        if (type.equals("Patient")) showPatientInfo(pos);
-                        else showDoctorInfo(pos);
+                        /*if (type.equals("Patient"))*/
+                        showInfo(pos);
+                        //else showDoctorInfo(pos);
                     } else {
-                        //makeSnackBar(3000, "You need a Wifi connection to update a user's status.");
+                        makeSnackBar(3000, "You need a Wifi connection to update a user's status.");
                     }
                 }
             });
@@ -221,7 +242,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         setAnimation(holder.itemView, position);
     }
 
-    public void showPatientInfo(int position) {
+    public void showInfo(final int position) {
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
         DisplayMetrics metrics = new DisplayMetrics();
@@ -230,32 +251,282 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         final Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(true);
+        String t = list.get(position).get("Type").toString();
         dialog.setContentView(R.layout.update_info);
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
         lp.copyFrom(dialog.getWindow().getAttributes());
         lp.width = (int) (screenW * .875);
         dialog.getWindow().setAttributes(lp);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        Button back = dialog.findViewById(R.id.back);
+        back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+                dialog.cancel();
+            }
+        });
 
+        TextView plasmaT = dialog.findViewById(R.id.donatedText);
+        TextView willingT = dialog.findViewById(R.id.willDonate);
+        String s1 = "Donated Plasma: " + (list.get(position).get("Donated").equals(true) ? "yes" : "no");
+        String s2 = "Willing to Donate: " + (list.get(position).get("Willing").equals(true) ? "yes" : "no");
+        SpannableString ss1 = new SpannableString(s1);
+        ss1.setSpan(new StyleSpan(Typeface.BOLD), s1.indexOf(": ") + 2, s1.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        SpannableString ss2 = new SpannableString(s2);
+        ss2.setSpan(new StyleSpan(Typeface.BOLD), s2.indexOf(": ") + 2, s2.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        plasmaT.setText(ss1);
+        willingT.setText(ss2);
+
+
+        String userPath = "userPass/" + patientIDs.get(position);
+        db.document(userPath).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot snapshot) {
+                Log.wtf("*Reading current users's data", snapshot.getData().toString());
+                displayStuff(dialog, (HashMap<String, Object>) snapshot.getData(), position);
+                dialog.show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                largeToast("Could not load user's data. Are you connected to the internet?");
+            }
+        });
+    }
+
+    private void displayStuff(Dialog dialog, final HashMap<String, Object> map, final int position) {
         TextView nameT = dialog.findViewById(R.id.nameText);
-        TextView statusT = dialog.findViewById(R.id.statusText);
+        final TextView statusT = dialog.findViewById(R.id.statusText);
+        TextView providerT = dialog.findViewById(R.id.providerText);
+        TextView doctorT = dialog.findViewById(R.id.doctorText);
+        TextView previousDateT = dialog.findViewById(R.id.updatedText);
+        final Spinner statusSelection = dialog.findViewById(R.id.statusSelection);
 
-        Map<String, Object> map = list.get(position);
         String name = map.get("Name").toString();
         String username = map.get("User").toString();
         String status = map.get("Status").toString();
+        String type = map.get("Type").toString();
 
-        nameT.setText(name);
+        previousDateT.setText("Updated: " + cleanDate(map.get("Updated").toString()));
+
+        nameT.setPaintFlags(nameT.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+        nameT.setText(type.equals("Doctor") ? "Dr. " + name : name + "'s Info");
+
+        if (map.containsKey("CenterU"))
+            providerT.setText("Center: " + map.get("CenterU").toString());
+        if (map.containsKey("DoctorU")) {
+            if (map.get("DoctorU").toString().equals("n/a"))
+                doctorT.setText("Doctor: n/a");
+            else
+                doctorT.setText("Dr. " + map.get("DoctorU").toString());
+        }
+        handleColors_Spinners(statusSelection, statusT, status);
+        if (notesSaved.containsKey(position))
+            statusSelection.setSelection(notesSaved.get(position).second);
+
+        final EditText notes = dialog.findViewById(R.id.noteText);
+        if (notesSaved.containsKey(position)) notes.setText(notesSaved.get(position).first);
+
+        final TextView wordCount = dialog.findViewById(R.id.wordCount);
+        notes.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                int wordsLength = countWords(s.toString());// words.length;
+                // count == 0 means a new word is going to start
+                if (wordsLength > 200)
+                    makeToast("Word limit exceeded.");
+                if (wordsLength >= 200) {
+                    setCharLimit(notes, notes.getText().length());
+                } else {
+                    removeFilter(notes);
+                }
+
+                if (s.toString().length() == 0)
+                    wordCount.setText(String.valueOf(wordsLength) + "/" + 200 + " words");
+                else wordCount.setText(String.valueOf(wordsLength) + "/" + 200 + " words");
+
+            }
+        });
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                Pair pair = new Pair(notes.getText().toString().trim(), statusSelection.getSelectedItemPosition());
+                notesSaved.put(position, pair);
+            }
+        });
+        Button update = dialog.findViewById(R.id.update);
+        update.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final String patientPath = map.get("Doc ID").toString();
+                final String newStatus = statusT.getText().toString();
+                String note = notes.getText().toString();
+                if(!isNetworkAvailable()) {
+                    makeToast("A WiFi connection is required to update status.");
+                }if(isNetworkAvailable()){
+                    final String time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+                    final String currentDate = new SimpleDateFormat("M/d/yy", Locale.getDefault()).format(new Date());
+                    HashMap<String, Object> userPassMap = new HashMap<>();
+                    userPassMap.put("Updated", currentDate + " " + time);
+                    userPassMap.put("Status", newStatus);
+                    //TODO Ask dad if city should be the doctor's city.
+                    userPassMap.put("CityU", doctorInfo.get("City"));
+                    //TODO Shouldn't plasma be something that the doctor can edit?
+                    userPassMap.put("CenterU", doctorInfo.get("Center"));
+                    userPassMap.put("DoctorU", doctorInfo.get("Doc"));
+                    db.document(patientPath).set(userPassMap, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            HashMap<String, Object> mapMap = new HashMap<>();
+                            mapMap.put("City", map.get("City"));
+                            mapMap.put("Country", map.get("Country"));
+                            mapMap.put("State", map.get("State"));
+                            mapMap.put("Status", newStatus);
+                            db.document("Map/"+patientPath.substring(patientPath.indexOf("/")+1)).set(mapMap)
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            //TODO Ask dad if it is fine if Update document name is random key.
+                                            db.collection(patientPath +"/")
+
+                                        }
+                                    }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    largeToast("Failed to save info. Please try again.");
+                                    Log.wtf("*-)map ERROR", e.toString());
+                                }
+                            });
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            largeToast("Failed to save info. Please try again.");
+                            Log.wtf("*-)userPass ERROR", e.toString());
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private InputFilter filter;
+
+    private void removeFilter(EditText et) {
+        if (filter != null) {
+            et.setFilters(new InputFilter[0]);
+            filter = null;
+        }
+    }
+
+    private int countWords(String s) {
+        String trim = s.trim();
+        if (trim.isEmpty())
+            return 0;
+        if (trim.length() == 0)
+            return 0;
+        return trim.split("\\s+").length; // separate string around spaces
+    }
+
+
+    private void setCharLimit(EditText et, int max) {
+        filter = new InputFilter.LengthFilter(max);
+        et.setFilters(new InputFilter[]{filter});
+    }
+
+    private void handleColors_Spinners(Spinner statusSelection, TextView statusT, String status) {
+        ArrayList<String> statusList = new ArrayList<>();
+        statusList.add("Infected");
+        statusList.add("Uninfected");
+        statusList.add("Recovered");
+        for (int i = 0; i < statusList.size(); i++)
+            if (statusList.get(i).equals(status)) {
+                statusList.remove(i);
+                break;
+            }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, R.layout.status_selected, statusList);
+        statusSelection.setAdapter(adapter);
 
         String t1 = "Current Status: " + status;
         SpannableString ss1 = new SpannableString(t1);
         ss1.setSpan(new StyleSpan(Typeface.BOLD), t1.indexOf(": ") + 2, t1.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss1.setSpan(new ForegroundColorSpan(Color.parseColor("#000000")), t1.indexOf(": ") + 2, t1.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
 
+        ss1.setSpan(new StyleSpan(Typeface.BOLD), 0, 20, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (status.equals("Unknown"))
+            ss1.setSpan(new ForegroundColorSpan(Color.parseColor("#000000")), t1.indexOf(": ") + 2, t1.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        else if (status.equals("Infected"))
+            ss1.setSpan(new ForegroundColorSpan(Color.parseColor("#eb3838")), t1.indexOf(": ") + 2, t1.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        else if (status.equals("Recovered"))
+            ss1.setSpan(new ForegroundColorSpan(Color.parseColor("#2bad0e")), t1.indexOf(": ") + 2, t1.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        else if (status.equals("Uninfected"))
+            ss1.setSpan(new ForegroundColorSpan(Color.parseColor("#bf950a")), t1.indexOf(": ") + 2, t1.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         statusT.setText(ss1);
+        statusSelection.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String text = ((TextView) adapterView.getChildAt(0)).getText().toString();
+                if (text.equals("Unknown")) {
+                    ((TextView) adapterView.getChildAt(0)).setTextColor(0XFF000000);
+                    ((TextView) adapterView.getChildAt(0)).setBackgroundColor(0XFFDFDFDF);
+                } else if (text.equals("Infected")) {
+                    ((TextView) adapterView.getChildAt(0)).setTextColor(0XFF2db30e);
+                    ((TextView) adapterView.getChildAt(0)).setBackgroundColor(0XFFFFDDDD);
+                } else if (text.equals("Recovered")) {
+                    ((TextView) adapterView.getChildAt(0)).setTextColor(0XFF35c215);
+                    ((TextView) adapterView.getChildAt(0)).setBackgroundColor(0XFFDDFFDE);
+                } else if (text.equals("Uninfected")) {
+                    ((TextView) adapterView.getChildAt(0)).setTextColor(0XFFc4990a);
+                    ((TextView) adapterView.getChildAt(0)).setBackgroundColor(0XFFFFEDDD);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                makeToast("Please select a state if you are in the US.");
+            }
+        });
+        statusSelection.setPrompt("Update Status to ...");
+
+    }
 
 
-        dialog.show();
+    public String cleanDate(String s) {
+        String currentDate = new SimpleDateFormat("M/d/yy", Locale.getDefault()).format(new Date());
+        String[] split = s.split(" ");
+        String time = cleanTime(split[1]);
+        if (currentDate.equals(split[0]))
+            return "Today," + time;
+        int curDay = Integer.parseInt(currentDate.substring(currentDate.indexOf("/") + 1, currentDate.indexOf("/", currentDate.indexOf("/") + 1)));
+        int previousDay = Integer.parseInt(split[0].substring(split[0].indexOf("/") + 1, split[0].indexOf("/", split[0].indexOf("/") + 1)));
+        if (curDay == previousDay + 1)
+            return "Yesterday," + time;
+        return split[0].substring(0, split[0].length() - 3) + "," + time;
+    }
+
+    public String cleanTime(String s) {
+        Integer a = Integer.parseInt(s.substring(0, s.indexOf(":")));
+        String end = "AM";
+        if (a > 12) {
+            a -= 12;
+            end = "PM";
+        } else if (a == 0) {
+            a += 12;
+        }
+        int firstIndex = s.indexOf(":");
+        int secondIdex = s.indexOf(":", firstIndex + 1);
+        return " " + a + s.substring(s.indexOf(":"), secondIdex) + " " + end;
     }
 
     public void showDoctorInfo(int position) {
@@ -434,6 +705,16 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
 
     public void makeToast(String s) {
         Toast.makeText(context, s, Toast.LENGTH_LONG).show();
+    }
+
+    private void largeToast(String s) {
+        Toast toast;
+        toast = Toast.makeText(context, s, Toast.LENGTH_LONG);
+        ViewGroup group = (ViewGroup) toast.getView();
+        TextView messageTextView = (TextView) group.getChildAt(0);
+        messageTextView.setTextSize(22);
+        toast.show();
+
     }
 
     public void shortToast(String s) {

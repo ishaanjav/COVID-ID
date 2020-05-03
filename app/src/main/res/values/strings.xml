@@ -16,7 +16,10 @@
     <string name="title_notifications">Notifications</string>
     <string name="title_activity_patient_dashboard">MainActivity</string>
     <string name="yourstatus"><u>Status</u></string>
+    <string name="updateStatusText"><u>Update Status</u></string>
+    <string name="plasmaStatusText"><u>Plasma Status</u></string>
     <string name="title_activity_doctor_dashboard">MainActivity</string>
     <string name="patientTitle"><u>Patient Statuses</u></string>
     <string name="doctorTitle"><u>Other Doctors</u></string>
+    <string name="noteshint"><i>Type your notes here</i></string>
 </resources>

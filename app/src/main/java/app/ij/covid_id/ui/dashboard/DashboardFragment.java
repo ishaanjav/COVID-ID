@@ -295,7 +295,7 @@ public class DashboardFragment extends Fragment {
     }
 
     int counter = 0;
-   public static ListenerRegistration listener, listener2;
+    public static ListenerRegistration listener, listener2;
 
     //IMPORTANT If you do decide on writing Hello "NAME" on dashboard, then you have to listen to local changes
     //  and update UI for local changes to say Hello "new name" or whatever.
@@ -471,6 +471,11 @@ public class DashboardFragment extends Fragment {
                     "Note: Ensure your provider has the app downloaded. If the provider does not have the app, reach out to ijappscovid@gmail.com mentioning the doctor/provider name, street address and phone/email information.");
             */
             return "Unknown\nor\nUntested";
+        } else if (status.equals("Deceased")) {
+            statusColor1.setBackgroundResource(R.drawable.gradient_border_grey);
+            statusTextView.setTextSize(37);
+            statusTextView.setTextColor(Color.parseColor("#000000"));
+            message.setText("Unfortunately, the patient has passed away from COVID. We send our regards.");
         } else if (status.equals("Recovered")) {
             statusColor1.setBackgroundResource(R.drawable.gradient_border_green);
             statusTextView.setTextSize(37);
@@ -500,11 +505,11 @@ public class DashboardFragment extends Fragment {
         String time = cleanTime(split[1]);
         if (currentDate.equals(split[0]))
             return "Today," + time;
-        int curDay = Integer.parseInt(currentDate.substring(currentDate.indexOf("/")+1, currentDate.indexOf("/", currentDate.indexOf("/")+1)));
-        int previousDay = Integer.parseInt(split[0].substring(split[0].indexOf("/")+1, split[0].indexOf("/", split[0].indexOf("/")+1)));
+        int curDay = Integer.parseInt(currentDate.substring(currentDate.indexOf("/") + 1, currentDate.indexOf("/", currentDate.indexOf("/") + 1)));
+        int previousDay = Integer.parseInt(split[0].substring(split[0].indexOf("/") + 1, split[0].indexOf("/", split[0].indexOf("/") + 1)));
         if (curDay == previousDay + 1)
-            return "Yesterday,"+time;
-        return split[0].substring(0, split[0].length() - 3) +","+ time;
+            return "Yesterday," + time;
+        return split[0].substring(0, split[0].length() - 3) + "," + time;
     }
 
     public String cleanTime(String s) {
@@ -601,7 +606,7 @@ public class DashboardFragment extends Fragment {
                 }
                 counter++;
 
-               listener2 = updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
+                listener2 = updatesRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
                     public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
                         statusUpdates = new ArrayList<>();

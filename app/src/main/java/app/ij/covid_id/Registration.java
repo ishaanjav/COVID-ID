@@ -421,15 +421,13 @@ public class Registration extends AppCompatActivity {
         userPass.put("Created", currentDate + " " + time);
         userPass.put("Updated", currentDate + " " + time);
         //userPass.put("Latest Update", currentDate + " " + time);
-        userPass.put("Status", status);
+        userPass.put("Status", "Unknown");
 //TODO Write Updates Subscollection to userPass
         userPass.put("Name", name.getText().toString().trim());
         userPass.put("Phone", phone.getText().toString().trim());
 
-        if (!doctor) {
-            userPass.put("Donated", (haveDonatedPlasma));
-            userPass.put("Willing", (willDonatePlasma));
-        }
+        userPass.put("Donated", (haveDonatedPlasma));
+        userPass.put("Willing", (willDonatePlasma));
         userPass.put("City", city.getText().toString().trim());
         userPass.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
         userPass.put("Country", (country.getSelectedItem().toString()));
@@ -768,6 +766,7 @@ public class Registration extends AppCompatActivity {
             userPass.put("Center", medicalCenter.getText().toString().trim());
             userPass.put("CenterU", medicalCenter.getText().toString().trim());
         }
+        userPass.put("DoctorU", "n/a");
         userPass.put("CityU", city.getText().toString().trim());
         userPass.put("City", city.getText().toString().trim());
         userPass.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
@@ -837,21 +836,21 @@ public class Registration extends AppCompatActivity {
                                                                             @Override
                                                                             public void onSuccess(Void aVoid) {
                                                                                 //INFO Write to "Updates" and put in stuff.
-                                                                                HashMap<String, Object> dates = new HashMap<>();
-                                                                                dates.put("Status", status);
-                                                                                dates.put("Prev", "n/a");
-                                                                                dates.put("City", city.getText().toString());
-                                                                                dates.put("Date", currentDate + " " + time);
-                                                                                dates.put("Doc", (doctor) ? "You" : "n/a");
-                                                                                dates.put("Center", "n/a");
-                                                                                dates.put("Ph", (doctor) ? phone.getText().toString().trim() : "n/a");
+                                                                                HashMap<String, Object> updateMap = new HashMap<>();
+                                                                                updateMap.put("Status", status);
+                                                                                updateMap.put("Prev", "n/a");
+                                                                                updateMap.put("City", city.getText().toString());
+                                                                                updateMap.put("Date", currentDate + " " + time);
+                                                                                updateMap.put("Doc", (doctor) ? "You" : "n/a");
+                                                                                updateMap.put("Center", "n/a");
+                                                                                updateMap.put("Ph", (doctor) ? phone.getText().toString().trim() : "n/a");
                                                                                 String em = email.getText().toString();
                                                                                 if (em.isEmpty())
                                                                                     em = "";
-                                                                                dates.put("Em", (doctor) ? em : "n/a");
-                                                                                dates.put("Note", "n/a");
+                                                                                updateMap.put("Em", (doctor) ? em : "n/a");
+                                                                                updateMap.put("Note", "n/a");
                                                                                 db.collection(userPassDocumentID + "/Updates")
-                                                                                        .document("Update 1").set(dates)
+                                                                                        .document("Update 1").set(updateMap)
                                                                                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                                             @Override
                                                                                             public void onSuccess(Void aVoid) {
@@ -1139,7 +1138,7 @@ public class Registration extends AppCompatActivity {
     }
 
     private boolean validCity(String city) {
-        if(city.length() < 2) return false;
+        if (city.length() < 2) return false;
         for (char c : city.toCharArray())
             if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' || c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U')
                 return true;
@@ -1327,35 +1326,40 @@ public class Registration extends AppCompatActivity {
     ImageView statusHelp;
 
     private void initializeDoctor2() {
-        statusHelp = doctorCard2.findViewById(R.id.statusHelp);
         doctorBack2 = doctorCard2.findViewById(R.id.doctorPrevious2);
         doctorFinish = doctorCard2.findViewById(R.id.doctorFinish);
-        unknown = doctorCard2.findViewById(R.id.unknown);
-        covidPositive = doctorCard2.findViewById(R.id.covidpositive);
-        covidRecovered = doctorCard2.findViewById(R.id.covidnegative);
-        covidNegative = doctorCard2.findViewById(R.id.covidn);
+        // unknown = patientCard2.findViewById(R.id.unknown);
+        // covidPositive = patientCard2.findViewById(R.id.covidpositive);
+        //  covidRecovered = patientCard2.findViewById(R.id.covidnegative);
+        //  covidNegative = patientCard2.findViewById(R.id.covidn);
+        plasmaYes = doctorCard2.findViewById(R.id.plasmayes);
+        plasmaNo = doctorCard2.findViewById(R.id.plasmano);
+        willingYes = doctorCard2.findViewById(R.id.willingyes);
+        willingNo = doctorCard2.findViewById(R.id.willingno);
+        //   covidStatus = patientCard2.findViewById(R.id.covidStatus);
+        haveDonatedGroup = doctorCard2.findViewById(R.id.donationgroupStatus);
+        willDonateGroup = doctorCard2.findViewById(R.id.willdonategroupstatus);
         /*try {
             getImageSize();
         } catch (IOException e) {
             e.printStackTrace();
         }*/
-        doctor2Helpers();
         doctorDone();
     }
 
     private void initializePatient2() {
-        statusHelp = patientCard2.findViewById(R.id.statusHelp);
+        //statusHelp = patientCard2.findViewById(R.id.statusHelp);
         patientPrevious2 = patientCard2.findViewById(R.id.patientPrevious2);
         patientFinish = patientCard2.findViewById(R.id.patientFinish);
-        unknown = patientCard2.findViewById(R.id.unknown);
-        covidPositive = patientCard2.findViewById(R.id.covidpositive);
-        covidRecovered = patientCard2.findViewById(R.id.covidnegative);
-        covidNegative = patientCard2.findViewById(R.id.covidn);
+        // unknown = patientCard2.findViewById(R.id.unknown);
+        // covidPositive = patientCard2.findViewById(R.id.covidpositive);
+        //  covidRecovered = patientCard2.findViewById(R.id.covidnegative);
+        //  covidNegative = patientCard2.findViewById(R.id.covidn);
         plasmaYes = patientCard2.findViewById(R.id.plasmayes);
         plasmaNo = patientCard2.findViewById(R.id.plasmano);
         willingYes = patientCard2.findViewById(R.id.willingyes);
         willingNo = patientCard2.findViewById(R.id.willingno);
-        covidStatus = patientCard2.findViewById(R.id.covidStatus);
+        //   covidStatus = patientCard2.findViewById(R.id.covidStatus);
         haveDonatedGroup = patientCard2.findViewById(R.id.donationgroupStatus);
         willDonateGroup = patientCard2.findViewById(R.id.willdonategroupstatus);
        /* try {
@@ -1363,7 +1367,6 @@ public class Registration extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }*/
-        patient2Helpers();
         patientDone();
     }
 
@@ -1375,15 +1378,20 @@ public class Registration extends AppCompatActivity {
             public void onClick(View view) {
                 //TODO Check if they have selected one of the 3 options from RadioGroup
                 // Then ask if sure
-                u = unknown.isChecked();
+               /* u = unknown.isChecked();
                 covidP = covidPositive.isChecked();
                 covidR = covidRecovered.isChecked();
-                covidN = covidNegative.isChecked();
+                covidN = covidNegative.isChecked();*/
 
-                if (u || covidP || covidR || covidN)
+                haveDonatedPlasma = plasmaYes.isChecked();
+                boolean noDonate = plasmaNo.isChecked();
+                willDonatePlasma = willingYes.isChecked();
+                boolean noWilling = willingNo.isChecked();
+
+                if ((plasmaYes.isChecked() || plasmaNo.isChecked()) && (willingYes.isChecked() || willingNo.isChecked()))
                     showRegister();
                 else
-                    makeSnackBar(1900, "Select an option above");
+                    makeSnackBar(1900, "Select the options above.");
             }
         });
     }
@@ -1401,13 +1409,12 @@ public class Registration extends AppCompatActivity {
                 willDonatePlasma = willingYes.isChecked();
                 boolean noWilling = willingNo.isChecked();
 
-                u = unknown.isChecked();
+           /*     u = unknown.isChecked();
                 covidP = covidPositive.isChecked();
                 covidR = covidRecovered.isChecked();
                 covidN = covidNegative.isChecked();
-
-                if ((unknown.isChecked() || covidPositive.isChecked() || covidRecovered.isChecked() || covidN) &&
-                        (plasmaYes.isChecked() || plasmaNo.isChecked()) && (willingYes.isChecked() || willingNo.isChecked()))
+*/
+                if ((plasmaYes.isChecked() || plasmaNo.isChecked()) && (willingYes.isChecked() || willingNo.isChecked()))
                     showRegister();
                 else
                     makeSnackBar(1900, "Select the options above.");
@@ -1925,7 +1932,7 @@ public class Registration extends AppCompatActivity {
                 Log.wtf("-_- BEFORE IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
 
                 stream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 75, stream);
                 imageInByte = stream.toByteArray();
                 lengthbmp = imageInByte.length;
                 Log.wtf("-_- AFTER IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());

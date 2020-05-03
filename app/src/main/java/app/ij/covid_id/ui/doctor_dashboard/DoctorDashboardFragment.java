@@ -185,6 +185,7 @@ public class DoctorDashboardFragment extends Fragment {
     int counter = 0;
     public static ListenerRegistration listener, listener2;
 
+
     //IMPORTANT If you do decide on writing Hello "NAME" on dashboard, then you have to listen to local changes
     //  and update UI for local changes to say Hello "new name" or whatever.
     // For things like status, don't need to worry since they can't change it in settings
@@ -365,7 +366,13 @@ public class DoctorDashboardFragment extends Fragment {
                     "Note: Ensure your provider has the app downloaded. If the provider does not have the app, reach out to ijappscovid@gmail.com mentioning the doctor/provider name, street address and phone/email information.");
             */
             return "Unknown\nor\nUntested";
-        } else if (status.equals("Recovered")) {
+        } else if(status.equals("Deceased")){
+            statusColor1.setBackgroundResource(R.drawable.gradient_border_grey);
+            statusTextView.setTextSize(37);
+            statusTextView.setTextColor(Color.parseColor("#000000"));
+            message.setText("Unfortunately, the patient has passed away from COVID.\nWe send our regards.");
+        }
+        else if (status.equals("Recovered")) {
             statusColor1.setBackgroundResource(R.drawable.gradient_border_green);
             statusTextView.setTextSize(37);
             statusTextView.setTextColor(Color.parseColor("#000000"));

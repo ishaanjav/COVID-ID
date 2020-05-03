@@ -71,7 +71,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/bar"
-            android:background="@drawable/white_background_middle"
+            android:background="@drawable/white_background_bottom"
             android:paddingBottom="10sp">
 
             <TextView
@@ -84,26 +84,18 @@
                 android:textColor="#000"
                 android:textSize="29sp" />
 
-            <RelativeLayout
-                android:id="@+id/spinnerStore"
+            <Spinner
+                android:id="@+id/statusSelection"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/updateStatusText"
-                android:background="#ddd"
-                android:layout_centerHorizontal="true">
-
-                <Spinner
-                    android:id="@+id/statusSelection"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    />
-            </RelativeLayout>
+                android:layout_centerHorizontal="true" />
 
             <TextView
                 android:id="@+id/wordCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/spinnerStore"
+                android:layout_below="@+id/statusSelection"
                 android:layout_alignParentRight="true"
                 android:layout_marginTop="-2sp"
                 android:layout_marginRight="10sp"
@@ -131,53 +123,10 @@
                 android:textColorHint="#555"
                 android:textCursorDrawable="@drawable/notescurosr" />
 
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:id="@+id/bar2"
-            android:layout_width="match_parent"
-            android:layout_height="5sp"
-            android:layout_below="@id/box2"
-            android:background="#b86de3" />
-
-        <RelativeLayout
-            android:id="@+id/box3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/bar2"
-            android:background="@drawable/white_background_bottom">
-
-            <TextView
-                android:id="@+id/plasmaStatusText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="6sp"
-                android:text="@string/plasmaStatusText"
-                android:textAlignment="center"
-                android:textColor="#000"
-                android:textSize="29sp" />
-
-            <TextView
-                android:id="@+id/donatedText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/plasmaStatusText"
-                android:layout_marginLeft="11sp"
-                android:textSize="23sp" />
-
-            <TextView
-                android:id="@+id/willDonate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/donatedText"
-                android:layout_marginLeft="11sp"
-                android:textSize="23sp" />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/willDonate"
+                android:layout_below="@id/noteText"
                 android:layout_alignParentBottom="true"
                 android:layout_marginTop="12sp"
                 android:orientation="horizontal">
@@ -206,7 +155,6 @@
 
             </LinearLayout>
         </RelativeLayout>
-
 
     </RelativeLayout>
 </ScrollView>

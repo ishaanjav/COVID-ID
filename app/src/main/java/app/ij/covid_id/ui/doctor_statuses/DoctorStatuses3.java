@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.icu.text.IDNA;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -16,13 +15,10 @@ import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.Scroller;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,7 +26,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnCanceledListener;
@@ -61,17 +56,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import app.ij.covid_id.DoctorDashboard;
 import app.ij.covid_id.InfoRecyclerViewAdapter;
 import app.ij.covid_id.R;
 import app.ij.covid_id.ui.doctor_dashboard.DoctorDashboardFragment;
-
-import static app.ij.covid_id.InfoRecyclerViewAdapter.lastPosition;
-import static app.ij.covid_id.InfoRecyclerViewAdapter.setAnimation;
 
 public class DoctorStatuses3 extends Fragment {
 
@@ -81,7 +71,7 @@ public class DoctorStatuses3 extends Fragment {
     public String documentID, username, name, userPassID, type, password, accountCreated, phone, email, status, medicalProvider;
     String statusLastUpdated;
     String doctorsPath;
-    public RecyclerView patientRecycler;
+    public static RecyclerView patientRecycler;
     Button update;
     TextView message;
     public String TAG = "DoctorStatuses3";
@@ -106,6 +96,11 @@ public class DoctorStatuses3 extends Fragment {
         patientNested2 = new ArrayList<>();
         patientNested3 = new ArrayList<>();
         patientNested4 = new ArrayList<>();
+        //patientPath0 = new ArrayList<>();
+        //patientPath1 = new ArrayList<>();
+        //patientPath2 = new ArrayList<>();
+        //patientPath3 = new ArrayList<>();
+        //patientPath4 = new ArrayList<>();
         patientUsernames = new ArrayList<>();
         readStorage();
         DoctorDashboard.variable = 3;
@@ -258,6 +253,7 @@ public class DoctorStatuses3 extends Fragment {
     //IDEA What I am thinking is just have this 1 time function, set a listener. If listener changes, call 1 time function
     int maxSize;
     DocumentSnapshot lastVisible, firstVisible;
+
     private void loadPatientInfo() {
         //maxSize = 1;
         db.collection("userPass")
@@ -279,6 +275,7 @@ public class DoctorStatuses3 extends Fragment {
                 totalStartTime = System.currentTimeMillis();
                 Log.wtf("*-_--Total Start", "" + totalStartTime);
                 patientNested0 = new ArrayList<>();
+                //patientPath0 = new ArrayList<>();
                 size0 = 0;
                 for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                     //patientInfo.add((HashMap<String, Object>) document.getData());
@@ -286,6 +283,7 @@ public class DoctorStatuses3 extends Fragment {
                     if (!document.get("User").equals(username)) {
                         size0++;
                         patientNested0.add((HashMap<String, Object>) document.getData());
+                        //patientPath0.add(document.getId());
                         bitmaps = null;
 //adapter.notifyItemChanged();
                         //adapter.notifyItem
@@ -336,10 +334,12 @@ public class DoctorStatuses3 extends Fragment {
                                 public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                                     Log.wtf("*-_NESTED 1", "Size: " + queryDocumentSnapshots.size());
                                     patientNested1 = new ArrayList<>();
+                                    //patientPath1 = new ArrayList<>();
                                     size1 = 0;
                                     for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                                         if (!document.get("User").equals(username)) {
                                             size1++;
+                                            //patientPath0.add(document.getId());
                                             patientNested1.add((HashMap<String, Object>) document.getData());
                                             Log.wtf("*--READING 1 ", document.getId() + " => " + document.getData());
                                         }
@@ -377,12 +377,14 @@ public class DoctorStatuses3 extends Fragment {
                                                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                                                         Log.wtf("*-_NESTED 2", "Size: " + queryDocumentSnapshots.size());
                                                         patientNested2 = new ArrayList<>();
+                                                        //patientPath2 = new ArrayList<>();
                                                         size2 = 0;
                                                         for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                                                             //patientInfo.add((HashMap<String, Object>) document.getData());
                                                             //patientUsernames.add(document.get("User").toString());
                                                             if (!document.get("User").equals(username)) {
                                                                 size2++;
+                                                                //patientPath2.add(document.getId());
                                                                 patientNested2.add((HashMap<String, Object>) document.getData());
                                                                 Log.wtf("*--READING 2 ", document.getId() + " => " + document.getData());
                                                             }    //size++;
@@ -426,12 +428,14 @@ public class DoctorStatuses3 extends Fragment {
                                                                         public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                                                                             Log.wtf("*-_NESTED 3", "Size: " + queryDocumentSnapshots.size());
                                                                             patientNested3 = new ArrayList<>();
+                                                                            //patientPath3 = new ArrayList<>();
                                                                             size3 = 0;
                                                                             for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                                                                                 //patientInfo.add((HashMap<String, Object>) document.getData());
                                                                                 //patientUsernames.add(document.get("User").toString());
                                                                                 if (!document.get("User").equals(username)) {
                                                                                     size3++;
+                                                                                    //patientPath3.add(document.getId());
                                                                                     patientNested3.add((HashMap<String, Object>) document.getData());
                                                                                     Log.wtf("*--READING 3 ", document.getId() + " => " + document.getData());
                                                                                 }            //size++;
@@ -473,11 +477,13 @@ public class DoctorStatuses3 extends Fragment {
                                                                                             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                                                                                                 Log.wtf("*-_NESTED 4", "Size: " + queryDocumentSnapshots.size());
                                                                                                 patientNested4 = new ArrayList<>();
+                                                                                                //patientPath4 = new ArrayList<>();
                                                                                                 size4 = 0;
                                                                                                 for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                                                                                                     //patientInfo.add((HashMap<String, Object>) document.getData());
                                                                                                     //patientUsernames.add(document.get("User").toString());
                                                                                                     if (!document.get("User").equals(username)) {
+                                                                                                        //patientPath4.add(document.getId());
                                                                                                         size4++;
                                                                                                         patientNested4.add((HashMap<String, Object>) document.getData());
                                                                                                         Log.wtf("*--READING 4 ", document.getId() + " => " + document.getData());
@@ -574,6 +580,7 @@ public class DoctorStatuses3 extends Fragment {
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                         patientNested0 = new ArrayList<>();
+                        //patientPath0 = new ArrayList<>();
                         size0 = 0;
                         for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                               /*patientInfo.add((HashMap<String, Object>) document.getData());
@@ -581,6 +588,7 @@ public class DoctorStatuses3 extends Fragment {
                             Log.wtf("*--READING ", document.getId() + " => " + document.getData());
                             if (!document.get("User").equals(username)) {
                                 size0++;
+                                //patientPath0.add(document.getId());
                                 patientNested0.add((HashMap<String, Object>) document.getData());
                                 //Log.wtf("*--READING ", document.getId() + " => " + document.getData());
                             } else {
@@ -631,12 +639,14 @@ new Handler().postDelayed(new Runnable() {
                                         public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                                             Log.wtf("*-_NESTED 1", "Size: " + queryDocumentSnapshots.size());
                                             patientNested1 = new ArrayList<>();
+                                            //patientPath1 = new ArrayList<>();
                                             size1 = 0;
                                             for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                                                 //patientInfo.add((HashMap<String, Object>) document.getData());
                                                 //patientUsernames.add(document.get("User").toString());
                                                 if (!document.get("User").equals(username)) {
                                                     size1++;
+                                                    //patientPath1.add(document.getId());
                                                     patientNested1.add((HashMap<String, Object>) document.getData());
                                                     Log.wtf("*--READING 1 ", document.getId() + " => " + document.getData());
                                                 }  //size++;
@@ -673,12 +683,14 @@ new Handler().postDelayed(new Runnable() {
                                                             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                                                                 Log.wtf("*-_NESTED 2", "Size: " + queryDocumentSnapshots.size());
                                                                 patientNested2 = new ArrayList<>();
+                                                                //patientPath2 = new ArrayList<>();
                                                                 size2 = 0;
                                                                 for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                                                                     //patientInfo.add((HashMap<String, Object>) document.getData());
                                                                     //patientUsernames.add(document.get("User").toString());
                                                                     if (!document.get("User").equals(username)) {
                                                                         size2++;
+                                                                        //patientPath2.add(document.getId());
                                                                         patientNested2.add((HashMap<String, Object>) document.getData());
                                                                         Log.wtf("*--READING 2 ", document.getId() + " => " + document.getData());
                                                                     }  //size++;
@@ -1025,7 +1037,7 @@ new Handler().postDelayed(new Runnable() {
     }*/
 
     public static ArrayList<String> fileList;
-
+    //public ArrayList<String> patientPaths;
 
     public void getfile() {
         Log.wtf("*------------Images---------------------Images------------------------", "----------------------------------------");
@@ -1060,6 +1072,12 @@ new Handler().postDelayed(new Runnable() {
         patientInfo.addAll(patientNested2);
         patientInfo.addAll(patientNested3);
         patientInfo.addAll(patientNested4);
+       /* patientPaths = new ArrayList<>();
+        patientPaths.addAll(patientPath0);
+        patientPaths.addAll(patientPath1);
+        patientPaths.addAll(patientPath2);
+        patientPaths.addAll(patientPath3);
+        patientPaths.addAll(patientPath4);*/
 
         //Log.wtf("*-_PATIENTINFP:", patientInfo.toString());
         Log.wtf("*-_ File List:", fileList.toString());
@@ -1069,8 +1087,10 @@ new Handler().postDelayed(new Runnable() {
     int count = 0;
     ArrayList<Boolean> goodToGo;
     HashMap<String, Bitmap> bitmaps;
+    //ArrayList<String> patientPath0, patientPath1, patientPath2, patientPath3, patientPath4;
 
     public void writeImages() {
+        final HashMap<String, Object> doctorInfo = getDoctorInfo();
         final boolean[] set = {false};
         count = patientInfo.size();
         goodToGo = new ArrayList<>();
@@ -1079,13 +1099,13 @@ new Handler().postDelayed(new Runnable() {
         if (patientInfo.size() == 0) {
             if (loadingResults != null && isSafe())
                 loadingResults.cancel();
-            adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
+            adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID, db, doctorInfo);
             patientRecycler.setAdapter(adapter);
         } else {
             boolean haveAllFiles = haveAllfiles();
             if (fileList.size() == 0 && !isNetworkAvailable()) {
                 makeSnackBar(5000, "Could not load images since you are not connected to the internet.");
-                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
+                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID, db, doctorInfo);
                 patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                 patientRecycler.setAdapter(adapter);
                 for (int i = 0; i < patientInfo.size(); i++) {
@@ -1095,7 +1115,7 @@ new Handler().postDelayed(new Runnable() {
                 }
             } else if (!haveAllFiles && !isNetworkAvailable()) {
                 makeSnackBar(5000, "Could not load all images since you are not connected to the internet.");
-                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
+                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID, db, doctorInfo);
                 patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                 patientRecycler.setAdapter(adapter);
                 for (int i = 0; i < patientInfo.size(); i++) {
@@ -1104,7 +1124,7 @@ new Handler().postDelayed(new Runnable() {
                     userString += "-------" + username;
                 }
             } else if (haveAllFiles) {
-                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
+                adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID, db, doctorInfo);
                 patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                 patientRecycler.setAdapter(adapter);
                 for (int i = 0; i < patientInfo.size(); i++) {
@@ -1139,7 +1159,7 @@ new Handler().postDelayed(new Runnable() {
 
                                     //if (username.equals(patientUsernames.get(0)) ) {
                                     if (goodToGo.size() == patientInfo.size()) {
-                                        adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
+                                        adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID, db, doctorInfo);
                                         //setMaxHeight();
                                /*if (isSafe() && loadingResults != null)
                                    if (isSafe() && loadingResults != null) loadingResults.cancel();*/
@@ -1172,7 +1192,7 @@ new Handler().postDelayed(new Runnable() {
                                     goodToGo.add(false);
                                     Log.wtf("*Image Failure", "gSize: " + goodToGo.size() + " " + "listSize: " + patientInfo.size());
                                     if (goodToGo.size() == patientInfo.size()) {
-                                        adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
+                                        adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID, db, doctorInfo);
                                         patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                                         patientRecycler.setAdapter(adapter);
                                         if (isSafe())
@@ -1203,7 +1223,7 @@ new Handler().postDelayed(new Runnable() {
                         // if (!entered && !set[0] && i == patientUsernames.size() - 1) {
                         if (goodToGo.size() == patientInfo.size()) {
                             //    if (isSafe() && loadingResults != null) loadingResults.cancel();
-                            adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID);
+                            adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID, db, doctorInfo);
                             patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                             patientRecycler.setAdapter(adapter);
                    /*new Handler().postDelayed(new Runnable() {
@@ -1226,9 +1246,19 @@ new Handler().postDelayed(new Runnable() {
 
 
             }
-            if(isSafe())
-            writeToUsers(userString);
+            if (isSafe())
+                writeToUsers(userString);
         }
+    }
+
+    private HashMap<String, Object> getDoctorInfo() {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("Name", name);
+        map.put("City", city);
+        map.put("Center", medicalProvider);
+        map.put("Doc", medicalProvider);
+
+        return map;
     }
 
 
@@ -1286,7 +1316,7 @@ new Handler().postDelayed(new Runnable() {
     }
 
     int counter = 0;
-  public static ListenerRegistration userPassListener;
+    public static ListenerRegistration userPassListener;
 
     public void updateInfoTxt() {
         final DocumentReference docRef = db.collection("userPass").document(userPassID);
@@ -1332,14 +1362,14 @@ new Handler().postDelayed(new Runnable() {
 
     @Override
     public void onDestroyView() {
-        if(userPassListener != null)
+        if (userPassListener != null)
             userPassListener.remove();
         super.onDestroyView();
     }
 
     @Override
     public void onDestroy() {
-        if(userPassListener != null)
+        if (userPassListener != null)
             userPassListener.remove();
         Log.wtf("*-*REMOVING UNCESSARY", "" + removeUncessaryFiles());
         super.onDestroy();

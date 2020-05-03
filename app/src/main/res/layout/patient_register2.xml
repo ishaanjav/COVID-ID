@@ -25,81 +25,14 @@
                 android:layout_marginLeft="27sp"
                 android:layout_marginTop="17sp"
                 android:fontFamily="@font/remedium"
-                android:text="Your COVID Status"
+                android:text="Plasma Donation"
                 android:textColor="#393939"
                 android:textSize="30sp" />
-
-            <ImageView
-                android:id="@+id/statusHelp"
-                android:layout_width="30dp"
-                android:layout_height="30sp"
-                android:layout_alignParentLeft="true"
-                android:layout_below="@id/existingusertext2"
-                android:layout_marginLeft="6dp"
-                android:layout_marginTop="19dp"
-                app:srcCompat="@drawable/helpicon" />
-
-            <TextView
-                android:id="@+id/covidtestingstatustext"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="35sp"
-                android:layout_marginTop="20sp"
-                android:fontFamily="@font/remedium"
-                android:layout_below="@id/existingusertext2"
-                android:text="COVID-19 Testing Status:"
-                android:textColor="#393939"
-                android:textSize="23sp" />
+            /
 
 
             <!--For The Other 2 Radiogroups, set orientation to horizontal.
             Also change the color to they grey used for "Unknown or Untested" instead of red and green.-->
-            <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
-                android:id="@+id/covidStatus"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/covidtestingstatustext"
-                android:layout_marginLeft="50sp"
-                android:orientation="vertical">
-
-                <RadioButton
-                    android:id="@+id/unknown"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5sp"
-                    android:buttonTint="#818181"
-                    android:textColor="#505050"
-                    android:text="Unknown or Untested"
-                    android:textSize="20sp" />
-                <RadioButton
-                    android:id="@+id/covidpositive"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6sp"
-                    android:buttonTint="#F62E2E"
-                    android:textColor="#505050"
-                    android:text="Infected"
-                    android:textSize="20sp" />
-                <RadioButton
-                    android:id="@+id/covidn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6sp"
-                    android:buttonTint="#FFA560"
-                    android:textColor="#505050"
-                    android:text="Not Infected"
-                    android:textSize="20sp" />
-               <!--android:buttonTint="#2E88F6"-->
-                <RadioButton
-                    android:id="@+id/covidnegative"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6sp"
-                    android:buttonTint="#26D61F"
-                    android:textColor="#505050"
-                    android:text="Recovered"
-                    android:textSize="20sp" />
-            </RadioGroup>
 
             <!--Plasme Donated-->
 
@@ -110,7 +43,7 @@
                 android:layout_marginLeft="35sp"
                 android:layout_marginTop="23sp"
                 android:fontFamily="@font/remedium"
-                android:layout_below="@id/covidStatus"
+                android:layout_below="@id/existingusertext2"
                 android:text="Donated plasma:"
                 android:textColor="#393939"
                 android:textSize="23sp" />
@@ -150,7 +83,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="35sp"
-                android:layout_marginTop="23sp"
+                android:layout_marginTop="21sp"
                 android:fontFamily="@font/remedium"
                 android:layout_below="@id/donationgroupStatus"
                 android:text="Willing to donate plasma:"
