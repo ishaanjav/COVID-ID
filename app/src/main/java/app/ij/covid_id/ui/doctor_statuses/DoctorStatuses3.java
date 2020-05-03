@@ -107,7 +107,7 @@ public class DoctorStatuses3 extends Fragment {
         return root;
     }
 
-    ArrayList<HashMap<String, Object>> patientInfo;
+    public static ArrayList<HashMap<String, Object>> patientInfo;
     ArrayList<HashMap<String, Object>> patientNested0, patientNested1, patientNested2, patientNested3, patientNested4;
 
     InfoRecyclerViewAdapter adapter;
@@ -253,6 +253,12 @@ public class DoctorStatuses3 extends Fragment {
     //IDEA What I am thinking is just have this 1 time function, set a listener. If listener changes, call 1 time function
     int maxSize;
     DocumentSnapshot lastVisible, firstVisible;
+
+    public void setAdapterAgain(){
+         HashMap<String, Object> doctorInfo = getDoctorInfo();
+        adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID, db, doctorInfo);
+        patientRecycler.setAdapter(adapter);
+    }
 
     private void loadPatientInfo() {
         //maxSize = 1;
@@ -1256,7 +1262,7 @@ new Handler().postDelayed(new Runnable() {
         map.put("Name", name);
         map.put("City", city);
         map.put("Center", medicalProvider);
-        map.put("Doc", medicalProvider);
+        map.put("Doc", name);
         map.put("Phone", phone);
         map.put("Email", email);
 

@@ -2,9 +2,9 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/screen"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/screen"
     android:background="@drawable/gradient_welcome"
     tools:context=".MainActivity">
 
@@ -126,27 +126,26 @@
                     </RelativeLayout>
 
                     <CheckBox
+                        android:id="@+id/remember"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_below="@id/container"
-                        android:layout_marginTop="4sp"
-                        android:id="@+id/remember"
-                        android:buttonTint="#2B2B2B"
                         android:layout_marginLeft="20sp"
-                        android:textSize="16sp"
+                        android:layout_marginTop="4sp"
+                        android:buttonTint="#2B2B2B"
                         android:text="Keep me signed in"
-                        />
+                        android:textSize="16sp" />
 
                     <TextView
-                        android:layout_width="wrap_content"
                         android:id="@+id/forgot"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:layout_below="@id/login"
-                        android:layout_marginBottom="13sp"
-                        android:text="@string/forgot"
-                        android:textSize="16sp"
                         android:layout_marginLeft="25sp"
+                        android:layout_marginBottom="13sp"
                         android:fontFamily="@font/opensansitalci"
-                        android:layout_height="wrap_content"/>
+                        android:text="@string/forgot"
+                        android:textSize="16sp" />
 
                     <Button
                         android:id="@+id/login"
@@ -209,8 +208,8 @@
                 android:layout_marginLeft="10sp"
                 android:layout_marginTop="39sp"
                 android:layout_marginRight="10sp"
-                app:cardCornerRadius="15sp"
                 android:layout_marginBottom="20sp"
+                app:cardCornerRadius="15sp"
                 app:cardElevation="9sp">
 
                 <RelativeLayout
@@ -235,6 +234,7 @@
                         android:layout_below="@+id/newusertext"
                         android:layout_centerHorizontal="true"
                         android:layout_marginTop="21sp"
+                        android:layout_marginBottom="16sp"
                         android:background="@drawable/welcome_background_reverse"
                         android:paddingLeft="63sp"
                         android:paddingTop="6sp"
@@ -243,7 +243,6 @@
                         android:text="Sign Up"
                         android:textAllCaps="false"
                         android:textColor="#fff"
-                        android:layout_marginBottom="16sp"
                         android:textSize="25sp"
                         android:visibility="visible" />
                 </RelativeLayout>

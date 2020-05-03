@@ -8,6 +8,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
@@ -418,7 +419,7 @@ public class Registration extends AppCompatActivity {
         userPass.put("Pass", pass.getText().toString().trim());
         userPass.put("Verified", !doctor);
         userPass.put("Type", reference);
-        userPass.put("Created",  currentDate + " " + time);
+        userPass.put("Created", currentDate + " " + time);
         userPass.put("Updated", currentDate + " " + time);
         //userPass.put("Latest Update", currentDate + " " + time);
         userPass.put("Status", "Unknown");
@@ -709,8 +710,18 @@ public class Registration extends AppCompatActivity {
             map.put("Donated", (haveDonatedPlasma));
             map.put("Willing", (willDonatePlasma));
         }
-        final ProgressDialog dialog = ProgressDialog.show(Registration.this, "Creating Account",
-                "Processing. Please wait...", true);
+         /*ProgressDialog dialog = ProgressDialog.show(Registration.this, "Creating Account",
+                "Processing. Please wait...", true);*/
+        final ProgressDialog dialog = new ProgressDialog(Registration.this);
+        dialog.setMessage("Processing. Please wait...");
+        dialog.setTitle("Creating Account");
+        dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        dialog.setIndeterminate(false);
+        dialog.setProgress(0);
+        //TODO Ask dad should this loading progress be cancelable?
+        dialog.setCancelable(false);
+        dialog.show();
+
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -805,7 +816,8 @@ public class Registration extends AppCompatActivity {
                                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
                                 final byte[] data2 = baos.toByteArray();
-
+                                Log.wtf("TIMES", "" + System.currentTimeMillis());
+                                dialog.setProgress(60);
                                 UploadTask uploadTask = storageReference2.putBytes(data2);
                                 uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                                     @Override
@@ -821,6 +833,8 @@ public class Registration extends AppCompatActivity {
                                                         hashMap.put("City", city.getText().toString().trim());
                                                         hashMap.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
                                                         hashMap.put("Country", (country.getSelectedItem().toString()));
+                                                        Log.wtf("TIMES", "" + System.currentTimeMillis());
+                                                        dialog.setProgress(70);
                                                         final String userPassDocumentID = documentReference.getPath();
                                                         map.put("userPass", userPassDocumentID);
                                                         db.collection("Map").document(user.getText().toString().trim())
@@ -832,12 +846,15 @@ public class Registration extends AppCompatActivity {
                                                                         Map<String, Object> data = new HashMap<>();
                                                                         //data.put("Doc ID", mainDocumentID);
                                                                         //IMPORTANT Change it to below because Patient/Doctor will not be used anymore.
+                                                                        Log.wtf("TIMES", "" + System.currentTimeMillis());
+                                                                        dialog.setProgress(80);
                                                                         data.put("Doc ID", userPassDocumentID);
                                                                         //IMPORTANT After adding the main info, get the ID and go back to userPass to add it there.
                                                                         doc.set(data, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                             @Override
                                                                             public void onSuccess(Void aVoid) {
                                                                                 //INFO Write to "Updates" and put in stuff.
+                                                                                Log.wtf("TIMES", "" + System.currentTimeMillis());
                                                                                 HashMap<String, Object> updateMap = new HashMap<>();
                                                                                 updateMap.put("Status", status);
                                                                                 updateMap.put("Prev", "n/a");
@@ -849,6 +866,7 @@ public class Registration extends AppCompatActivity {
                                                                                 String em = email.getText().toString();
                                                                                 if (em.isEmpty())
                                                                                     em = "";
+                                                                                dialog.setProgress(90);
                                                                                 updateMap.put("Em", (doctor) ? em : "n/a");
                                                                                 updateMap.put("Note", "n/a");
                                                                                 db.collection(userPassDocumentID + "/Updates")
@@ -857,7 +875,9 @@ public class Registration extends AppCompatActivity {
                                                                                             @Override
                                                                                             public void onSuccess(Void aVoid) {
                                                                                                 makeToast("Account created");
+                                                                                                dialog.setProgress(100);
                                                                                                 dialog.cancel();
+                                                                                                Log.wtf("TIMES", "" + System.currentTimeMillis());
                                                                                                 writeToFile(doctor ? "Doctor" : "Patient", getApplicationContext());
                                                                                                 //IMPORTANT Account has successfully been created.
                                                                                                 Intent finish = new Intent(Registration.this, MainActivity.class);
@@ -1079,13 +1099,15 @@ public class Registration extends AppCompatActivity {
             makeSnackBar(2000, "Your passwords do not match.");
         else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
             makeSnackBar(2000, "Please enter your full name.");
+        else if (!validCity(sName))
+            makeSnackBar(2500, "You have not entered vowels in your name.");
         else if (sMedicalCenterName.length() <= 3)
             makeSnackBar(3000, "Please enter a valid medical center name.");
         else if (sPhone.length() < 10)
             makeSnackBar(2000, "Please enter a valid phone #.");
         else if (sEmail.length() > 0 && !isValid(sEmail))
             makeSnackBar(2000, "Please enter a valid email.");
-        else if (sCity.length() < 2)
+        else if (!validCity(sCity))
             makeSnackBar(2000, "Please enter a valid city.");
         else if (!pictureGood)
             makeSnackBar(2000, "Please take a picture of your face.");
@@ -1168,6 +1190,8 @@ public class Registration extends AppCompatActivity {
             makeSnackBar(2000, "Your passwords do not match.");
         else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
             makeSnackBar(2000, "Please enter your full name.");
+        else if (!validCity(sName))
+            makeSnackBar(2500, "You have not entered vowels in your name.");
         else if (sPhone.length() < 10)
             makeSnackBar(2000, "Please enter a valid phone #.");
         else if (sEmail.length() > 0 && !isValid(sEmail))

@@ -1,6 +1,8 @@
 package app.ij.covid_id;
 
+import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
@@ -153,7 +155,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
   /*items[layoutPosition] = items[layoutPosition].let {
             it.first to !it.second
         }*/
-        notifyItemChanged(pos);
+        //   notifyItemChanged(pos);
     }
 
     int counter = 0;
@@ -241,6 +243,8 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         setAnimation(holder.itemView, position);
     }
 
+    ProgressDialog progress;
+
     public void showInfo(final int position) {
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
@@ -263,6 +267,8 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
             public void onClick(View view) {
                 dialog.dismiss();
                 dialog.cancel();
+                if (progress != null)
+                    if (progress != null) progress.cancel();
             }
         });
 
@@ -277,12 +283,22 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         plasmaT.setText(ss1);
         willingT.setText(ss2);
 
+        progress = new ProgressDialog((Activity) context);
+        progress.setMessage("Processing. Please wait...");
+        progress.setTitle("Loading Info");
+        progress.setIndeterminate(true);
+        progress.setCancelable(true);
+        progress.show();
 
         String userPath = list.get(position).get("Doc ID").toString();
         db.document(userPath).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot snapshot) {
                 Log.wtf("*Reading current users's data", snapshot.getData().toString());
+                if (progress != null) {
+                    if (progress != null) progress.cancel();
+                    progress.dismiss();
+                }
                 displayStuff(dialog, (HashMap<String, Object>) snapshot.getData(), position);
                 dialog.show();
             }
@@ -290,9 +306,13 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
             @Override
             public void onFailure(@NonNull Exception e) {
                 largeToast("Could not load user's data. Are you connected to the internet?");
+                if (progress != null) progress.cancel();
+                dialog.cancel();
             }
         });
     }
+
+    boolean updated;
 
     private void displayStuff(final Dialog dialog, final HashMap<String, Object> map, final int position) {
         TextView nameT = dialog.findViewById(R.id.nameText);
@@ -307,11 +327,17 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         String status = map.get("Status").toString();
         String type = map.get("Type").toString();
 
+        //TODO For dates, if it is yesterday, then I am saying "Yesterday: ____".
+        //  This makes it wrap onto next line like with Dr.Doctor Jones. Should I do this?
         previousDateT.setText("Updated: " + cleanDate(map.get("Updated").toString()));
 
         nameT.setPaintFlags(nameT.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+        //TODO Ask dad should I put Dr. in the name if they are a doctor or does that get too confusing
+        // especially since we are displaying Doctor: Dr. _____ who updated them?
         nameT.setText(type.equals("Doctor") ? "Dr. " + name : name + "'s Info");
-
+        //TODO Ask dad - If user is signed out of app when their status is updated and now user signs
+        // into app, they will not get buzzing that status changed.
+        //TODO Ask dad show dad- Message for deceased patient
         if (map.containsKey("CenterU"))
             providerT.setText("Center: " + map.get("CenterU").toString());
         if (map.containsKey("DoctorU")) {
@@ -357,11 +383,15 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
 
             }
         });
+        updated = false;
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialogInterface) {
                 Pair pair = new Pair(notes.getText().toString().trim(), statusSelection.getSelectedItemPosition());
-                notesSaved.put(position, pair);
+                if (!updated)
+                    notesSaved.put(position, pair);
+                else
+                    notesSaved.put(position, new Pair<String, Integer>("", 0));
             }
         });
         Button update = dialog.findViewById(R.id.update);
@@ -369,12 +399,29 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
             @Override
             public void onClick(View view) {
                 final String patientPath = map.get("Doc ID").toString();
-                final String newStatus = statusT.getText().toString();
+                final String newStatus = statusSelection.getSelectedItem().toString();
                 final String note = notes.getText().toString();
                 if (!isNetworkAvailable()) {
                     makeToast("A WiFi connection is required to update status.");
                 }
                 if (isNetworkAvailable()) {
+                    progress = new ProgressDialog((Activity) context);
+                    progress.setMessage("Processing. Please wait...");
+                    progress.setTitle("Uploading Data");
+                    progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                    progress.setIndeterminate(false);
+                    progress.setProgress(0);
+                    //TODO Ask dad should this loading progress be cancelable?
+                    progress.setCancelable(true);
+                    progress.show();
+
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            progress.setMessage("Processing. Please wait..." + "\nMake sure you have a good internet connection.");
+                        }
+                    }, 6200);
+
                     final String time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
                     final String currentDate = new SimpleDateFormat("M/d/yy", Locale.getDefault()).format(new Date());
                     HashMap<String, Object> userPassMap = new HashMap<>();
@@ -393,6 +440,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                             mapMap.put("Country", map.get("Country"));
                             mapMap.put("State", map.get("State"));
                             mapMap.put("Status", newStatus);
+                            progress.setProgress(25);
                             db.document("Map/" + map.get("Orig")).set(mapMap)
                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                                         @Override
@@ -400,7 +448,8 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                                             //TODO Ask dad right now when user registers, for both patient and doctor the
                                             //  default city is their current city. For doctors the center is their own center.
                                             //TODO Ask dad if it is fine if Update document name is random key.
-                                            //TODO Ask dad if updates should also contain the state of the doctor.
+                                            //TODO Ask dad if updates should also contain the state/country of the doctor.
+                                            progress.setProgress(50);
                                             HashMap<String, Object> patientUpdates = new HashMap<>();
                                             patientUpdates.put("Center", doctorInfo.get("Center"));
                                             patientUpdates.put("City", doctorInfo.get("City"));
@@ -420,6 +469,8 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                                                     //TODO Ask dad if Patient is a doctor, should I also
                                                     // be getting the patient doctor's medical center?
                                                     // What about foreign patients. Should I get country?
+                                                    // Right now I am getting all 3. Should I?
+                                                    progress.setProgress(75);
                                                     HashMap<String, Object> doctorPatients = new HashMap<>();
                                                     doctorPatients.put("Doc ID", map.get("Doc ID"));
                                                     doctorPatients.put("CenterU", doctorInfo.get("Center"));
@@ -447,12 +498,16 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                                                                     //TODO Ask Dad if below message is good.
                                                                     makeToast("Data uploaded. Thank you!");
                                                                     //TODO Check if below works and what happens.
+                                                                    updated = true;
                                                                     HashMap<String, Object> temp = list.get(position);
                                                                     temp.put("Status", newStatus);
+                                                                    if (progress != null)
+                                                                        progress.cancel();
                                                                     list.set(position, temp);
                                                                     try {
-                                                                        notifyItemChanged(position);
-                                                                    }catch(Exception e){
+                                                                        //notifyItemChanged(position);
+                                                                        notifyDataSetChanged();
+                                                                    } catch (Exception e) {
                                                                         Log.wtf("*-)notifyItemChanged", e.toString());
                                                                     }
                                                                     //notifyItemChanged();
@@ -461,6 +516,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                                                         @Override
                                                         public void onFailure(@NonNull Exception e) {
                                                             largeToast("Failed to save info. Please try again.");
+                                                            if (progress != null) progress.cancel();
                                                             Log.wtf("*-)doctor/patients ERROR", e.toString());
                                                         }
                                                     });
@@ -468,6 +524,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                                             }).addOnFailureListener(new OnFailureListener() {
                                                 @Override
                                                 public void onFailure(@NonNull Exception e) {
+                                                    if (progress != null) progress.cancel();
                                                     largeToast("Failed to save info. Please try again.");
                                                     Log.wtf("*-)patient/updates ERROR", e.toString());
                                                 }
@@ -478,6 +535,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                                 @Override
                                 public void onFailure(@NonNull Exception e) {
                                     largeToast("Failed to save info. Please try again.");
+                                    if (progress != null) progress.cancel();
                                     Log.wtf("*-)map ERROR", e.toString());
                                 }
                             });
@@ -486,6 +544,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                         @Override
                         public void onFailure(@NonNull Exception e) {
                             largeToast("Failed to save info. Please try again.");
+                            if (progress != null) progress.cancel();
                             Log.wtf("*-)userPass ERROR", e.toString());
                         }
                     });
