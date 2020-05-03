@@ -151,7 +151,6 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         db = FirebaseFirestore.getInstance();
         db.setFirestoreSettings(settings);
-
         title = findViewById(R.id.title);
         username = findViewById(R.id.user);
         password = findViewById(R.id.pass);
@@ -478,8 +477,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        //super.onBackPressed();
-        makeToast("Action not available");
+        super.onBackPressed();
+        //makeToast("Action not available");
     }
 
     private String readFromFile(String file, Context context) {

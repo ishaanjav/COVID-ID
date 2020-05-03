@@ -11,13 +11,15 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/icon1"
+        android:icon="@mipmap/appiconreal"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/icon1"
         android:supportsRtl="true"
+        android:hardwareAccelerated="true"
+        android:largeHeap="true"
         android:theme="@style/AppTheme" >
         <activity
             android:name=".DoctorDashboard"
+            android:hardwareAccelerated="false"
             android:theme="@style/BottomTheme"
             android:label="@string/title_activity_doctor_dashboard" >
         </activity>

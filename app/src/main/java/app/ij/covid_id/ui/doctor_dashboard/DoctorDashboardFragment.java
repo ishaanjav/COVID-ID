@@ -72,6 +72,7 @@ public class DoctorDashboardFragment extends Fragment {
     public static String status;
     String statusLastUpdated;
     TextView statusTextView, lastUpdated, city;
+    String currentCity;
     String doctorPath;
     RelativeLayout statusColor1/*, statuScolor2*/;
     RecyclerView list;
@@ -176,7 +177,7 @@ public class DoctorDashboardFragment extends Fragment {
         if (isSafe()) {
             statusTextView.setText(cleanStatus());
             lastUpdated.setText(cleanDate());
-            lastCity.setText("City: " + cityLast);
+            lastCity.setText("My City: " + currentCity);
             lastMedicalCenter.setText("Center: " + centerLast);
         }
         //TODO use info from ArrayList to fill recycler.
@@ -324,6 +325,7 @@ public class DoctorDashboardFragment extends Fragment {
         medicalCenter = data.get("Center").toString();
         cityLast = data.get("CityU").toString();
         centerLast = data.get("CenterU").toString();
+        currentCity = data.get("City").toString();
         status = tempStatus;
         writeToInfo(toWrite);
     }
@@ -366,13 +368,12 @@ public class DoctorDashboardFragment extends Fragment {
                     "Note: Ensure your provider has the app downloaded. If the provider does not have the app, reach out to ijappscovid@gmail.com mentioning the doctor/provider name, street address and phone/email information.");
             */
             return "Unknown\nor\nUntested";
-        } else if(status.equals("Deceased")){
+        } /*else if(status.equals("Deceased")){
             statusColor1.setBackgroundResource(R.drawable.gradient_border_grey);
             statusTextView.setTextSize(37);
             statusTextView.setTextColor(Color.parseColor("#000000"));
             message.setText("Unfortunately, the patient has passed away from COVID.\nWe send our regards.");
-        }
-        else if (status.equals("Recovered")) {
+        }*/ else if (status.equals("Recovered")) {
             statusColor1.setBackgroundResource(R.drawable.gradient_border_green);
             statusTextView.setTextSize(37);
             statusTextView.setTextColor(Color.parseColor("#000000"));
@@ -451,6 +452,7 @@ public class DoctorDashboardFragment extends Fragment {
         documentID = (contents[7]);
         if (status == null || status.length() < 1)
             status = (contents[8]);
+        currentCity = (contents[12]);
         userPassID = (contents[9]);
         medicalCenter = (contents[15]);
         cityLast = (contents[16]);

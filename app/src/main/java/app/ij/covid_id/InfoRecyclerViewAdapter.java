@@ -287,6 +287,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         progress.setMessage("Processing. Please wait...");
         progress.setTitle("Loading Info");
         progress.setIndeterminate(true);
+        progress.setIcon(R.drawable.circle);
         progress.setCancelable(true);
         progress.show();
 
@@ -327,17 +328,17 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         String status = map.get("Status").toString();
         String type = map.get("Type").toString();
 
-        //TODO For dates, if it is yesterday, then I am saying "Yesterday: ____".
+        //DONE For dates, if it is yesterday, then I am saying "Yesterday: ____".
         //  This makes it wrap onto next line like with Dr.Doctor Jones. Should I do this?
         previousDateT.setText("Updated: " + cleanDate(map.get("Updated").toString()));
 
         nameT.setPaintFlags(nameT.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-        //TODO Ask dad should I put Dr. in the name if they are a doctor or does that get too confusing
+        //DONE Ask dad should I put Dr. in the name if they are a doctor or does that get too confusing
         // especially since we are displaying Doctor: Dr. _____ who updated them?
-        nameT.setText(type.equals("Doctor") ? "Dr. " + name : name + "'s Info");
-        //TODO Ask dad - If user is signed out of app when their status is updated and now user signs
+        // nameT.setText(type.equals("Doctor") ? "Dr. " + name : name + "'s Info");
+        nameT.setText(name + "'s Info");
+        //FUTURE FILES If user is signed out of app when their status is updated and now user signs
         // into app, they will not get buzzing that status changed.
-        //TODO Ask dad show dad- Message for deceased patient
         if (map.containsKey("CenterU"))
             providerT.setText("Center: " + map.get("CenterU").toString());
         if (map.containsKey("DoctorU")) {
@@ -409,9 +410,10 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                     progress.setMessage("Processing. Please wait...");
                     progress.setTitle("Uploading Data");
                     progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                    progress.setIcon(R.drawable.circle);
                     progress.setIndeterminate(false);
                     progress.setProgress(0);
-                    //TODO Ask dad should this loading progress be cancelable?
+                    //DONE Ask dad should this loading progress be cancelable?
                     progress.setCancelable(true);
                     progress.show();
 
@@ -427,7 +429,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                     HashMap<String, Object> userPassMap = new HashMap<>();
                     userPassMap.put("Updated", currentDate + " " + time);
                     userPassMap.put("Status", newStatus);
-                    //TODO Ask dad if city should be the doctor's city.
+                    //DONE Ask dad if city should be the doctor's city.
                     userPassMap.put("CityU", doctorInfo.get("City"));
                     //TODO Shouldn't plasma be something that the doctor can edit?
                     userPassMap.put("CenterU", doctorInfo.get("Center"));
@@ -447,12 +449,14 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                                         public void onSuccess(Void aVoid) {
                                             //TODO Ask dad right now when user registers, for both patient and doctor the
                                             //  default city is their current city. For doctors the center is their own center.
-                                            //TODO Ask dad if it is fine if Update document name is random key.
-                                            //TODO Ask dad if updates should also contain the state/country of the doctor.
+                                            //DONE  if it is fine if Update document name is random key.
+                                            //DONE  if updates should also contain the state/country of the doctor.
                                             progress.setProgress(50);
                                             HashMap<String, Object> patientUpdates = new HashMap<>();
                                             patientUpdates.put("Center", doctorInfo.get("Center"));
                                             patientUpdates.put("City", doctorInfo.get("City"));
+                                            patientUpdates.put("State", doctorInfo.get("State"));
+                                            patientUpdates.put("Country", doctorInfo.get("Country"));
                                             patientUpdates.put("Date", currentDate + " " + time);
                                             patientUpdates.put("Doc", doctorInfo.get("Doc"));
                                             patientUpdates.put("Em", doctorInfo.get("Email"));
@@ -499,11 +503,13 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                                                                     makeToast("Data uploaded. Thank you!");
                                                                     //TODO Check if below works and what happens.
                                                                     updated = true;
-                                                                    HashMap<String, Object> temp = list.get(position);
-                                                                    temp.put("Status", newStatus);
+                                                                    HashMap<String, Object> temp/* = list.get(position)*/;
                                                                     if (progress != null)
                                                                         progress.cancel();
-                                                                    list.set(position, temp);
+                                                                    temp = DoctorStatuses3.patientInfo.get(position);
+                                                                    temp.put("Status", newStatus);
+                                                                    DoctorStatuses3.setAdapterAgain();
+                                                                    //list.set(position, temp);
                                                                     try {
                                                                         //notifyItemChanged(position);
                                                                         notifyDataSetChanged();
@@ -582,11 +588,17 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         statusList.add("Infected");
         statusList.add("Uninfected");
         statusList.add("Recovered");
-        for (int i = 0; i < statusList.size(); i++)
-            if (statusList.get(i).equals(status)) {
-                statusList.remove(i);
-                break;
-            }
+        if (!status.equals("Unknown")) {
+            String sel = "Infected";
+            for (int i = 0; i < statusList.size(); i++)
+                if (statusList.get(i).equals(status)) {
+                    sel = statusList.remove(i);
+                    break;
+                }
+            statusList.add(0, sel);
+        }else{
+            statusList.add(0, "Unknown");
+        }
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, R.layout.status_selected, statusList);
         statusSelection.setAdapter(adapter);
@@ -640,10 +652,10 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         String time = cleanTime(split[1]);
         if (currentDate.equals(split[0]))
             return "Today," + time;
-        int curDay = Integer.parseInt(currentDate.substring(currentDate.indexOf("/") + 1, currentDate.indexOf("/", currentDate.indexOf("/") + 1)));
+       /* int curDay = Integer.parseInt(currentDate.substring(currentDate.indexOf("/") + 1, currentDate.indexOf("/", currentDate.indexOf("/") + 1)));
         int previousDay = Integer.parseInt(split[0].substring(split[0].indexOf("/") + 1, split[0].indexOf("/", split[0].indexOf("/") + 1)));
         if (curDay == previousDay + 1)
-            return "Yesterday," + time;
+            return "Yesterday," + time;*/
         return split[0].substring(0, split[0].length() - 3) + "," + time;
     }
 

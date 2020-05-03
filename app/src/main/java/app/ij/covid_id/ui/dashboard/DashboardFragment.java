@@ -276,6 +276,7 @@ public class DashboardFragment extends Fragment {
         });
     }
 
+    String currentCity;
     public void updateLayout() {
         //README Uncomment below for quick testing
         //status = "Unknown";
@@ -288,7 +289,8 @@ public class DashboardFragment extends Fragment {
             SpannableString ss2 = new SpannableString("Center: " + centerLast);
             ss.setSpan(new StyleSpan(Typeface.BOLD), 0, 5, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             ss2.setSpan(new StyleSpan(Typeface.BOLD), 0, 7, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            lastCity.setText("City: " + cityLast);
+            //lastCity.setText("City: " + cityLast);
+            lastCity.setText("My City: " + currentCity);
             lastMedicalCenter.setText("Center: " + centerLast);
         }
         //TODO use info from ArrayList to fill recycler.
@@ -427,6 +429,7 @@ public class DashboardFragment extends Fragment {
         phone = data.get("Phone").toString();
         //email = data.get("Email").toString();
 
+        currentCity = data.get("City").toString();
         cityLast = data.get("CityU").toString();
         centerLast = data.get("CenterU").toString();
         status = tempStatus;
@@ -471,12 +474,12 @@ public class DashboardFragment extends Fragment {
                     "Note: Ensure your provider has the app downloaded. If the provider does not have the app, reach out to ijappscovid@gmail.com mentioning the doctor/provider name, street address and phone/email information.");
             */
             return "Unknown\nor\nUntested";
-        } else if (status.equals("Deceased")) {
+        }/* else if (status.equals("Deceased")) {
             statusColor1.setBackgroundResource(R.drawable.gradient_border_grey);
             statusTextView.setTextSize(37);
             statusTextView.setTextColor(Color.parseColor("#000000"));
             message.setText("Unfortunately, the patient has passed away from COVID. We send our regards.");
-        } else if (status.equals("Recovered")) {
+        }*/ else if (status.equals("Recovered")) {
             statusColor1.setBackgroundResource(R.drawable.gradient_border_green);
             statusTextView.setTextSize(37);
             statusTextView.setTextColor(Color.parseColor("#000000"));
@@ -556,6 +559,7 @@ public class DashboardFragment extends Fragment {
         documentID = (contents[7]);
         status = (contents[8]);
         userPassID = (contents[9]);
+        currentCity = (contents[12]);
         cityLast = (contents[15]);
         centerLast = (contents[16]);
     }

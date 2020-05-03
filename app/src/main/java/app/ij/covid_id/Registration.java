@@ -343,340 +343,6 @@ public class Registration extends AppCompatActivity {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    private void saveInformation() {
-        final String reference = (doctor) ? "Doctor" : "Patient";
-        final Map<String, Object> map = new HashMap<>();
-        map.put("Username", user.getText().toString().trim());
-        map.put("Orig", user.getText().toString().trim());
-        map.put("Password", pass.getText().toString().trim());
-        map.put("Name", name.getText().toString().trim());
-        map.put("Phone", phone.getText().toString().trim());
-        map.put("Email", email.getText().toString().trim());
-        map.put("City", city.getText().toString().trim());
-        map.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
-        map.put("Country", (country.getSelectedItem().toString()));
-
-        final String time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-        final String currentDate = new SimpleDateFormat("M/d/yy", Locale.getDefault()).format(new Date());
-        final String status;
-        if (u) status = "Unknown";
-        else if (covidR) status = "Recovered";
-        else if (covidN) status = "Uninfected";
-        else status = "Infected";
-        map.put("Stat", status);
-
-        //map.put("Num of Dates", 1);
-        //map.put("Status 1", status);
-        //map.put("Date 1", currentDate + " " + time);
-        map.put("Updated", currentDate + " " + time);
-        map.put("Created", currentDate + " " + time);
-        if (doctor) {
-            map.put("Verified", false);
-        } else {
-            map.put("Donated", (haveDonatedPlasma));
-            map.put("Willing", (willDonatePlasma));
-        }
-        final ProgressDialog dialog = ProgressDialog.show(Registration.this, "Creating Account",
-                "Processing. Please wait...", true);
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                dialog.setMessage("Processing. Please wait..." + "\nMake sure you have a good internet connection.");
-            }
-        }, 7200);
-
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                final int[] count = {8};
-                new CountDownTimer(8000, 1000) {
-                    @Override
-                    public void onTick(long millisUntilFinished) {
-                        String s = count[0] + "";
-                        count[0]--;
-                        s += (millisUntilFinished / 1000 == 0) ? " second." : " seconds.";
-                        if (dialog.isShowing())
-                            dialog.setMessage("This took longer than expected.\nAre you connected to the internet?\n\nCheck your connection" +
-                                    " and try again in " + s);
-                    }
-
-                    @Override
-                    public void onFinish() {
-                        if ((dialog).isShowing()) {
-                            dialog.dismiss();
-                            dialog.cancel();
-                            makeSnackBar(8000, "Failed to create account.\nPlease make sure you have a good connection before trying again.");
-                        }
-                    }
-                }.start();
-            }
-        }, 23000);
-        final long start = System.currentTimeMillis();
-        Log.wtf("-_--START", "" + start);
-        final Map<String, Object> userPass = new HashMap<>();
-        userPass.put("User", user.getText().toString().trim());
-        userPass.put("Orig", user.getText().toString().trim());
-        userPass.put("Pass", pass.getText().toString().trim());
-        userPass.put("Verified", !doctor);
-        userPass.put("Type", reference);
-        userPass.put("Created", currentDate + " " + time);
-        userPass.put("Updated", currentDate + " " + time);
-        //userPass.put("Latest Update", currentDate + " " + time);
-        userPass.put("Status", "Unknown");
-//TODO Write Updates Subscollection to userPass
-        userPass.put("Name", name.getText().toString().trim());
-        userPass.put("Phone", phone.getText().toString().trim());
-
-        userPass.put("Donated", (haveDonatedPlasma));
-        userPass.put("Willing", (willDonatePlasma));
-        userPass.put("City", city.getText().toString().trim());
-        userPass.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
-        userPass.put("Country", (country.getSelectedItem().toString()));
-        userPass.put("Email", email.getText().toString().trim());
-        db.collection("userPass")
-                .whereEqualTo("User", user.getText().toString())
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            boolean unique = task.getResult().size() == 0;
-                            /*true;
-                            String curUser = user.getText().toString().trim();
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                String r = document.get("User").toString();
-                                Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("User").toString());
-                                if (r.equals(curUser)) {
-                                    makeSnackBar(3700, "Your username was just taken. Please choose another username.");
-                                    unique = false;
-                                    break;
-                                }
-                            }*/
-                            if (unique) {
-                                //INFO Username is unique.
-                                db.collection("userPass")
-                                        .add(userPass)
-                                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                            @Override
-                                            public void onSuccess(DocumentReference documentReference) {
-                                                StorageReference storageReference2 = FirebaseStorage.getInstance().getReference(user.getText().toString().trim().trim());
-                                                final String userPassDocumentID = documentReference.getPath();
-                                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                                                final byte[] data2 = baos.toByteArray();
-                                                final Map<String, Object> data = new HashMap<>();
-                                                data.put("Doc ID", userPassDocumentID);
-
-                                                map.put("userPass", userPassDocumentID);
-                                                UploadTask uploadTask = storageReference2.putBytes(data2);
-                                                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                                    @Override
-                                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                                        //INFO Adding the maint content
-                                                        HashMap<String, String> hashMap = new HashMap<>();
-                                                        hashMap.put("Status", status);
-                                                        hashMap.put("City", city.getText().toString().trim());
-                                                        hashMap.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
-                                                        hashMap.put("Country", (country.getSelectedItem().toString()));
-                                                        db.collection("Map").document(user.getText().toString().trim())
-                                                                .set(hashMap)
-                                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                                    @Override
-                                                                    public void onSuccess(Void aVoid) {
-                                                                        db.collection(reference)
-                                                                                .add(map)
-                                                                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                                                                    @Override
-                                                                                    public void onSuccess(DocumentReference documentReference) {
-                                                                                        final String mainDocumentID = documentReference.getId();
-
-                                                                                        DocumentReference doc = db.document(userPassDocumentID);
-                                                                                        //data.put("Doc ID", mainDocumentID);
-                                                                                        //IMPORTANT Change it to below because Patient/Doctor will not be used anymore.
-                                                                                        //IMPORTANT After adding the main info, get the ID and go back to userPass to add it there.
-                                                                                        doc.set(data, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                                                            @Override
-                                                                                            public void onSuccess(Void aVoid) {
-                                                                                                //INFO Write to "Updates" and put in stuff.
-                                                                                                HashMap<String, Object> updateMap = new HashMap<>();
-                                                                                                updateMap.put("Status", status);
-                                                                                                updateMap.put("Prev", "n/a");
-                                                                                                updateMap.put("City", "n/a");
-                                                                                                updateMap.put("Center", "n/a");
-                                                                                                updateMap.put("Date", currentDate + " " + time);
-                                                                                                updateMap.put("Center", "n/a");
-                                                                                                updateMap.put("Doc", (doctor) ? "You" : "n/a");
-                                                                                                updateMap.put("Ph", (doctor) ? phone.getText().toString().trim() : "n/a");
-                                                                                                String em = email.getText().toString();
-                                                                                                if (em.isEmpty())
-                                                                                                    em = "";
-                                                                                                updateMap.put("Em", (doctor) ? em : "n/a");
-                                                                                                updateMap.put("Note", "n/a");
-                                                                                                final String documentID = mainDocumentID;
-                                                                                                db.collection(reference + "/" + documentID + "/Updates")
-                                                                                                        .document("Update 1").set(updateMap)
-                                                                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                                                                            @Override
-                                                                                                            public void onSuccess(Void aVoid) {
-                                                                                                                makeToast("Account created");
-                                                                                                                dialog.cancel();
-                                                                                                                writeToFile(doctor ? "Doctor" : "Patient", getApplicationContext());
-                                                                                                                //IMPORTANT Account has successfully been created.
-                                                                                                                Intent finish = new Intent(Registration.this, MainActivity.class);
-                                                                                                                finish.putExtra("Type", doctor ? "Doctor" : "Patient");
-                                                                                                                long end = System.currentTimeMillis();
-                                                                                                                Log.wtf("-_--END", "" + end);
-                                                                                                                Log.wtf("-_--Upload Time", "" + (end - start));
-                                                                                                                startActivity(finish);
-                                                                                                                Log.wtf("TESTING", "DocumentSnapshot added with ID: " + documentID);
-                                                                                                            }
-                                                                                                        }).addOnFailureListener(new OnFailureListener() {
-                                                                                                    @Override
-                                                                                                    public void onFailure(@NonNull Exception e) {
-                                                                                                        dialog.cancel();
-                                                                                                        makeToast(e.getMessage());
-                                                                                                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                                                                                                        makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
-                                                                                                    }
-                                                                                                });
-                                                                                            }
-                                                                                        }).addOnFailureListener(new OnFailureListener() {
-                                                                                            @Override
-                                                                                            public void onFailure(@NonNull Exception e) {
-                                                                                                dialog.cancel();
-                                                                                                Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                                                                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
-                                                                                            }
-                                                                                        });
-                                                                                    }
-                                                                                })
-                                                                                .addOnFailureListener(new OnFailureListener() {
-                                                                                    @Override
-                                                                                    public void onFailure(@NonNull Exception e) {
-                                                                                        dialog.cancel();
-                                                                                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                                                                                        makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
-                                                                                    }
-                                                                                });
-                                                                    }
-                                                                }).addOnFailureListener(new OnFailureListener() {
-                                                            @Override
-                                                            public void onFailure(@NonNull Exception e) {
-                                                                dialog.cancel();
-                                                                Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
-                                                            }
-                                                        });
-                                                    }
-                                                }).addOnFailureListener(new OnFailureListener() {
-                                                    @Override
-                                                    public void onFailure(@NonNull Exception exception) {
-                                                        dialog.cancel();
-                                                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document" + exception.toString());
-                                                        makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
-                                                    }
-                                                });
-
-
-                                                Log.wtf("TESTING", "DocumentSnapshot added with ID: " + documentReference.getId());
-                                            }
-                                        })
-                                        .addOnFailureListener(new OnFailureListener() {
-                                            @Override
-                                            public void onFailure(@NonNull Exception e) {
-                                                dialog.cancel();
-                                                Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
-                                            }
-                                        });
-                            } else {
-                                makeSnackBar(3700, "Your username was just taken. Please choose another username.");
-                                unique = false;
-                                dialog.cancel();
-                            }
-                        } else {
-                            dialog.cancel();
-                            Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
-                        }
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                dialog.cancel();
-                makeSnackBar(6000, "Could not process whether your username is unique. Please have a stable internet connection.");
-            }
-        });
-
-
-        //TODO Have a DB called userPassword that stores just username and password,
-        // Even later on if you add a change username/password function, do not delete the original, just add it again to user password.
-        // First ask dad if someone deletes account or changes account whether new users can use their username or not.
-        // IF they can't use (that is easier a lot).
-
-       /* db.collection("Patients").document("Patient1")
-                .set(user)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.wtf("TESTING", "DocumentSnapshot added with ID: ");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                    }
-                });
-
-        db.collection("Patients")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.wtf("READING: READING:  ", document.getId() + " => " + document.getData());
-                                makeToast("Document ID: " + document.getId() + " =>  " + document.getData());
-                            }
-                        } else {
-                            Log.w("FAILED TO READ ---", "Error getting documents.", task.getException());
-                        }
-                    }
-                });*/
-// Add a new document with a generated ID
-        /*db.collection("Patients")
-                .add(user)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Log.wtf("TESTING", "DocumentSnapshot added with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                    }
-                });
-
-        db.collection("Patients")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.wtf("READING: READING:  ", document.getId() + " => " + document.getData());
-                                makeToast("Document ID: " + document.getId() + " =>  " + document.getData());
-                            }
-                        } else {
-                            Log.w("FAILED TO READ ---", "Error getting documents.", task.getException());
-                        }
-                    }
-                });*/
-
-    }
-
     private void saveInformation2() {
         final String reference = (doctor) ? "Doctor" : "Patient";
         final Map<String, Object> map = new HashMap<>();
@@ -692,11 +358,8 @@ public class Registration extends AppCompatActivity {
 
         final String time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
         final String currentDate = new SimpleDateFormat("M/d/yy", Locale.getDefault()).format(new Date());
-        final String status;
-        if (u) status = "Unknown";
-        else if (covidR) status = "Recovered";
-        else if (covidN) status = "Uninfected";
-        else status = "Infected";
+        final String status = "Unknown";
+
         map.put("Stat", status);
 
         //map.put("Num of Dates", 1);
@@ -704,12 +367,12 @@ public class Registration extends AppCompatActivity {
         //map.put("Date 1", currentDate + " " + time);
         map.put("Updated", currentDate + " " + time);
         map.put("Created", currentDate + " " + time);
-        if (doctor) {
+        if (doctor)
             map.put("Verified", false);
-        } else {
-            map.put("Donated", (haveDonatedPlasma));
-            map.put("Willing", (willDonatePlasma));
-        }
+        //} else {
+        map.put("Donated", (haveDonatedPlasma));
+        map.put("Willing", (willDonatePlasma));
+        //}
          /*ProgressDialog dialog = ProgressDialog.show(Registration.this, "Creating Account",
                 "Processing. Please wait...", true);*/
         final ProgressDialog dialog = new ProgressDialog(Registration.this);
@@ -717,8 +380,8 @@ public class Registration extends AppCompatActivity {
         dialog.setTitle("Creating Account");
         dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         dialog.setIndeterminate(false);
-        dialog.setProgress(0);
-        //TODO Ask dad should this loading progress be cancelable?
+        dialog.setIcon(R.drawable.circle);
+        dialog.setProgress(1);
         dialog.setCancelable(false);
         dialog.show();
 
@@ -771,16 +434,14 @@ public class Registration extends AppCompatActivity {
         userPass.put("Name", name.getText().toString().trim());
         userPass.put("Phone", phone.getText().toString().trim());
 
-        if (!doctor) {
-            userPass.put("Donated", (haveDonatedPlasma));
-            userPass.put("Willing", (willDonatePlasma));
-            userPass.put("CenterU", "n/a");
-        } else {
+        if (doctor){
             userPass.put("Center", medicalCenter.getText().toString().trim());
-            userPass.put("CenterU", medicalCenter.getText().toString().trim());
         }
+        userPass.put("Donated", (haveDonatedPlasma));
+        userPass.put("Willing", (willDonatePlasma));
+        userPass.put("CenterU", "n/a");
         userPass.put("DoctorU", "n/a");
-        userPass.put("CityU", city.getText().toString().trim());
+        userPass.put("CityU", "n/a");
         userPass.put("City", city.getText().toString().trim());
         userPass.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
         userPass.put("Country", (country.getSelectedItem().toString()));
@@ -858,7 +519,9 @@ public class Registration extends AppCompatActivity {
                                                                                 HashMap<String, Object> updateMap = new HashMap<>();
                                                                                 updateMap.put("Status", status);
                                                                                 updateMap.put("Prev", "n/a");
-                                                                                updateMap.put("City", city.getText().toString());
+                                                                                updateMap.put("City", city.getText().toString().trim());
+                                                                                updateMap.put("State", state.getSelectedItem().toString());
+                                                                                updateMap.put("Country", country.getSelectedItem().toString());
                                                                                 updateMap.put("Date", currentDate + " " + time);
                                                                                 updateMap.put("Doc", (doctor) ? "You" : "n/a");
                                                                                 updateMap.put("Center", "n/a");

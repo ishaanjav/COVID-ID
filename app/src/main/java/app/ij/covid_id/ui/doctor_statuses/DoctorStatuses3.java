@@ -1,5 +1,6 @@
 package app.ij.covid_id.ui.doctor_statuses;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -39,9 +40,11 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.local.LruGarbageCollector;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -61,21 +64,34 @@ import java.util.Map;
 import app.ij.covid_id.DoctorDashboard;
 import app.ij.covid_id.InfoRecyclerViewAdapter;
 import app.ij.covid_id.R;
+import app.ij.covid_id.Registration;
 import app.ij.covid_id.ui.doctor_dashboard.DoctorDashboardFragment;
 
 public class DoctorStatuses3 extends Fragment {
 
-    FirebaseFirestore db;
+    static FirebaseFirestore db;
     ScrollView screen;
     View root;
-    public String documentID, username, name, userPassID, type, password, accountCreated, phone, email, status, medicalProvider;
+    public String documentID;
+    public String username;
+    public static String name;
+    public static String userPassID;
+    public String type;
+    public String password;
+    public String accountCreated;
+    public static String phone;
+    public static String email;
+    public String status;
+    public static String medicalProvider;
     String statusLastUpdated;
     String doctorsPath;
     public static RecyclerView patientRecycler;
     Button update;
     TextView message;
     public String TAG = "DoctorStatuses3";
-    String city, state, country;
+    static String city;
+    static String state;
+    static String country;
     float screenW, screenH, maxHeightPatient, maxHeightDoctor;
 
     public View findViewById(int id) {
@@ -110,11 +126,12 @@ public class DoctorStatuses3 extends Fragment {
     public static ArrayList<HashMap<String, Object>> patientInfo;
     ArrayList<HashMap<String, Object>> patientNested0, patientNested1, patientNested2, patientNested3, patientNested4;
 
-    InfoRecyclerViewAdapter adapter;
+    static InfoRecyclerViewAdapter adapter;
     long totalStartTime, imageStartTime;
     ArrayList<String> patientUsernames;
     boolean foreign;
     int MAX_VELOCITY_Y = 1;
+    static Context context;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -122,13 +139,20 @@ public class DoctorStatuses3 extends Fragment {
         patientUsernames = new ArrayList<>();
         patientInfo = new ArrayList<>();
         foreign = state.isEmpty() || state.length() < 2;
-        maxSize = 25;
+        maxSize = 30;
 
+        context = getContext();
         WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
         DisplayMetrics metrics = new DisplayMetrics();
         display.getMetrics(metrics);
+
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setCacheSizeBytes(300000000)
+                .build();
         db = FirebaseFirestore.getInstance();
+        db.setFirestoreSettings(settings);
+
         directory = getContext().getApplicationInfo().dataDir + "/files";
         screenW = metrics.widthPixels;
         maxHeightPatient = screenH * 3f / 5f;
@@ -141,14 +165,24 @@ public class DoctorStatuses3 extends Fragment {
         //country = "IN: India";
         //foreign = false;
         //removeUncessaryFiles();
+        progress = 0;
 
         //TODO Have a feature where instead you use progressbar and
         // based on number of images downloaded, it updates the completion percent to
         // 50 then 100 then whatever.
         if (isSafe()) {
-            loadingResults = ProgressDialog.show(getContext(), "Loading Patients",
-                    "Retrieving Data. Please wait...", true);
+           /* loadingResults = ProgressDialog.show(getContext(), "Loading Patients",
+                    "Retrieving Data. Please wait...", true);*/
+            loadingResults = new ProgressDialog((Activity) getContext());
             loadingResults.setCancelable(true);
+            loadingResults.setMessage("Retrieving Data. Please wait...");
+            loadingResults.setTitle("Loading Patients");
+            loadingResults.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            loadingResults.setIndeterminate(false);
+            loadingResults.setIcon(R.drawable.circle);
+            loadingResults.setProgress(0);
+            loadingResults.setCancelable(true);
+            loadingResults.show();
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -254,14 +288,17 @@ public class DoctorStatuses3 extends Fragment {
     int maxSize;
     DocumentSnapshot lastVisible, firstVisible;
 
-    public void setAdapterAgain(){
-         HashMap<String, Object> doctorInfo = getDoctorInfo();
-        adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID, db, doctorInfo);
+    public static void setAdapterAgain() {
+        HashMap<String, Object> doctorInfo = getDoctorInfo();
+        adapter = new InfoRecyclerViewAdapter(context, patientInfo, patientRecycler, bitmaps, userPassID, db, doctorInfo);
         patientRecycler.setAdapter(adapter);
     }
 
+    int progress = 0;
+
     private void loadPatientInfo() {
         //maxSize = 1;
+        progress = 0;
         db.collection("userPass")
                 .whereEqualTo("State", state)
                 //.orderBy("State")
@@ -290,6 +327,9 @@ public class DoctorStatuses3 extends Fragment {
                         size0++;
                         patientNested0.add((HashMap<String, Object>) document.getData());
                         //patientPath0.add(document.getId());
+                        Log.wtf("*-*Progress:", "" + progress);
+                        progress += 2;
+                        loadingResults.setProgress(progress);
                         bitmaps = null;
 //adapter.notifyItemChanged();
                         //adapter.notifyItem
@@ -345,6 +385,9 @@ public class DoctorStatuses3 extends Fragment {
                                     for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                                         if (!document.get("User").equals(username)) {
                                             size1++;
+                                            Log.wtf("*-*Progress:", "" + progress);
+                                            progress += 2;
+                                            loadingResults.setProgress(progress);
                                             //patientPath0.add(document.getId());
                                             patientNested1.add((HashMap<String, Object>) document.getData());
                                             Log.wtf("*--READING 1 ", document.getId() + " => " + document.getData());
@@ -390,6 +433,9 @@ public class DoctorStatuses3 extends Fragment {
                                                             //patientUsernames.add(document.get("User").toString());
                                                             if (!document.get("User").equals(username)) {
                                                                 size2++;
+                                                                Log.wtf("*-*Progress:", "" + progress);
+                                                                progress += 1;
+                                                                loadingResults.setProgress(progress);
                                                                 //patientPath2.add(document.getId());
                                                                 patientNested2.add((HashMap<String, Object>) document.getData());
                                                                 Log.wtf("*--READING 2 ", document.getId() + " => " + document.getData());
@@ -441,6 +487,9 @@ public class DoctorStatuses3 extends Fragment {
                                                                                 //patientUsernames.add(document.get("User").toString());
                                                                                 if (!document.get("User").equals(username)) {
                                                                                     size3++;
+                                                                                    Log.wtf("*-*Progress:", "" + progress);
+                                                                                    progress += 1;
+                                                                                    loadingResults.setProgress(progress);
                                                                                     //patientPath3.add(document.getId());
                                                                                     patientNested3.add((HashMap<String, Object>) document.getData());
                                                                                     Log.wtf("*--READING 3 ", document.getId() + " => " + document.getData());
@@ -491,6 +540,9 @@ public class DoctorStatuses3 extends Fragment {
                                                                                                     if (!document.get("User").equals(username)) {
                                                                                                         //patientPath4.add(document.getId());
                                                                                                         size4++;
+                                                                                                        Log.wtf("*-*Progress:", "" + progress);
+                                                                                                        progress += 2;
+                                                                                                        loadingResults.setProgress(progress);
                                                                                                         patientNested4.add((HashMap<String, Object>) document.getData());
                                                                                                         Log.wtf("*--READING 4 ", document.getId() + " => " + document.getData());
                                                                                                     }  //size++;
@@ -575,6 +627,7 @@ public class DoctorStatuses3 extends Fragment {
 
     private void loadForeignPatientInfo() {
         //makeToast(city +":" + country);
+        progress = 0;
         db.collection("userPass")
                 .whereEqualTo("Country", country)
                 .whereEqualTo("City", city)
@@ -594,6 +647,9 @@ public class DoctorStatuses3 extends Fragment {
                             Log.wtf("*--READING ", document.getId() + " => " + document.getData());
                             if (!document.get("User").equals(username)) {
                                 size0++;
+                                Log.wtf("*-*Progress:", "" + progress);
+                                progress += 2;
+                                loadingResults.setProgress(progress);
                                 //patientPath0.add(document.getId());
                                 patientNested0.add((HashMap<String, Object>) document.getData());
                                 //Log.wtf("*--READING ", document.getId() + " => " + document.getData());
@@ -652,6 +708,9 @@ new Handler().postDelayed(new Runnable() {
                                                 //patientUsernames.add(document.get("User").toString());
                                                 if (!document.get("User").equals(username)) {
                                                     size1++;
+                                                    Log.wtf("*-*Progress:", "" + progress);
+                                                    progress += 2;
+                                                    loadingResults.setProgress(progress);
                                                     //patientPath1.add(document.getId());
                                                     patientNested1.add((HashMap<String, Object>) document.getData());
                                                     Log.wtf("*--READING 1 ", document.getId() + " => " + document.getData());
@@ -696,6 +755,9 @@ new Handler().postDelayed(new Runnable() {
                                                                     //patientUsernames.add(document.get("User").toString());
                                                                     if (!document.get("User").equals(username)) {
                                                                         size2++;
+                                                                        Log.wtf("*-*Progress:", "" + progress);
+                                                                        progress += 2;
+                                                                        loadingResults.setProgress(progress);
                                                                         //patientPath2.add(document.getId());
                                                                         patientNested2.add((HashMap<String, Object>) document.getData());
                                                                         Log.wtf("*--READING 2 ", document.getId() + " => " + document.getData());
@@ -1046,6 +1108,8 @@ new Handler().postDelayed(new Runnable() {
     //public ArrayList<String> patientPaths;
 
     public void getfile() {
+        progress = 48;
+        loadingResults.setProgress(progress);
         Log.wtf("*------------Images---------------------Images------------------------", "----------------------------------------");
         imageStartTime = System.currentTimeMillis();
         Log.wtf("*-_--Image Start", "" + imageStartTime);
@@ -1054,6 +1118,8 @@ new Handler().postDelayed(new Runnable() {
         File[] files = location.listFiles();
         //Log.wtf("** Files", "Path: " + directory + "  # of files: " + files.length);
         bitmaps = new HashMap<>();
+        bitmaps.clear();
+
         for (int i = 0; i < files.length; i++) {
             String name = files[i].getName();
             if (name.endsWith(".jpg")) {
@@ -1064,6 +1130,11 @@ new Handler().postDelayed(new Runnable() {
                 try {
                     fileInputStream = getContext().openFileInput(name);
                     bitmap = BitmapFactory.decodeStream(fileInputStream);
+                    //if (i % 2 == 0)
+                    Log.wtf("*-*Progress:", "" + progress);
+                    if (i % 3 == 0)
+                        progress += 1;
+                    loadingResults.setProgress(progress);
                     fileInputStream.close();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -1092,7 +1163,7 @@ new Handler().postDelayed(new Runnable() {
 
     int count = 0;
     ArrayList<Boolean> goodToGo;
-    HashMap<String, Bitmap> bitmaps;
+    static HashMap<String, Bitmap> bitmaps;
     //ArrayList<String> patientPath0, patientPath1, patientPath2, patientPath3, patientPath4;
 
     public void writeImages() {
@@ -1110,7 +1181,7 @@ new Handler().postDelayed(new Runnable() {
         } else {
             boolean haveAllFiles = haveAllfiles();
             if (fileList.size() == 0 && !isNetworkAvailable()) {
-                makeSnackBar(5000, "Could not load images since you are not connected to the internet.");
+                makeSnackBar(4750, "Could not load images since you are not connected to the internet.");
                 adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID, db, doctorInfo);
                 patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                 patientRecycler.setAdapter(adapter);
@@ -1120,7 +1191,7 @@ new Handler().postDelayed(new Runnable() {
                     userString += "-------" + username;
                 }
             } else if (!haveAllFiles && !isNetworkAvailable()) {
-                makeSnackBar(5000, "Could not load all images since you are not connected to the internet.");
+                makeSnackBar(4500, "Could not load all images since you are not connected to the internet.");
                 adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps, userPassID, db, doctorInfo);
                 patientRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
                 patientRecycler.setAdapter(adapter);
@@ -1144,12 +1215,19 @@ new Handler().postDelayed(new Runnable() {
                     //final String username = patientUsernames.get(i);
                     final String username = patientInfo.get(i).get("User").toString();
                     userString += "-------" + username;
+                    Log.wtf("*-*Progress:", "" + progress);
+
                     try {
                         final StorageReference mImageRef = FirebaseStorage.getInstance().getReference(username + ".jpg");
-                        final long ONE_MEGABYTE = 1300 * 1300;
+                        final long ONE_MEGABYTE = 1000 * 1000;
                         boolean entered = false;
                         if (fileList.isEmpty() || !fileList.contains(username)) {
                             //TODO Take a look into getBytes and whether it can be used to get smaller images.
+                            if (i % 3 == 0)
+                                progress += 3;
+                            else
+                                progress += 2;
+                            loadingResults.setProgress(Math.min(progress, 90));
                             final int finalI = i;
                             //entered = i == patientUsernames.size() - 1;
                             Log.wtf("*-_Loading Firebase Images:", "Username: " + username + "  File list: " + fileList.contains(username));
@@ -1221,6 +1299,8 @@ new Handler().postDelayed(new Runnable() {
                             });
                         } else {
                             goodToGo.add(true);
+                            progress += 1;
+                            loadingResults.setProgress(progress);
                         }
            /*adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler);
            adapter.notifyDataSetChanged();
@@ -1257,10 +1337,12 @@ new Handler().postDelayed(new Runnable() {
         }
     }
 
-    private HashMap<String, Object> getDoctorInfo() {
+    private static HashMap<String, Object> getDoctorInfo() {
         HashMap<String, Object> map = new HashMap<>();
         map.put("Name", name);
         map.put("City", city);
+        map.put("State", state);
+        map.put("Country", country);
         map.put("Center", medicalProvider);
         map.put("Doc", name);
         map.put("Phone", phone);
@@ -1370,6 +1452,11 @@ new Handler().postDelayed(new Runnable() {
 
     @Override
     public void onDestroyView() {
+        Log.wtf("*-& onDestroyView", "Done");
+        if (bitmaps != null)
+            bitmaps.clear();
+        if (patientInfo != null)
+            patientInfo.clear();
         if (userPassListener != null)
             userPassListener.remove();
         super.onDestroyView();
@@ -1377,6 +1464,11 @@ new Handler().postDelayed(new Runnable() {
 
     @Override
     public void onDestroy() {
+        Log.wtf("*-& onDestroyView", "Done");
+        if (bitmaps != null)
+            bitmaps.clear();
+        if (patientInfo != null)
+            patientInfo.clear();
         if (userPassListener != null)
             userPassListener.remove();
         Log.wtf("*-*REMOVING UNCESSARY", "" + removeUncessaryFiles());
@@ -1583,10 +1675,14 @@ new Handler().postDelayed(new Runnable() {
 
 
     private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager
-                = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        if (isSafe() && getContext() != null) {
+            ConnectivityManager connectivityManager
+                    = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        } else {
+            return false;
+        }
     }
 
     Snackbar mySnackbar;
