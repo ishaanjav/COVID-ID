@@ -418,7 +418,7 @@ public class Registration extends AppCompatActivity {
         userPass.put("Pass", pass.getText().toString().trim());
         userPass.put("Verified", !doctor);
         userPass.put("Type", reference);
-        userPass.put("Created", currentDate + " " + time);
+        userPass.put("Created",  currentDate + " " + time);
         userPass.put("Updated", currentDate + " " + time);
         //userPass.put("Latest Update", currentDate + " " + time);
         userPass.put("Status", "Unknown");
@@ -497,21 +497,23 @@ public class Registration extends AppCompatActivity {
                                                                                             @Override
                                                                                             public void onSuccess(Void aVoid) {
                                                                                                 //INFO Write to "Updates" and put in stuff.
-                                                                                                HashMap<String, Object> dates = new HashMap<>();
-                                                                                                dates.put("Status", status);
-                                                                                                dates.put("Prev", "n/a");
-                                                                                                dates.put("City", "n/a");
-                                                                                                dates.put("Date", currentDate + " " + time);
-                                                                                                dates.put("Doc", (doctor) ? "You" : "n/a");
-                                                                                                dates.put("Ph", (doctor) ? phone.getText().toString().trim() : "n/a");
+                                                                                                HashMap<String, Object> updateMap = new HashMap<>();
+                                                                                                updateMap.put("Status", status);
+                                                                                                updateMap.put("Prev", "n/a");
+                                                                                                updateMap.put("City", "n/a");
+                                                                                                updateMap.put("Center", "n/a");
+                                                                                                updateMap.put("Date", currentDate + " " + time);
+                                                                                                updateMap.put("Center", "n/a");
+                                                                                                updateMap.put("Doc", (doctor) ? "You" : "n/a");
+                                                                                                updateMap.put("Ph", (doctor) ? phone.getText().toString().trim() : "n/a");
                                                                                                 String em = email.getText().toString();
                                                                                                 if (em.isEmpty())
                                                                                                     em = "";
-                                                                                                dates.put("Em", (doctor) ? em : "n/a");
-                                                                                                dates.put("Note", "n/a");
+                                                                                                updateMap.put("Em", (doctor) ? em : "n/a");
+                                                                                                updateMap.put("Note", "n/a");
                                                                                                 final String documentID = mainDocumentID;
                                                                                                 db.collection(reference + "/" + documentID + "/Updates")
-                                                                                                        .document("Update 1").set(dates)
+                                                                                                        .document("Update 1").set(updateMap)
                                                                                                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                                                             @Override
                                                                                                             public void onSuccess(Void aVoid) {

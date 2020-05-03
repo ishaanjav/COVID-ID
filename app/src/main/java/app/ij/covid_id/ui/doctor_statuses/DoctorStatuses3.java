@@ -1257,6 +1257,8 @@ new Handler().postDelayed(new Runnable() {
         map.put("City", city);
         map.put("Center", medicalProvider);
         map.put("Doc", medicalProvider);
+        map.put("Phone", phone);
+        map.put("Email", email);
 
         return map;
     }

@@ -47,6 +47,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
@@ -63,14 +64,13 @@ import app.ij.covid_id.ui.doctor_statuses.DoctorStatuses3;
 public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerViewAdapter.ViewHolder> {
 
     static Context context;
-    ArrayList<HashMap<String, Object>> list;
+    public static ArrayList<HashMap<String, Object>> list;
     HashMap<String, Bitmap> bitmapList;
     int mExpandedPosition;
     View details;
     static RecyclerView recyclerView;
     public String TAG = "RecyclerViewAdapter";
     ArrayList<Boolean> bools;
-    ArrayList<String> patientIDs;
     String doctorID;
     FirebaseFirestore db;
     static HashMap<Integer, Pair<String, Integer>> notesSaved;
@@ -82,7 +82,6 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         this.recyclerView = recyclerView;
         bitmapList = bitmaps;
         this.doctorID = doctorID;
-        this.patientIDs = patientIDs;
         this.db = db;
         this.doctorInfo = info;
     }
@@ -279,7 +278,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         willingT.setText(ss2);
 
 
-        String userPath = "userPass/" + patientIDs.get(position);
+        String userPath = list.get(position).get("Doc ID").toString();
         db.document(userPath).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot snapshot) {
@@ -295,7 +294,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         });
     }
 
-    private void displayStuff(Dialog dialog, final HashMap<String, Object> map, final int position) {
+    private void displayStuff(final Dialog dialog, final HashMap<String, Object> map, final int position) {
         TextView nameT = dialog.findViewById(R.id.nameText);
         final TextView statusT = dialog.findViewById(R.id.statusText);
         TextView providerT = dialog.findViewById(R.id.providerText);
@@ -371,10 +370,11 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
             public void onClick(View view) {
                 final String patientPath = map.get("Doc ID").toString();
                 final String newStatus = statusT.getText().toString();
-                String note = notes.getText().toString();
-                if(!isNetworkAvailable()) {
+                final String note = notes.getText().toString();
+                if (!isNetworkAvailable()) {
                     makeToast("A WiFi connection is required to update status.");
-                }if(isNetworkAvailable()){
+                }
+                if (isNetworkAvailable()) {
                     final String time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
                     final String currentDate = new SimpleDateFormat("M/d/yy", Locale.getDefault()).format(new Date());
                     HashMap<String, Object> userPassMap = new HashMap<>();
@@ -393,12 +393,85 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                             mapMap.put("Country", map.get("Country"));
                             mapMap.put("State", map.get("State"));
                             mapMap.put("Status", newStatus);
-                            db.document("Map/"+patientPath.substring(patientPath.indexOf("/")+1)).set(mapMap)
+                            db.document("Map/" + map.get("Orig")).set(mapMap)
                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                                         @Override
                                         public void onSuccess(Void aVoid) {
+                                            //TODO Ask dad right now when user registers, for both patient and doctor the
+                                            //  default city is their current city. For doctors the center is their own center.
                                             //TODO Ask dad if it is fine if Update document name is random key.
-                                            db.collection(patientPath +"/")
+                                            //TODO Ask dad if updates should also contain the state of the doctor.
+                                            HashMap<String, Object> patientUpdates = new HashMap<>();
+                                            patientUpdates.put("Center", doctorInfo.get("Center"));
+                                            patientUpdates.put("City", doctorInfo.get("City"));
+                                            patientUpdates.put("Date", currentDate + " " + time);
+                                            patientUpdates.put("Doc", doctorInfo.get("Doc"));
+                                            patientUpdates.put("Em", doctorInfo.get("Email"));
+                                            patientUpdates.put("Note", note);
+                                            patientUpdates.put("Phone", doctorInfo.get("Phone"));
+                                            patientUpdates.put("Prev", map.get("Status"));
+                                            patientUpdates.put("Status", newStatus);
+
+                                            db.collection(patientPath + "/Updates").add(patientUpdates).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                                @Override
+                                                public void onSuccess(DocumentReference documentReference) {
+                                                    //TODO Ask dad what info goes into Patients for doctor?
+                                                    // Is this sufficient?
+                                                    //TODO Ask dad if Patient is a doctor, should I also
+                                                    // be getting the patient doctor's medical center?
+                                                    // What about foreign patients. Should I get country?
+                                                    HashMap<String, Object> doctorPatients = new HashMap<>();
+                                                    doctorPatients.put("Doc ID", map.get("Doc ID"));
+                                                    doctorPatients.put("CenterU", doctorInfo.get("Center"));
+                                                    doctorPatients.put("CityU", doctorInfo.get("City"));
+                                                    if (map.get("Type").equals("Doctor"))
+                                                        doctorPatients.put("Center", map.get("Center"));
+                                                    doctorPatients.put("City", map.get("City"));
+                                                    doctorPatients.put("State", map.get("State"));
+                                                    doctorPatients.put("Country", map.get("Country"));
+                                                    doctorPatients.put("Phone", map.get("Phone"));
+                                                    doctorPatients.put("Email", map.get("Email"));
+                                                    doctorPatients.put("Name", map.get("Name"));
+                                                    doctorPatients.put("User", map.get("Orig"));
+                                                    doctorPatients.put("Type", map.get("Type"));
+                                                    doctorPatients.put("Prev", map.get("Status"));
+                                                    doctorPatients.put("Status", newStatus);
+                                                    doctorPatients.put("Date", currentDate + " " + time);
+
+                                                    db.collection("userPass/" + doctorID + "/Patients").add(doctorPatients)
+                                                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                                                @Override
+                                                                public void onSuccess(DocumentReference documentReference) {
+                                                                    dialog.dismiss();
+                                                                    dialog.cancel();
+                                                                    //TODO Ask Dad if below message is good.
+                                                                    makeToast("Data uploaded. Thank you!");
+                                                                    //TODO Check if below works and what happens.
+                                                                    HashMap<String, Object> temp = list.get(position);
+                                                                    temp.put("Status", newStatus);
+                                                                    list.set(position, temp);
+                                                                    try {
+                                                                        notifyItemChanged(position);
+                                                                    }catch(Exception e){
+                                                                        Log.wtf("*-)notifyItemChanged", e.toString());
+                                                                    }
+                                                                    //notifyItemChanged();
+                                                                }
+                                                            }).addOnFailureListener(new OnFailureListener() {
+                                                        @Override
+                                                        public void onFailure(@NonNull Exception e) {
+                                                            largeToast("Failed to save info. Please try again.");
+                                                            Log.wtf("*-)doctor/patients ERROR", e.toString());
+                                                        }
+                                                    });
+                                                }
+                                            }).addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    largeToast("Failed to save info. Please try again.");
+                                                    Log.wtf("*-)patient/updates ERROR", e.toString());
+                                                }
+                                            });
 
                                         }
                                     }).addOnFailureListener(new OnFailureListener() {
@@ -481,7 +554,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                     ((TextView) adapterView.getChildAt(0)).setTextColor(0XFF000000);
                     ((TextView) adapterView.getChildAt(0)).setBackgroundColor(0XFFDFDFDF);
                 } else if (text.equals("Infected")) {
-                    ((TextView) adapterView.getChildAt(0)).setTextColor(0XFF2db30e);
+                    ((TextView) adapterView.getChildAt(0)).setTextColor(0XFFd11313);
                     ((TextView) adapterView.getChildAt(0)).setBackgroundColor(0XFFFFDDDD);
                 } else if (text.equals("Recovered")) {
                     ((TextView) adapterView.getChildAt(0)).setTextColor(0XFF35c215);
