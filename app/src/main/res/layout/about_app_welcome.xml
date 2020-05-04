@@ -53,13 +53,26 @@ app:cardCornerRadius="16sp">
         android:text="Contact covid.ijapps@gmail.com for support or questions."
         android:textSize="20sp" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:textStyle="italic"
+        android:layout_below="@id/text2"
+        android:id="@+id/privacy"
+        android:text="@string/privacypolicy"
+        android:textColor="#5096EF"
+        android:layout_marginLeft="8sp"
+        android:textSize="16sp"
+        android:layout_marginTop="-2sp"
+        android:layout_height="wrap_content"/>
+
     <Button
         android:id="@+id/back"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/text2"
+        android:layout_below="@+id/privacy"
         android:background="#A761C5"
         android:text="OK"
+        android:layout_marginTop="6sp"
         android:textSize="24sp"
         android:textColor="#E5E2FF" />
 </RelativeLayout>

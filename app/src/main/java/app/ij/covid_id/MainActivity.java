@@ -946,6 +946,17 @@ public class MainActivity extends AppCompatActivity {
         dialog.getWindow().setAttributes(lp);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
 
+        TextView privacy = dialog.findViewById(R.id.privacy);
+        privacy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String url = "https://ij-apps.wixsite.com/android/covid-id-privacy-policy";
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse(url));
+                startActivity(i);
+            }
+        });
+
         if (!animate)
             dialog.getWindow().getAttributes().windowAnimations = R.style.SlidingDialogAnimation;
 

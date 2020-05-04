@@ -2506,6 +2506,17 @@ public class Registration extends AppCompatActivity {
         dialog.getWindow().setAttributes(lp);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
 
+        TextView privacy = dialog.findViewById(R.id.privacy);
+        privacy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String url = "https://ij-apps.wixsite.com/android/covid-id-privacy-policy";
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse(url));
+                startActivity(i);
+            }
+        });
+
         Button back = (Button) dialog.findViewById(R.id.back);
         back.setOnClickListener(new View.OnClickListener() {
             @Override

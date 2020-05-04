@@ -22,4 +22,5 @@
     <string name="patientTitle"><u>Patient Statuses</u></string>
     <string name="doctorTitle"><u>Other Doctors</u></string>
     <string name="noteshint"><i>Type your notes here</i></string>
+    <string name="privacypolicy"><u>Privacy Policy</u> </string>
 </resources>
