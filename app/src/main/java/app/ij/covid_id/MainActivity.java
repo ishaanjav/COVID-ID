@@ -582,71 +582,84 @@ public class MainActivity extends AppCompatActivity {
                                             }
                                         } else {
                                             String user = u, pass = p;
-                                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                                String userType = document.get("Type").toString();
-                                                Log.wtf("Login SUCCESSFUL- ", user + " " + pass);
-                                                boolean match = true;
-                                                boolean verified = Boolean.parseBoolean(document.get("Verified").toString());
-                                                String documentId = document.getId();
-                                                if (verified) {
-                                                    //TODO Login successful.
-                                                    //TODO Send intent with the userType and documentId.
-                                                    //userType = document.get("Type").toString();
-                                                    error.setText("");
-                                                    Intent intent;
-                                                    String remaining = "";
-                                                    if (userType.equals("Patient")) {
-                                                        intent = new Intent(MainActivity.this, PatientDashboard.class);
-                                                        remaining += "___________" + document.get("Donated").toString()
-                                                                + "___________" + document.get("Willing").toString();
-                                                    } else {//DONE Change to doctor dashboard
-                                                        intent = new Intent(MainActivity.this, DoctorDashboard.class);
-                                                        remaining += "___________" + document.get("Center").toString();
+                                            try {
+                                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                                    String userType = document.get("Type").toString();
+                                                    Log.wtf("Login SUCCESSFUL- ", user + " " + pass);
+                                                    boolean match = true;
+                                                    boolean verified = Boolean.parseBoolean(document.get("Verified").toString());
+                                                    String documentId = document.getId();
+                                                    if (verified) {
+                                                        //TODO Login successful.
+                                                        //TODO Send intent with the userType and documentId.
+                                                        //userType = document.get("Type").toString();
+                                                        error.setText("");
+                                                        Intent intent;
+                                                        String remaining = "";
+                                                        if (userType.equals("Patient")) {
+                                                            intent = new Intent(MainActivity.this, PatientDashboard.class);
+                                                            remaining += "___________" + document.get("Donated").toString()
+                                                                    + "___________" + document.get("Willing").toString();
+                                                        } else {//DONE Change to doctor dashboard
+                                                            intent = new Intent(MainActivity.this, DoctorDashboard.class);
+                                                            remaining += "___________" + document.get("Center").toString();
+                                                        }
+                                                        remaining += "___________" + document.get("CityU").toString() + "___________" + document.get("CenterU").toString();
+                                                        String n = "Bob", p = "9999999999", city = "", state = "", country = "", docId;
+                                                        docId = document.get("Doc ID").toString();
+                                                        String userPassID = document.getId();
+                                                        n = document.get("Name").toString();
+                                                        p = document.get("Phone").toString();
+
+                                                        String stat = document.get("Status").toString();
+                                                        if (state.isEmpty() || state.length() == 0)
+                                                            state = " ";
+                                                        String e = document.get("Email").toString();
+                                                        if (e.isEmpty() || e.length() == 0)
+                                                            e = " ";
+
+                                                        writeToInfo(userType + "___________" + documentId + "___________" + user + "___________" +
+                                                                pass + "___________" + document.get("Updated").toString()
+                                                                + "___________" + n + "___________" + p + "___________" + docId
+                                                                + "___________" + stat + "___________" + userPassID + "___________" + document.get("Created").toString()
+                                                                + "___________" + document.get("City").toString() + "___________" + document.get("State").toString()
+                                                                + "___________" + document.get("Country").toString() + "___________" +
+                                                                e + remaining, getApplicationContext());
+                                                        //writeToUpdate("yes", getApplicationContext());
+                                                        if (!remember.isChecked())
+                                                            writeLogin("false", getApplicationContext());
+                                                        else if (userType.contains("octor"))
+                                                            writeLogin("Doctor", getApplicationContext());
+                                                        else
+                                                            writeLogin("Patient", getApplicationContext());
+
+                                                        writeToFile("Done", getApplicationContext());
+
+                                                        makeToast("Logged in.");
+                                                        startActivity(intent);
+                                                        loggedIn = true;
+                                                        if (dialog != null) dialog.dismiss();
+                                                        break;
+                                                    } else {
+                                                        loggedIn = true;
+                                                        if (dialog != null) dialog.dismiss();
+                                                        makeSnackBar(7000, "Your account has not been verified yet. Contact covid.ijapps@gmail.com for more info.");
+                                                        break;
                                                     }
-                                                    remaining += "___________" + document.get("CityU").toString() + "___________" + document.get("CenterU").toString();
-                                                    String n = "Bob", p = "9999999999", city = "", state = "", country = "", docId;
-                                                    docId = document.get("Doc ID").toString();
-                                                    String userPassID = document.getId();
-                                                    n = document.get("Name").toString();
-                                                    p = document.get("Phone").toString();
 
-                                                    String stat = document.get("Status").toString();
-                                                    if (state.isEmpty() || state.length() == 0)
-                                                        state = " ";
-                                                    String e = document.get("Email").toString();
-                                                    if (e.isEmpty() || e.length() == 0)
-                                                        e = " ";
-
-                                                    writeToInfo(userType + "___________" + documentId + "___________" + user + "___________" +
-                                                            pass + "___________" + document.get("Updated").toString()
-                                                            + "___________" + n + "___________" + p + "___________" + docId
-                                                            + "___________" + stat + "___________" + userPassID + "___________" + document.get("Created").toString()
-                                                            + "___________" + document.get("City").toString() + "___________" + document.get("State").toString()
-                                                            + "___________" + document.get("Country").toString() + "___________" +
-                                                            e + remaining, getApplicationContext());
-                                                    //writeToUpdate("yes", getApplicationContext());
-                                                    if (!remember.isChecked())
-                                                        writeLogin("false", getApplicationContext());
-                                                    else if (userType.contains("octor"))
-                                                        writeLogin("Doctor", getApplicationContext());
-                                                    else
-                                                        writeLogin("Patient", getApplicationContext());
-
-                                                    writeToFile("Done", getApplicationContext());
-
-                                                    makeToast("Logged in.");
-                                                    startActivity(intent);
+                                                }
+                                            } catch (Exception e){
+                                                if (isNetworkAvailable()) {
+                                                    makeSnackBar(3000, "An error occurred. Please try again.");
                                                     loggedIn = true;
-                                                    if (dialog != null) dialog.dismiss();
-                                                    break;
+                                                   // error.setText("The username or password is wrong.");
                                                 } else {
                                                     loggedIn = true;
-                                                    if (dialog != null) dialog.dismiss();
-                                                    makeSnackBar(7000, "Your account has not been verified yet. Contact covid.ijapps@gmail.com for more info.");
-                                                    break;
+                                                    error.setText("Not connected to internet");
+                                                    makeSnackBar(4400, "An error occurred. It may be because you are not connected to the internet.");
                                                 }
-
                                             }
+
                                         }
                                     } else {
                                         makeSnackBar(5000, "Could not verify your username and password. Please have a stable internet connection.");
