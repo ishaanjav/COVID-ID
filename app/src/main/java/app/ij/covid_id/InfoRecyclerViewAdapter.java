@@ -193,7 +193,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
 
         if (type.equals("Doctor"))
             name = "Dr. " + name;
-        if(position == list.size()-1) holder.details.setVisibility(View.GONE);
+        if (position == list.size() - 1) holder.details.setVisibility(View.GONE);
 
         holder.name.setText(map.get("Name").toString());
         boolean foreign = map.get("State").toString().length() < 2;
@@ -597,7 +597,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                     break;
                 }
             statusList.add(0, sel);
-        }else{
+        } else {
             statusList.add(0, "Unknown");
         }
 
@@ -830,6 +830,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
             fileInputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
+            Log.wtf("*InfoRecyclerViewAdapter", "Loading Images failed: " + e.toString());
             bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.usericon2);
         }
         return bitmap;
