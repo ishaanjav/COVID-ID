@@ -477,8 +477,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-        //makeToast("Action not available");
+        //super.onBackPressed();
+        makeToast("Action not available");
     }
 
     private String readFromFile(String file, Context context) {
