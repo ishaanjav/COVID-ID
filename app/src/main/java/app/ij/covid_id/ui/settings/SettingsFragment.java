@@ -83,10 +83,15 @@ public class SettingsFragment extends Fragment {
         DoctorDashboard.variable = 3;
         PatientDashboard.variable = 3;
         readStorage();
-        updateInfoTxt();
+        //updateInfoTxt();
         return root;
     }
-
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateInfoTxt();
+        Log.wtf("*-((( onStart", "CAlled");
+    }
     protected boolean isSafe() {
         return !(this.isRemoving() || this.getActivity() == null || this.isDetached() || !this.isAdded() || this.getView() == null);
     }

@@ -107,6 +107,7 @@ public class DoctorDashboardFragment extends Fragment {
         status = "";
         readStorage();
         DoctorDashboard.variable = 3;
+        Log.wtf("*-((( onCreated", "CAlled");
 
         //dashboardViewModel = ViewModelProviders.of(this, new DashboardViewModelFactory(getActivity(), username, documentID, db, root)).get(DashboardViewModel.class);
         return root;
@@ -126,7 +127,14 @@ public class DoctorDashboardFragment extends Fragment {
         //loadInformation();
 
         //makeToast("Inside doctor dashboard");
+        //updateInfoTxt();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
         updateInfoTxt();
+        Log.wtf("*-((( onStart", "CAlled");
     }
 
     private void updateList() {
@@ -191,6 +199,7 @@ public class DoctorDashboardFragment extends Fragment {
     //  and update UI for local changes to say Hello "new name" or whatever.
     // For things like status, don't need to worry since they can't change it in settings
     public void updateInfoTxt() {
+        Log.wtf("Update Info Txt CAlled", "CALLED");
         final DocumentReference docRef = db.collection("userPass").document(userPassID);
         listener = docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
@@ -393,7 +402,7 @@ public class DoctorDashboardFragment extends Fragment {
             statusColor1.setBackgroundResource(R.drawable.gradient_border_red);
             // statuScolor2.setBackgroundResource(R.drawable.red_bottom);
         }
-        return status;
+        return status +"\n(Tested)";
     }
 
     public String cleanDate() {

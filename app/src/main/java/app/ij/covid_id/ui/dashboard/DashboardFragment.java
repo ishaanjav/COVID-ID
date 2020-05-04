@@ -119,6 +119,13 @@ public class DashboardFragment extends Fragment {
         return root;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateInfoTxt();
+        Log.wtf("*-((( onStart", "CAlled");
+    }
+
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -133,7 +140,7 @@ public class DashboardFragment extends Fragment {
         //loadInformation();
 
         //makeToast("Inside doctor dashboard");
-        updateInfoTxt();
+        //updateInfoTxt();
 
         WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
@@ -303,6 +310,7 @@ public class DashboardFragment extends Fragment {
     //  and update UI for local changes to say Hello "new name" or whatever.
     // For things like status, don't need to worry since they can't change it in settings
     public void updateInfoTxt() {
+        Log.wtf("Update Info Txt CAlled", "CALLED");
         final DocumentReference docRef = db.collection("userPass").document(userPassID);
         listener = docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override

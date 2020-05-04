@@ -87,7 +87,6 @@ public class DoctorDashboard extends AppCompatActivity {
         screenW = metrics.widthPixels;
         //updater = readFromFile(getApplicationContext());
         //listenForUpdates();
-
         variable = 3;
         firstDoctor = readFirstDoctor(getApplicationContext());
         if (firstDoctor == null || firstDoctor.isEmpty() || firstDoctor.length() < 2) {
@@ -101,6 +100,12 @@ public class DoctorDashboard extends AppCompatActivity {
             //TODO Uncomment below when done testing TourGuide
             //writeToFirstDoctor("Doctor Finished");
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //makeToast("HI");
     }
 
     private void writeToUpdate(String data, Context context) {

@@ -216,7 +216,7 @@ public class DoctorStatuses3 extends Fragment {
                 }
             }, 20000);
         }
-        updateInfoTxt();
+        //updateInfoTxt();
 
       /* adapter = new InfoRecyclerViewAdapter(getContext(), patientInfo, patientRecycler, bitmaps);
        patientRecycler.setAdapter(adapter);*/
@@ -278,7 +278,12 @@ public class DoctorStatuses3 extends Fragment {
             makeSnackBar(6000, "You are not connected to the internet. Therefore, you will not receive updates unless you connect.");
 
     }
-
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateInfoTxt();
+        Log.wtf("*-((( onStart", "CAlled");
+    }
     Query patientQuery;
     public static ProgressDialog loadingResults;
     int size0, size1, size2, size3, size4;
