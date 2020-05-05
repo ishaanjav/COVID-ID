@@ -386,18 +386,18 @@ public class DoctorDashboardFragment extends Fragment {
             statusColor1.setBackgroundResource(R.drawable.gradient_border_green);
             statusTextView.setTextSize(37);
             statusTextView.setTextColor(Color.parseColor("#000000"));
-            message.setText("This status implies that you were infected with COVID and more importantly you have recovered. Ask your doctor how you can conduct future activities and or give plasma to help others.\n");
+            message.setText("This status implies that you were infected with COVID and more importantly you have recovered (as recorded by your doctor).\nAsk your doctor how you can conduct future activities and or give plasma to help others.\n");
             //  statuScolor2.setBackgroundResource(R.drawable.green_bottom);
         } else if (status.equals("Uninfected")) {
             statusColor1.setBackgroundResource(R.drawable.gradient_border_yellow);
             statusTextView.setTextSize(37);
             statusTextView.setTextColor(Color.parseColor("#000000"));
-            message.setText("This status implies that your COVID test has returned negative. This means you did not have COVID at the time of your test.\n");
+            message.setText("This status implies that your COVID test has returned uninfected as recorded by your doctor.\nContact your doctor for more information.\n");
             // statuScolor2.setBackgroundResource(R.drawable.yellow_bottom);
         } else if (status.equals("Infected")) {
             statusTextView.setTextColor(Color.parseColor("#ffffff"));
             statusTextView.setTextSize(37);
-            message.setText("This status implies that you are infected with COVID. You need immediate medical attention and provider advice.\n");
+            message.setText("This status implies that you are infected with COVID as recorded by your doctor.\nPlease contact your doctor immediately.\n");
 
             statusColor1.setBackgroundResource(R.drawable.gradient_border_red);
             // statuScolor2.setBackgroundResource(R.drawable.red_bottom);

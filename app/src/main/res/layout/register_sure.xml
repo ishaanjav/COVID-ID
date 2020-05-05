@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:id="@+id/background"
     app:cardCornerRadius="16sp">
 
     <RelativeLayout
@@ -28,41 +29,155 @@
 
         </RelativeLayout>-->
 
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:id="@+id/wrapper"
+            android:layout_height="wrap_content">
         <TextView
+            android:id="@+id/text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="13sp"
             android:layout_marginTop="15sp"
-            android:id="@+id/text"
             android:fontFamily="@font/regular"
             android:text="Before you register, have you saved your username and password?"
             android:textSize="21sp" />
 
         <TextView
+            android:id="@+id/text2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/text"
             android:layout_marginLeft="12sp"
+            android:layout_marginTop="0sp"
             android:layout_marginRight="12sp"
-            android:layout_marginTop="11sp"
-            android:id="@+id/text2"
-            android:textColor="#000"
+            android:layout_marginBottom="25sp"
             android:fontFamily="@font/regular"
-            android:text="If you ever forget your login credentials, contact covid.ijapps@gmail.com for support."
-            android:textSize="21sp" />
+            android:text="If you ever forget your login credentials, contact covid.ijapps@gmail.com."
+            android:textColor="#000"
+            android:textSize="19sp" />
+        </RelativeLayout>
+        <ScrollView
+            android:id="@+id/privacy"
+            android:layout_width="match_parent"
+            android:layout_height="101sp"
+            android:layout_below="@+id/wrapper"
+            android:scrollbarSize="3sp"
+            android:scrollbarAlwaysDrawVerticalTrack="true"
+            android:layout_marginLeft="10sp"
+            android:background="@drawable/privacypolicybox"
+            android:layout_marginRight="9sp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="91sp"
+                android:layout_marginTop="0sp"
+                android:layout_marginLeft="5sp"
+                android:textSize="12sp"
+                android:layout_marginRight="5sp"
+                android:textColor="#624187"
+                android:layout_marginBottom="4sp"
+                android:text="PRIVACY POLICY\nEffective Date: May 2nd, 2020
+\nThank you for using the app! 
+
+\n\nThis Privacy Policy describes: 
+\n- The personal data the app collects.
+\n- How the data is used.
+\n- What happens to the data after use.
+\n\nContact Us
+\nIf you have any questions about using this app or the data that it collects, you are encouraged to 
+contact us by email at: covid.ijapps@gmail.com.
+
+\n\nData Used
+\nData you provide:
+\n- Image containing user's face.
+​​​​\n  - From camera
+\n  - OR from photo gallery
+\nData received:
+\n- COVID Test results
+\nOnly verified Medical Providers are allowed to update this. 
+
+\n\nPurpose of Data Collection
+
+\nData is collected to provide the primary service of letting the user attest their identity and the provider who attested that they are free of corona virus. Today all over the world there are a huge number of people who are out of jobs. Meanwhile societies are going back to work with the fear factor of not knowing who is infected or not. There is a heavy burden on workers and co-workers both mentally and otherwise to maintain social distancing and ensure they do not contract the virus.
+
+\nThe goal of the app is to make it easy for the patient, medical provider and employer and coworker to know the COVID status if the worker so chooses to disclose and show their phone. 
+
+
+
+\nThe app requires an image of the user to display to their doctor/medical provider for easy recognition. 
+
+
+
+\nTherefore, the app receives the image either through the camera or a picture that the user chooses from the photo gallery.
+
+
+
+\nMore over the address line data is not collected, only city and state or city and country(if located outside the U.S.)
+
+
+
+
+\n\nWho Can See Your Data
+
+\nOnly the user of the app who is the 'patient' and a medical provider or doctor within the same city, state, or country.
+
+
+
+\nThe only person who can view the image and the COVID status/notes is the user of the app and medical providers. The medical providers provide the important function to enable the patients/workers to get back to work smoothly and quickly by attesting the tested patients for their city or state but always within the country. Typically the patients for the city where provider is, is shown. If they the providers need, they can scroll and see for patients within state and if really needed scroll and see patients across states but always within the country. This is so to facilitate a patient/worker traveling across state/cities and using a lab say QUEST diagnostics in NJ/NY based on home or work area to get their status in a convenient way. Similarly for other states.
+
+
+\n\nPermissions the App Requests
+
+\n- Camera permission
+
+\n- Storage permission (only selected by user for high-quality images or selecting images from gallery on device)
+
+\n- Only one of these is necessary to use the app, but using both is recommended for high quality pictures.
+
+The user has to use either permission to upload an image as the app can not automatically upload images. However, the app will not be able to serve its purpose if neither one of the permissions are granted.
+
+
+
+
+\n\nDisclaimer
+
+\nPlease keep in mind that the app does not encourage risky behavior or breaking local rules or laws on social and spatial distancing. It is always recommended to stay as safe as you need to be or more. Your doctor or medical provider is always the person to give you the proper advice on health care matters. This app is merely a tool to allow you to get your test results, status, and notes from COVID testing quickly in a easy to use, show-and-display manner. *In no way does the app guarantee what a medical provider provides as a status. In no way does the app guarantee any health outcomes or safety by using the app. The app does not take any responsibility for any health or business adversities faced when using the app. The status displayed in the app does not guarantee immunity from recurrence of COVID even if the medical provider indicates the status as 'Recovered' or any other statuses which convey whatever meaning the provider intends to convey. In no way does the app purport to understand or guarantee what a specific medical provider has provided as part of the app or what practices the user follows. In no way does the app guarantee technical glitches in updates to and from the app, irrespective of the cause of the glitch.
+\nThis is merely an app to help the people monitor their COVID status digitally. The user is expected to use electronics devices in a safe way and not while driving or other such unsafe practices. \nThe app will in no way be responsible for unsafe usage of the device.
+
+
+
+\n\nYour Privacy Rights
+
+You have the ability to revoke the app’s camera and storage permission (if granted in the first place) from your device’s Settings. Once this is done, the app will not have be able to take pictures from the camera. 
+
+\nHowever, it is important to note that doing so will prevent new users from creating accounts on the same device (since a photo is required) or prevent the user from updating their picture." />
+
+        </ScrollView>
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@id/privacy"
+            android:id="@+id/agree"
+            android:layout_below="@+id/privacy"
+            android:buttonTint="#7BC871"
+            android:layout_marginTop="6sp"
+            android:text="By selecting this checkbox you agree to the terms and conditions of the privacy policy."
+            />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/text2"
-            android:layout_marginTop="15sp"
+            android:layout_below="@+id/agree"
+            android:layout_marginTop="8sp"
             android:orientation="horizontal">
 
             <Button
                 android:id="@+id/back"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="98"
+                android:layout_weight="95"
                 android:background="#DD6262"
                 android:paddingTop="6sp"
                 android:paddingBottom="8sp"
@@ -77,7 +192,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="100"
-                android:background="#7BC871"
+                android:background="#959595"
                 android:paddingTop="6sp"
                 android:paddingBottom="8sp"
                 android:text="Finish"

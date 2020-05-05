@@ -61,11 +61,16 @@ import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -151,7 +156,6 @@ public class Registration extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         firstAsk = 0;
         denyCounter = 0;
-
         firstCard.setBackgroundResource(R.drawable.card_white);
         patientCard1.setBackgroundResource(R.drawable.card_white);
         patientCard2.setBackgroundResource(R.drawable.card_white);
@@ -225,6 +229,7 @@ public class Registration extends AppCompatActivity {
                 }
             }
         });
+        //showRegister();
     }
 
     boolean visible, confirmVisible;
@@ -2486,6 +2491,8 @@ public class Registration extends AppCompatActivity {
         }
     }
 
+    Snackbar agreeSnack;
+
     public void showRegister() {
         final Dialog dialog = new Dialog(Registration.this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -2505,7 +2512,7 @@ public class Registration extends AppCompatActivity {
         text1.setText(ss1);
 
         Button back = (Button) dialog.findViewById(R.id.back);
-        Button yes = (Button) dialog.findViewById(R.id.yes);
+        final Button yes = (Button) dialog.findViewById(R.id.yes);
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -2513,17 +2520,49 @@ public class Registration extends AppCompatActivity {
                 dialog.cancel();
             }
         });
+        final CheckBox agree = dialog.findViewById(R.id.agree);
+        agree.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b) {
+                    if (agreeSnack != null)
+                        agreeSnack.dismiss();
+                    yes.setBackgroundColor(Color.parseColor("#7BC871"));
+                } else {
+                    yes.setBackgroundColor(Color.parseColor("#959595"));
+                }
+            }
+        });
         yes.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 //TODO Save their info then go back to welcome page.
-                dialog.dismiss();
-                dialog.cancel();
-                if (isNetworkAvailable()) //IMPORTANT TRY BELOW
-                    saveInformation2();
+
+                if (isNetworkAvailable()) {
+                    if (agree.isChecked()) {
+                        saveInformation2();
+                        dialog.dismiss();
+                        dialog.cancel();
+                    } else {
+                        //makeSnackBar(3000, "You must agree to the privacy policy above.");
+                        agreeSnack = Snackbar.make(dialog.findViewById(R.id.wrapper), "Agree to the privacy policy.", 3000);
+                        /* View tr = agreeSnack.getView();
+                        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) tr.getLayoutParams();
+                        params.gravity = Gravity.TOP;
+                        tr.setLayoutParams(params);*/
+                        View snackbarView = agreeSnack.getView();
+                        snackbarView.setBackgroundColor(Color.parseColor("#dbc6f7"));
+                        TextView tv = (TextView) snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
+                        tv.setTextColor(Color.parseColor("#000000"));
+                        tv.setTextSize(18);
+                        agreeSnack.show();
+                    }
                     //saveInformation();
-                else
+                } else {
                     makeSnackBar(10000, "Please connect your device to a network. It is currently not connected and to create your account, an internet connection is required.");
+                    dialog.dismiss();
+                    dialog.cancel();
+                }
             }
         });
         dialog.show();
