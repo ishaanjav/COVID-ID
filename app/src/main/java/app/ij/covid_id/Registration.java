@@ -36,6 +36,8 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.provider.MediaStore;
+import android.telephony.PhoneNumberFormattingTextWatcher;
+import android.telephony.PhoneNumberUtils;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.TextWatcher;
@@ -113,10 +115,11 @@ public class Registration extends AppCompatActivity {
     float screenW, screenH;
     Page page;
     Spinner state, country;
+    EditText medicalLicense;
 
     public enum Page {PAGE1, PATIENT1, DOCTOR1, PATIENT2, DOCTOR2}
 
-    ImageView phoneHelp, locationHelp, photoHelp, medicalCenterHelp;
+    ImageView phoneHelp, locationHelp, photoHelp, medicalCenterHelp, medicalHelp;
     CardView takePicture, deletePicture;
     Button patientContinue, patientFinish, doctorContinue, doctorFinish;
     Button patientBack1, patientBack2, doctorBack1, doctorBack2;
@@ -164,9 +167,11 @@ public class Registration extends AppCompatActivity {
         updated = false;
         doctor = false;
         pictureGood = false;
+        takenPicture = false;
+        phoneChanged = false;
 
         countryGood = true;
-        backCounter = 0;
+        backCounter = 3;
 
         WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
@@ -268,6 +273,28 @@ public class Registration extends AppCompatActivity {
         pass = patientCard1.findViewById(R.id.pass);
         name = patientCard1.findViewById(R.id.name);
         phone = patientCard1.findViewById(R.id.phone);
+        phone.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
+        phone.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                phoneChanged = true;
+                sPhone = editable.toString().trim();
+                /*if (sPhone.length() > 0 && firstDigit(sPhone) == '1' && sPhone.contains("(") && (sPhone.indexOf("(") > sPhone.indexOf("1")) && digitLength(sPhone) >= 9 && digitLength(sPhone) != 11)
+                        shortToast("You only have " + (digitLength(sPhone) - 1) + " digits following the country code 1.");
+                if (sPhone.length() > 0 && firstDigit(sPhone) == '1' && sPhone.contains("(") && (sPhone.indexOf("(") > sPhone.indexOf("1")) && digitLength(sPhone) == 11)
+                    toast.cancel();*/
+            }
+        });
         email = patientCard1.findViewById(R.id.email);
         city = patientCard1.findViewById(R.id.city);
         state = patientCard1.findViewById(R.id.state);
@@ -298,6 +325,26 @@ public class Registration extends AppCompatActivity {
         pass = doctorCard1.findViewById(R.id.pass);
         name = doctorCard1.findViewById(R.id.name);
         phone = doctorCard1.findViewById(R.id.phone);
+        medicalLicense = doctorCard1.findViewById(R.id.doctorLicense);
+        phone.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
+        phone.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                phoneChanged = true;
+                sPhone = editable.toString().trim();
+
+            }
+        });
         email = doctorCard1.findViewById(R.id.email);
         city = doctorCard1.findViewById(R.id.city);
         medicalCenter = doctorCard1.findViewById(R.id.medicalCenterName);
@@ -306,6 +353,7 @@ public class Registration extends AppCompatActivity {
         confirmPass = doctorCard1.findViewById(R.id.confirmpass);
         country = doctorCard1.findViewById(R.id.country);
         phoneHelp = doctorCard1.findViewById(R.id.phoneHelp);
+        medicalHelp = doctorCard1.findViewById(R.id.medicalLicenseHelp);
         locationHelp = doctorCard1.findViewById(R.id.locationHelp);
         takePicture = doctorCard1.findViewById(R.id.cardholder);
         take = doctorCard1.findViewById(R.id.takepicture);
@@ -327,10 +375,29 @@ public class Registration extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (backCounter < 3)
+        if (page == Page.DOCTOR2) {
+            animateCards(doctorCard2, doctorCard1, R.anim.slide_out_right, R.anim.slide_in_right);
+            page = Page.DOCTOR1;
+        } else if (page == Page.DOCTOR1) {
+            animateCards(doctorCard1, firstCard, R.anim.slide_out_right, R.anim.slide_in_right);
+            page = Page.PAGE1;
+        } else if (page == Page.PATIENT2) {
+            animateCards(patientCard2, patientCard1, R.anim.slide_out_right, R.anim.slide_in_right);
+            page = Page.PATIENT1;
+        } else if (page == Page.PATIENT1) {
+            animateCards(patientCard1, firstCard, R.anim.slide_out_right, R.anim.slide_in_right);
+            page = Page.PAGE1;
+        } else {
+            if (backCounter > 0)
+                makeSnackBar(5500, "Are you sure? Going back will delete your progress.\nIf you want to return to the Welcome Page, press back " + (backCounter) + ((backCounter == 1) ? " more time." : " more times."));
+            else super.onBackPressed();
+            backCounter--;
+        }
+
+       /* if (backCounter < 3)
             makeSnackBar(5500, "Going back will delete your progress. Instead, use the buttons or swipe to navigate between pages.\nIf you want to return to the Welcome Page, press back " + (3 - backCounter) + " times.");
         else super.onBackPressed();
-        backCounter++;
+        backCounter++;*/
     }
 
     FirebaseFirestore db;
@@ -434,8 +501,9 @@ public class Registration extends AppCompatActivity {
         userPass.put("Name", name.getText().toString().trim());
         userPass.put("Phone", phone.getText().toString().trim());
 
-        if (doctor){
+        if (doctor) {
             userPass.put("Center", medicalCenter.getText().toString().trim());
+            userPass.put("License", medicalLicense.getText().toString().trim());
         }
         userPass.put("Donated", (haveDonatedPlasma));
         userPass.put("Willing", (willDonatePlasma));
@@ -739,7 +807,9 @@ public class Registration extends AppCompatActivity {
         });
     }
 
-    String sMedicalCenterName;
+    String sMedicalCenterName, sMedicalLicense;
+    boolean takenPicture;
+    boolean phoneChanged;
 
     private void goToDoctor2() {
         sUser = user.getText().toString().trim();
@@ -752,6 +822,20 @@ public class Registration extends AppCompatActivity {
         sState = state.getSelectedItem().toString();
         sCountry = state.getSelectedItem().toString();
         sMedicalCenterName = medicalCenter.getText().toString().trim();
+        sMedicalLicense = medicalLicense.getText().toString().trim();
+        if (validPhone(sPhone) && phoneChanged) {
+            if (digitLength(sPhone) == 9)
+                shortToast("Your phone # is 9 digits long");
+            if (firstDigit(sPhone) != '1' && digitLength(sPhone) > 10)
+                shortToast("Your phone # is 10+ digits long");
+            phoneChanged = false;
+        }
+        if (sPhone.length() > 0 && firstDigit(sPhone) == '1' && sPhone.contains("(") && (sPhone.indexOf("(") > sPhone.indexOf("1")) && digitLength(sPhone) >= 9 && digitLength(sPhone) != 11)
+            shortToast("You only have " + (digitLength(sPhone) - 1) + " digits following the country code 1.");
+
+
+        if (page == Page.DOCTOR1)
+            pictureGood = true;
         if (sUser.length() < 6)
             makeSnackBar(2000, "Please make your username longer.");
         else if (!uniqueUsername())
@@ -766,12 +850,14 @@ public class Registration extends AppCompatActivity {
             makeSnackBar(2500, "You have not entered vowels in your name.");
         else if (sMedicalCenterName.length() <= 3)
             makeSnackBar(3000, "Please enter a valid medical center name.");
-        else if (sPhone.length() < 10)
+        else if (!validPhone(sPhone.trim()))
             makeSnackBar(2000, "Please enter a valid phone #.");
-        else if (sEmail.length() > 0 && !isValid(sEmail))
+        else if (sEmail.length() > 0 && !isValid(sEmail)) {
             makeSnackBar(2000, "Please enter a valid email.");
-        else if (!validCity(sCity))
+        } else if (!validCity(sCity))
             makeSnackBar(2000, "Please enter a valid city.");
+        else if (sMedicalLicense.length() <= 2 || sMedicalLicense.length() > 30)
+            makeSnackBar(1800, "Please nter a valid medical number.");
         else if (!pictureGood)
             makeSnackBar(2000, "Please take a picture of your face.");
         else {
@@ -824,6 +910,31 @@ public class Registration extends AppCompatActivity {
         }
     }
 
+    private char firstDigit(String sPhone) {
+        for (char c : sPhone.toCharArray()) {
+            if (Character.isDigit(c)) return c;
+        }
+        return ' ';
+    }
+
+    private int digitLength(String phone) {
+        int count = 0;
+        for (char c : phone.toCharArray()) {
+            if (Character.isDigit(c)) count++;
+            Log.wtf("***", "" + c);
+        }
+        return count;
+    }
+
+    private boolean validPhone(String phone) {
+        int count = 0;
+        for (char c : phone.toCharArray()) {
+            if (Character.isDigit(c)) count++;
+        }
+        if (count > 8 && count <= 16) return true;
+        else return false;
+    }
+
     private boolean validCity(String city) {
         if (city.length() < 2) return false;
         for (char c : city.toCharArray())
@@ -843,6 +954,17 @@ public class Registration extends AppCompatActivity {
         sCity = city.getText().toString().trim();
         sState = state.getSelectedItem().toString();
         sCountry = state.getSelectedItem().toString();
+
+        if (validPhone(sPhone) && phoneChanged) {
+            if (digitLength(sPhone) == 9)
+                shortToast("Your phone # is 9 digits long");
+            if (firstDigit(sPhone) != '1' && digitLength(sPhone) > 10)
+                shortToast("Your phone # is 10+ digits long");
+            phoneChanged = false;
+        }
+        if (sPhone.length() > 0 && firstDigit(sPhone) == '1' && sPhone.contains("(") && (sPhone.indexOf("(") > sPhone.indexOf("1")) && digitLength(sPhone) >= 9 && digitLength(sPhone) != 11)
+            shortToast("You only have " + (digitLength(sPhone) - 1) + " digits following the country code 1.");
+
         if (sUser.length() < 6)
             makeSnackBar(2000, "Please make your username longer.");
         else if (!uniqueUsername())
@@ -855,7 +977,7 @@ public class Registration extends AppCompatActivity {
             makeSnackBar(2000, "Please enter your full name.");
         else if (!validCity(sName))
             makeSnackBar(2500, "You have not entered vowels in your name.");
-        else if (sPhone.length() < 10)
+        else if (!validPhone(sPhone.trim()))
             makeSnackBar(2000, "Please enter a valid phone #.");
         else if (sEmail.length() > 0 && !isValid(sEmail))
             makeSnackBar(2000, "Please enter a valid email.");
@@ -911,105 +1033,6 @@ public class Registration extends AppCompatActivity {
                 }
             });
         }
-    }
-
-    public boolean checkDoctorContinue() {
-        //return true;
-        sUser = user.getText().toString().trim();
-        sPass = pass.getText().toString().trim();
-        sName = name.getText().toString().trim();
-        String confirm = confirmPass.getText().toString();
-        sPhone = phone.getText().toString().trim();
-        sEmail = email.getText().toString().trim();
-        sCity = city.getText().toString().trim();
-        sState = state.getSelectedItem().toString();
-        sCountry = state.getSelectedItem().toString();
-        if (sUser.length() < 6)
-            makeSnackBar(2000, "Please make your username longer.");
-        else if (!uniqueUsername())
-            makeSnackBar(2600, "This username already exists. Please choose another.");
-        else if (sPass.length() < 6)
-            makeSnackBar(2000, "Please make your password longer.");
-        else if (confirm.length() < 6)
-            makeSnackBar(2000, "Confirm your password by retyping it.");
-        else if (!confirm.equals(sPass))
-            makeSnackBar(2000, "Your passwords do not match.");
-        else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
-            makeSnackBar(2000, "Please enter your full name.");
-        else if (sPhone.length() < 10)
-            makeSnackBar(2000, "Please enter a valid phone #.");
-        else if (sEmail.length() > 0 && !isValid(sEmail))
-            makeSnackBar(2000, "Please enter a valid email.");
-        else if (sCity.length() <= 2)
-            makeSnackBar(2000, "Please enter a valid city.");
-        else if (!pictureGood)
-            makeSnackBar(2000, "Please take a picture of your face.");
-        else {
-            db.collection("cities")
-                    .get()
-                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                            if (task.isSuccessful()) {
-                                boolean unique = true;
-                                String curUser = user.getText().toString().trim();
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                    String r = (String) document.get("Username");
-                                    if (r.equals(curUser)) {
-                                        makeSnackBar(2400, "This username is taken. Please choose another.");
-                                        unique = false;
-                                        break;
-                                    } else {
-                                    }
-                                }
-                                if (unique) {
-
-                                }
-                            } else {
-                                Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
-                            }
-                        }
-                    });
-            return true;
-        }
-        return false;
-    }
-
-    public boolean checkPatientContinue() {
-        //return true;
-        sUser = user.getText().toString().trim();
-        sPass = pass.getText().toString().trim();
-        String confirm = confirmPass.getText().toString();
-        sName = name.getText().toString().trim();
-        sPhone = phone.getText().toString().trim();
-        sEmail = email.getText().toString().trim();
-        sCity = city.getText().toString().trim();
-        sState = state.getSelectedItem().toString();
-        sCountry = state.getSelectedItem().toString();
-        if (sUser.length() < 6)
-            makeSnackBar(2000, "Please make your username longer.");
-        else if (!uniqueUsername())
-            makeSnackBar(2600, "This username already exists. Please choose another.");
-        else if (sPass.length() < 6)
-            makeSnackBar(2000, "Please make your password longer.");
-        else if (confirm.length() < 6)
-            makeSnackBar(2000, "Confirm your password by retyping it.");
-        else if (!confirm.equals(sPass))
-            makeSnackBar(2000, "Your passwords do not match.");
-        else if (sName.length() < 4 || sName.indexOf(" ") < 2 || sName.indexOf(" ") == sName.length() - 1)
-            makeSnackBar(2000, "Please enter your full name.");
-        else if (sPhone.length() < 10)
-            makeSnackBar(2000, "Please enter a valid phone #.");
-        else if (sEmail.length() > 0 && !isValid(sEmail))
-            makeSnackBar(2000, "Please enter a valid email.");
-        else if (sCity.length() <= 2)
-            makeSnackBar(2000, "Please enter a valid city.");
-        else if (!pictureGood)
-            makeSnackBar(2000, "Please take a picture.");
-        else {
-            return true;
-        }
-        return false;
     }
 
     ImageView statusHelp;
@@ -1539,7 +1562,10 @@ public class Registration extends AppCompatActivity {
                 makeSnackBar(4000, "The image is low quality. Please consider taking a higher quality picture.");
                 //saveImage(getApplicationContext(), bitmap, "temp", "jpg");
 
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 88, stream);
                 photo.setImageBitmap(bitmap);
+                takenPicture = true;
             }
             if (requestCode == 100) {
                 toCompress = true;
@@ -1621,19 +1647,20 @@ public class Registration extends AppCompatActivity {
                 Log.wtf("-_- BEFORE IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
 
                 stream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 75, stream);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream);
                 imageInByte = stream.toByteArray();
                 lengthbmp = imageInByte.length;
                 Log.wtf("-_- AFTER IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
 
                 photo.setImageBitmap(bitmap);
-
+                takenPicture = true;
                 /*ByteArrayOutputStream out = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.PNG, 70, out);
                 bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));
                 photo.setImageBitmap(bitmap);*/
                 makeToast("Double tap or long press the image to rotate it.");
-
+//TODO Set takenpicture = to false if doctor presses discard.
+// Maybe show message saying are you sure you don't want to take picture.
 
             }
 
@@ -1865,9 +1892,11 @@ public class Registration extends AppCompatActivity {
                     if (view.getId() == R.id.locationHelp)
                         makeSnackBar(11000, "The location is used to display a list of your patients in your area. If you don't provide an accurate location, you may not see your patients or related results at all.");
                     if (view.getId() == R.id.photohelp)
-                        makeSnackBar(4000, "Please take a picture of your ID as verification of your profession.");
+                        makeSnackBar(6000, "Please take a picture of your face (or ID as verification of your profession). This is only visible to other doctors.");
                     if (view.getId() == R.id.medicalCenterHelp)
                         makeSnackBar(3700, "This is the name of the medical center or hospital where you work.");
+                    if (view.getId() == R.id.medicalLicenseHelp)
+                        makeSnackBar(6000, "Please provide your legal medical license # (or registration #) as issued by competent authorities for verification.");
                 } else {
                     if (view.getId() == R.id.phoneHelp)
                         makeSnackBar(3500, "Your phone # is required for doctors to contact you.");
@@ -1881,6 +1910,8 @@ public class Registration extends AppCompatActivity {
         photoHelp.setOnClickListener(listener);
         phoneHelp.setOnClickListener(listener);
         locationHelp.setOnClickListener(listener);
+        if (medicalHelp != null)
+            medicalHelp.setOnClickListener(listener);
         if (medicalCenterHelp != null)
             medicalCenterHelp.setOnClickListener(listener);
 
@@ -2344,7 +2375,7 @@ public class Registration extends AppCompatActivity {
     public void animateCards(CardView card1, final CardView card2, final int animation1,
                              final int animation2) {
         Animation slide = AnimationUtils.loadAnimation(getApplicationContext(), animation1);
-
+        backCounter = 3;
         card1.startAnimation(slide);
         card2.setVisibility(View.INVISIBLE);
         new Handler().postDelayed(new Runnable() {
@@ -2362,8 +2393,12 @@ public class Registration extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
     }
 
+    Toast toast;
+
     public void shortToast(String s) {
-        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+        if (toast != null) toast.cancel();
+        toast = Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT);
+        toast.show();
     }
 
     @Override

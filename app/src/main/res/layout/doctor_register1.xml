@@ -151,7 +151,6 @@
                 android:textCursorDrawable="@null"
                 android:textSize="20sp" />
 
-
             <ImageView
                 android:layout_width="24sp"
                 android:layout_height="24sp"
@@ -194,6 +193,7 @@
                 android:src="@drawable/helpicon"
                 android:layout_marginLeft="6sp"
                 />
+
             <TextView
                 android:id="@+id/phoneText"
                 android:layout_width="wrap_content"
@@ -243,20 +243,21 @@
                 android:textSize="20sp" />
 
             <ImageView
-                android:id="@+id/locationHelp"
-                android:layout_width="26sp"
-                android:layout_height="26sp"
+                android:layout_width="24sp"
+                android:layout_height="24sp"
                 android:layout_below="@id/email"
+                android:layout_marginTop="19sp"
+                android:id="@+id/locationHelp"
+                android:src="@drawable/helpicon"
                 android:layout_marginLeft="6sp"
-                android:layout_marginTop="20sp"
-                android:src="@drawable/helpicon" />
+                />
 
             <EditText
                 android:id="@+id/city"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/email"
-                android:layout_marginLeft="34sp"
+                android:layout_marginLeft="31sp"
                 android:layout_marginTop="9sp"
                 android:backgroundTint="#9547CD"
                 android:ems="4"
@@ -286,12 +287,47 @@
                 android:layout_marginTop="18sp"
                 android:layout_toRightOf="@id/state" />
 
+
+            <ImageView
+                android:layout_width="24sp"
+                android:layout_height="24sp"
+                android:layout_below="@id/country"
+                android:layout_marginTop="18sp"
+                android:id="@+id/medicalLicenseHelp"
+                android:src="@drawable/helpicon"
+                android:layout_marginLeft="6sp"
+                />
+
+            <TextView
+                android:id="@+id/doctorLicenseText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/country"
+                android:layout_marginLeft="32sp"
+                android:layout_marginTop="18sp"
+                android:fontFamily="@font/remedium"
+                android:text="Medical License *"
+                android:textSize="22sp" />
+
+            <EditText
+                android:id="@+id/doctorLicense"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/doctorLicenseText"
+                android:layout_marginLeft="36sp"
+                android:layout_marginTop="-7sp"
+                android:backgroundTint="#9547CD"
+                android:ems="5"
+                android:inputType="text"
+                android:textCursorDrawable="@null"
+                android:textSize="20sp" />
+
             <ImageView
                 android:id="@+id/photohelp"
                 android:layout_width="27sp"
                 android:layout_height="27sp"
                 android:layout_alignParentLeft="true"
-                android:layout_below="@id/country"
+                android:layout_below="@id/doctorLicense"
                 android:layout_marginLeft="6sp"
                 android:layout_marginTop="20sp"
                 app:srcCompat="@drawable/helpicon" />
@@ -300,7 +336,7 @@
                 android:id="@+id/photo"
                 android:layout_width="210sp"
                 android:layout_height="210sp"
-                android:layout_below="@id/country"
+                android:layout_below="@id/doctorLicense"
                 android:layout_marginLeft="32sp"
                 android:layout_marginTop="20sp"
                 app:cardBackgroundColor="#B870FF"
@@ -320,7 +356,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
-                android:layout_below="@id/country"
+                android:layout_below="@id/doctorLicense"
                 android:layout_marginRight="16sp"
                 android:layout_marginTop="36sp"
                 app:cardCornerRadius="14sp"
@@ -328,8 +364,9 @@
 
                 <RelativeLayout
                     android:id="@+id/taking"
-                    android:background="#F8E7C3F8" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:background="#F8E7C3F8">
 
                     <ImageView
                         android:id="@+id/clickimage"
@@ -343,8 +380,8 @@
                         android:id="@+id/takepicture"
                         android:layout_width="80sp"
                         android:layout_height="35sp"
-                        android:layout_marginTop="-3sp"
                         android:layout_below="@id/clickimage"
+                        android:layout_marginTop="-3sp"
                         android:background="#A546D8"
                         android:text="Camera"
                         android:textColor="#FFFFFE"
