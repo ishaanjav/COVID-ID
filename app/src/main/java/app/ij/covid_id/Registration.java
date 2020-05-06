@@ -230,6 +230,8 @@ public class Registration extends AppCompatActivity {
             }
         });
         //showRegister();
+        patientPhoto = false;
+        doctorPhoto = false;
     }
 
     boolean visible, confirmVisible;
@@ -323,7 +325,10 @@ public class Registration extends AppCompatActivity {
         previousClickers();
         test();
         toggle();
+        take.setText(patientPhoto ? ("Retake") : ("Camera"));
     }
+
+    boolean patientPhoto, doctorPhoto;
 
     private void initializeDoctor() {
         user = doctorCard1.findViewById(R.id.user);
@@ -376,6 +381,7 @@ public class Registration extends AppCompatActivity {
         previousClickers();
         test();
         toggle();
+        take.setText(doctorPhoto ? ("Retake") : ("Camera"));
     }
 
     @Override
@@ -1569,6 +1575,15 @@ public class Registration extends AppCompatActivity {
 
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 88, stream);
+                if (doctor) {
+                    doctorPhoto = true;
+                    //patientPhoto = false;
+                    take.setText("Retake");
+                } else {
+                    patientPhoto = true;
+                    //doctorPhoto = false;
+                    take.setText("Retake");
+                }
                 photo.setImageBitmap(bitmap);
                 takenPicture = true;
             }
@@ -1659,6 +1674,15 @@ public class Registration extends AppCompatActivity {
 
                 photo.setImageBitmap(bitmap);
                 takenPicture = true;
+                if (doctor) {
+                    doctorPhoto = true;
+                    //patientPhoto = false;
+                    take.setText("Retake");
+                } else {
+                    patientPhoto = true;
+                    //doctorPhoto = false;
+                    take.setText("Retake");
+                }
                 /*ByteArrayOutputStream out = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.PNG, 70, out);
                 bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));

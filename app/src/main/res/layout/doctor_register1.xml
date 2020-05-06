@@ -10,9 +10,9 @@
 
     <ScrollView
         android:layout_width="wrap_content"
-        android:layout_marginBottom="3sp"
+        android:layout_height="match_parent"
         android:layout_marginTop="3sp"
-        android:layout_height="match_parent">
+        android:layout_marginBottom="3sp">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -72,10 +72,10 @@
                 android:layout_marginLeft="37sp"
                 android:layout_marginTop="-6sp"
                 android:backgroundTint="#9547CD"
-                android:textColorHint="#9071A6"
-                android:hint="@string/enterpass"
                 android:ems="10"
+                android:hint="@string/enterpass"
                 android:inputType="textPassword"
+                android:textColorHint="#9071A6"
                 android:textCursorDrawable="@null"
                 android:textSize="20sp" />
 
@@ -86,13 +86,14 @@
                 android:layout_below="@+id/pass"
                 android:layout_marginLeft="37sp"
                 android:layout_marginTop="0sp"
-                android:hint="@string/confirmpass"
                 android:backgroundTint="#9547CD"
-                android:textColorHint="#9071A6"
                 android:ems="10"
+                android:hint="@string/confirmpass"
                 android:inputType="textPassword"
+                android:textColorHint="#9071A6"
                 android:textCursorDrawable="@null"
                 android:textSize="20sp" />
+
             <RelativeLayout
                 android:id="@+id/container1"
                 android:layout_width="50sp"
@@ -110,6 +111,7 @@
                     android:layout_centerInParent="true"
                     android:src="@drawable/hidepassword" />
             </RelativeLayout>
+
             <RelativeLayout
                 android:id="@+id/container2"
                 android:layout_width="50sp"
@@ -127,6 +129,7 @@
                     android:layout_centerInParent="true"
                     android:src="@drawable/hidepassword" />
             </RelativeLayout>
+
             <TextView
                 android:id="@+id/nameText"
                 android:layout_width="wrap_content"
@@ -152,14 +155,13 @@
                 android:textSize="20sp" />
 
             <ImageView
+                android:id="@+id/medicalCenterHelp"
                 android:layout_width="24sp"
                 android:layout_height="24sp"
                 android:layout_below="@id/name"
-                android:layout_marginTop="15sp"
-                android:id="@+id/medicalCenterHelp"
-                android:src="@drawable/helpicon"
                 android:layout_marginLeft="6sp"
-                />
+                android:layout_marginTop="15sp"
+                android:src="@drawable/helpicon" />
 
             <TextView
                 android:id="@+id/medicalCenterNameText"
@@ -182,17 +184,16 @@
                 android:backgroundTint="#9547CD"
                 android:ems="7"
                 android:inputType="textCapWords"
-                android:textCursorDrawable="@null"/>
+                android:textCursorDrawable="@null" />
 
             <ImageView
+                android:id="@+id/phoneHelp"
                 android:layout_width="24sp"
                 android:layout_height="24sp"
                 android:layout_below="@id/medicalCenterName"
-                android:layout_marginTop="15sp"
-                android:id="@+id/phoneHelp"
-                android:src="@drawable/helpicon"
                 android:layout_marginLeft="6sp"
-                />
+                android:layout_marginTop="15sp"
+                android:src="@drawable/helpicon" />
 
             <TextView
                 android:id="@+id/phoneText"
@@ -243,14 +244,13 @@
                 android:textSize="20sp" />
 
             <ImageView
+                android:id="@+id/locationHelp"
                 android:layout_width="24sp"
                 android:layout_height="24sp"
                 android:layout_below="@id/email"
-                android:layout_marginTop="19sp"
-                android:id="@+id/locationHelp"
-                android:src="@drawable/helpicon"
                 android:layout_marginLeft="6sp"
-                />
+                android:layout_marginTop="19sp"
+                android:src="@drawable/helpicon" />
 
             <EditText
                 android:id="@+id/city"
@@ -261,10 +261,10 @@
                 android:layout_marginTop="9sp"
                 android:backgroundTint="#9547CD"
                 android:ems="4"
-                android:singleLine="true"
+                android:fontFamily="@font/remedium"
                 android:hint="City *"
                 android:inputType="textCapWords"
-                android:fontFamily="@font/remedium"
+                android:singleLine="true"
                 android:textColorHint="#956DAE"
                 android:textCursorDrawable="@null"
                 android:textSize="20sp" />
@@ -289,14 +289,13 @@
 
 
             <ImageView
+                android:id="@+id/medicalLicenseHelp"
                 android:layout_width="24sp"
                 android:layout_height="24sp"
                 android:layout_below="@id/country"
-                android:layout_marginTop="18sp"
-                android:id="@+id/medicalLicenseHelp"
-                android:src="@drawable/helpicon"
                 android:layout_marginLeft="6sp"
-                />
+                android:layout_marginTop="18sp"
+                android:src="@drawable/helpicon" />
 
             <TextView
                 android:id="@+id/doctorLicenseText"
@@ -326,8 +325,8 @@
                 android:id="@+id/photohelp"
                 android:layout_width="27sp"
                 android:layout_height="27sp"
-                android:layout_alignParentLeft="true"
                 android:layout_below="@id/doctorLicense"
+                android:layout_alignParentLeft="true"
                 android:layout_marginLeft="6sp"
                 android:layout_marginTop="20sp"
                 app:srcCompat="@drawable/helpicon" />
@@ -346,8 +345,7 @@
                     android:id="@+id/photoholder"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@drawable/dbadge"
-                    />
+                    android:background="@drawable/dbadge" />
 
             </androidx.cardview.widget.CardView>
 
@@ -356,9 +354,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
-                android:layout_below="@id/doctorLicense"
+                android:layout_alignTop="@+id/photo"
                 android:layout_marginRight="16sp"
-                android:layout_marginTop="36sp"
+                android:layout_marginTop="16sp"
                 app:cardCornerRadius="14sp"
                 app:cardElevation="7sp">
 
@@ -394,9 +392,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
-                android:layout_below="@id/cardholder"
+                android:layout_alignBottom="@+id/photo"
+                android:layout_marginBottom="6sp"
                 android:layout_marginRight="16sp"
-                android:layout_marginTop="27sp"
                 app:cardCornerRadius="13sp"
                 app:cardElevation="7sp">
 
@@ -408,28 +406,24 @@
 
                     <ImageView
                         android:id="@+id/removeimage"
-                        android:layout_width="50sp"
-                        android:layout_height="40sp"
+                        android:layout_width="52sp"
+                        android:layout_height="50sp"
                         android:layout_centerHorizontal="true"
-                        android:layout_marginBottom="5sp"
-                        android:layout_marginTop="5sp"
                         android:background="#F8E7C3F8"
-                        app:srcCompat="@drawable/trash" />
+                        app:srcCompat="@drawable/gallery" />
 
                     <Button
                         android:id="@+id/removepicture"
                         android:layout_width="80sp"
                         android:layout_height="35sp"
                         android:layout_below="@id/removeimage"
-                        android:background="#A546D8"
                         android:layout_marginTop="-2sp"
-
-                        android:text="Discard"
+                        android:background="#A546D8"
+                        android:text="Gallery"
                         android:textColor="#FFFFFE"
                         android:textSize="17sp" />
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
-
 
 
             <LinearLayout
