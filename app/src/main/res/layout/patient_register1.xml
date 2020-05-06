@@ -342,7 +342,7 @@
 
                     <ImageView
                         android:id="@+id/removeimage"
-                        android:layout_width="52sp"
+                        android:layout_width="51sp"
                         android:layout_height="50sp"
                         android:layout_centerHorizontal="true"
                         android:background="#F8E7C3F8"

@@ -125,7 +125,7 @@ public class Registration extends AppCompatActivity {
     public enum Page {PAGE1, PATIENT1, DOCTOR1, PATIENT2, DOCTOR2}
 
     ImageView phoneHelp, locationHelp, photoHelp, medicalCenterHelp, medicalHelp;
-    CardView takePicture, deletePicture;
+    CardView takeGallery, galleryCardView;
     Button patientContinue, patientFinish, doctorContinue, doctorFinish;
     Button patientBack1, patientBack2, doctorBack1, doctorBack2;
     ImageView photo;
@@ -308,10 +308,10 @@ public class Registration extends AppCompatActivity {
         country = patientCard1.findViewById(R.id.country);
         phoneHelp = patientCard1.findViewById(R.id.phoneHelp);
         locationHelp = patientCard1.findViewById(R.id.locationHelp);
-        takePicture = patientCard1.findViewById(R.id.cardholder);
+        takeGallery = patientCard1.findViewById(R.id.cardholder);
         take = patientCard1.findViewById(R.id.takepicture);
         delete = patientCard1.findViewById(R.id.removepicture);
-        deletePicture = patientCard1.findViewById(R.id.removeholder);
+        galleryCardView = patientCard1.findViewById(R.id.removeholder);
         photo = patientCard1.findViewById(R.id.photoholder);
         photoHelp = patientCard1.findViewById(R.id.photohelp);
         patientContinue = patientCard1.findViewById(R.id.patientContinue);
@@ -365,10 +365,10 @@ public class Registration extends AppCompatActivity {
         phoneHelp = doctorCard1.findViewById(R.id.phoneHelp);
         medicalHelp = doctorCard1.findViewById(R.id.medicalLicenseHelp);
         locationHelp = doctorCard1.findViewById(R.id.locationHelp);
-        takePicture = doctorCard1.findViewById(R.id.cardholder);
+        takeGallery = doctorCard1.findViewById(R.id.cardholder);
         take = doctorCard1.findViewById(R.id.takepicture);
         delete = doctorCard1.findViewById(R.id.removepicture);
-        deletePicture = doctorCard1.findViewById(R.id.removeholder);
+        galleryCardView = doctorCard1.findViewById(R.id.removeholder);
         photo = doctorCard1.findViewById(R.id.photoholder);
         photoHelp = doctorCard1.findViewById(R.id.photohelp);
         doctorContinue = doctorCard1.findViewById(R.id.doctorContinue);
@@ -869,8 +869,8 @@ public class Registration extends AppCompatActivity {
             makeSnackBar(2000, "Please enter a valid city.");
         else if (sMedicalLicense.length() <= 2 || sMedicalLicense.length() > 30)
             makeSnackBar(1800, "Please nter a valid medical number.");
-        else if (!pictureGood)
-            makeSnackBar(2000, "Please take a picture of your face.");
+        else if (!doctorPhoto)
+            makeSnackBar(2000, "Please take a picture of yourself.");
         else {
             final ProgressDialog dialog = ProgressDialog.show(Registration.this, null,
                     "Checking username uniqueness...", true);
@@ -994,8 +994,8 @@ public class Registration extends AppCompatActivity {
             makeSnackBar(2000, "Please enter a valid email.");
         else if (!validCity(sCity))
             makeSnackBar(2000, "Please enter a valid city.");
-        else if (!pictureGood)
-            makeSnackBar(2000, "Please take a picture of your face.");
+        else if (!patientPhoto)
+            makeSnackBar(2000, "Please take a picture of yourself.");
         else {
             final ProgressDialog dialog = ProgressDialog.show(Registration.this, null,
                     "Checking username uniqueness...", true);
@@ -1314,6 +1314,7 @@ public class Registration extends AppCompatActivity {
     Uri imageUri;
 
     int firstAsk = 0;
+    int GALLERY = 1001;
 
     private void test() {
         View.OnClickListener clicker = new View.OnClickListener() {
@@ -1355,23 +1356,27 @@ public class Registration extends AppCompatActivity {
                 }
             }
         };
-        takePicture.setOnClickListener(clicker);
+        takeGallery.setOnClickListener(clicker);
         take.setOnClickListener(clicker);
-        View.OnClickListener delete2 = new View.OnClickListener() {
+        View.OnClickListener gallery = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (doctor)
+                Intent i = new Intent(
+                        Intent.ACTION_PICK,
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(i, GALLERY);
+               /* if (doctor)
                     photo.setImageResource(R.drawable.dbadge);
                 else
                     photo.setImageResource(R.drawable.usericon);
                 pictureGood = false;
                 allGood();
-                patientContinue.setBackgroundResource(R.drawable.greybutton);
+                patientContinue.setBackgroundResource(R.drawable.greybutton);*/
             }
         };
 
-        delete.setOnClickListener(delete2);
-        deletePicture.setOnClickListener(delete2);
+        delete.setOnClickListener(gallery);
+        galleryCardView.setOnClickListener(gallery);
     }
 
     boolean swapped = false;
@@ -1460,6 +1465,7 @@ public class Registration extends AppCompatActivity {
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialogInterface) {
+                pictureGood = (doctor) ? doctorPhoto : patientPhoto;
                 if (!pictureGood && !Idismissed[0])
                     makeToast("A picture is required. Click the help icon for more info.");
             }
@@ -1512,6 +1518,45 @@ public class Registration extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
 
+            //README Getting picture from gallery.
+            if (requestCode == GALLERY) {
+                Uri uri = data.getData();
+                try {
+                    bitmap = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), uri);
+                    makeToast("Double tap or long press the image to rotate it.");
+                    ;
+                } catch (IOException e) {
+                    Log.wtf("Error", e.toString());
+                    makeToast("Error. Try again or use the camera.");
+                }
+
+                if (bitmap.getWidth() > bitmap.getHeight()) {
+                    bitmap = Bitmap.createBitmap(
+                            bitmap,
+                            bitmap.getWidth() / 2 - bitmap.getHeight() / 2,
+                            0,
+                            bitmap.getHeight(),
+                            bitmap.getHeight());
+                } else if (bitmap.getHeight() > bitmap.getWidth()) {
+                    bitmap = Bitmap.createBitmap(
+                            bitmap,
+                            0,
+                            bitmap.getHeight() / 2 - bitmap.getWidth() / 2,
+                            bitmap.getWidth(),
+                            bitmap.getWidth());
+                }
+                pictureGood = true;
+                if (doctor) {
+                    doctorPhoto = true;
+                    //patientPhoto = false;
+                } else {
+                    patientPhoto = true;
+                    //doctorPhoto = false;
+                }
+                int targetDimension = 560;
+                bitmap = Bitmap.createScaledBitmap(bitmap, targetDimension, targetDimension, true);
+                photo.setImageBitmap(bitmap);
+            }
             if (requestCode == 10) {
                 toCompress = false;
                 //README They choose to take low quality image.
@@ -1919,9 +1964,9 @@ public class Registration extends AppCompatActivity {
                     if (view.getId() == R.id.phoneHelp)
                         makeSnackBar(3000, "The phone # is used to authenticate your account.");
                     if (view.getId() == R.id.locationHelp)
-                        makeSnackBar(11000, "The location is used to display a list of your patients in your area. If you don't provide an accurate location, you may not see your patients or related results at all.");
+                        makeSnackBar(8500, "The location is used to display a list of your patients in your area. If you don't provide an accurate location, you may not see your patients or related results at all.");
                     if (view.getId() == R.id.photohelp)
-                        makeSnackBar(6000, "Please take a picture of your face (or ID as verification of your profession). This is only visible to other doctors.");
+                        makeSnackBar(5500, "Please take a picture of your face (or ID as verification of your profession). This is only visible to other doctors.");
                     if (view.getId() == R.id.medicalCenterHelp)
                         makeSnackBar(3700, "This is the name of the medical center or hospital where you work.");
                     if (view.getId() == R.id.medicalLicenseHelp)
@@ -1930,9 +1975,9 @@ public class Registration extends AppCompatActivity {
                     if (view.getId() == R.id.phoneHelp)
                         makeSnackBar(3500, "Your phone # is required for doctors to contact you.");
                     if (view.getId() == R.id.locationHelp)
-                        makeSnackBar(11000, "The location is used to show your COVID status to medical professionals in your area. If you don't provide your actual location, doctors may not be able to view or update your status.");
+                        makeSnackBar(8900, "The location is used to show your COVID status to medical professionals in your area. If you don't provide your actual location, doctors may not be able to view or update your status.");
                     if (view.getId() == R.id.photohelp)
-                        makeSnackBar(9000, "Please take a close picture of only your face. Your photo is only visible to doctors and can be used as verification (if allowed).");
+                        makeSnackBar(6000, "Please take a picture of only your face. Your photo is only visible to doctors and can be used as verification (if allowed).");
                 }
             }
         };
@@ -1951,7 +1996,7 @@ public class Registration extends AppCompatActivity {
                     bitmap = RotateBitmap(bitmap, 270f);
                     photo.setImageBitmap(bitmap);
                     Vibrator vibrator = (Vibrator) Registration.this.getSystemService(Context.VIBRATOR_SERVICE);
-                    vibrator.vibrate(300);
+                    vibrator.vibrate(250);
                 }
                 return false;
             }
@@ -1964,7 +2009,7 @@ public class Registration extends AppCompatActivity {
                         bitmap = RotateBitmap(bitmap, 90f);
                         photo.setImageBitmap(bitmap);
                         Vibrator vibrator = (Vibrator) Registration.this.getSystemService(Context.VIBRATOR_SERVICE);
-                        vibrator.vibrate(300);
+                        vibrator.vibrate(250);
                     }
                     return super.onDoubleTap(e);
                 }
