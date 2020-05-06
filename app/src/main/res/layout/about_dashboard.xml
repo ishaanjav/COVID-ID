@@ -20,10 +20,11 @@
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:layout_margin="7sp"
+                android:id="@+id/title"
                 android:fontFamily="@font/ralewaybold"
-                android:text="About This App"
+                android:text="The Dashboard"
                 android:textColor="#fff"
-                android:textSize="30sp" />
+                android:textSize="29sp" />
 
         </RelativeLayout>
 
@@ -35,10 +36,7 @@
             android:layout_margin="8sp"
             android:layout_marginTop="15sp"
             android:fontFamily="@font/regular"
-            android:text="The COVID-ID app notifies users of updates in their COVID test results and displays their status - (&quot;Infected&quot;, &quot;Uninfected&quot;, and &quot;Recovered&quot;) - on their dashboard.
-        \nIt provides users with a digital means of monitoring their status regarding the virus while receiving updates from their doctors.
-        \nBy doing so, it can help people return to their jobs and society, showing employers or others that they have recovered or are uninfected (for example).
-        "
+            android:text=""
             android:textSize="19sp" />
 
         <TextView
@@ -54,27 +52,6 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/privacy"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/text2"
-            android:layout_marginLeft="8sp"
-            android:layout_marginTop="-2sp"
-            android:text="@string/privacypolicy"
-            android:textColor="#5096EF"
-            android:textSize="16sp"
-            android:textStyle="italic" />
 
-        <Button
-            android:id="@+id/back"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/privacy"
-            android:layout_marginTop="6sp"
-            android:background="#A761C5"
-            android:text="OK"
-            android:textColor="#E5E2FF"
-            android:textSize="24sp" />
     </RelativeLayout>
 </androidx.cardview.widget.CardView>

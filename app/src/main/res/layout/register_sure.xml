@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/background"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:id="@+id/background"
     app:cardCornerRadius="16sp">
 
     <RelativeLayout
@@ -30,52 +30,53 @@
         </RelativeLayout>-->
 
         <RelativeLayout
-            android:layout_width="match_parent"
             android:id="@+id/wrapper"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content">
-        <TextView
-            android:id="@+id/text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="13sp"
-            android:layout_marginTop="15sp"
-            android:fontFamily="@font/regular"
-            android:text="Before you register, have you saved your username and password?"
-            android:textSize="21sp" />
 
-        <TextView
-            android:id="@+id/text2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/text"
-            android:layout_marginLeft="12sp"
-            android:layout_marginTop="0sp"
-            android:layout_marginRight="12sp"
-            android:layout_marginBottom="25sp"
-            android:fontFamily="@font/regular"
-            android:text="If you ever forget your login credentials, contact covid.ijapps@gmail.com."
-            android:textColor="#000"
-            android:textSize="19sp" />
+            <TextView
+                android:id="@+id/text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="13sp"
+                android:layout_marginTop="15sp"
+                android:fontFamily="@font/regular"
+                android:text="Before you register, have you saved your username and password?"
+                android:textSize="21sp" />
+
+            <TextView
+                android:id="@+id/text2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/text"
+                android:layout_marginLeft="12sp"
+                android:layout_marginTop="0sp"
+                android:layout_marginRight="12sp"
+                android:layout_marginBottom="25sp"
+                android:fontFamily="@font/regular"
+                android:text="If you ever forget your login credentials, contact covid.ijapps@gmail.com."
+                android:textColor="#000"
+                android:textSize="19sp" />
         </RelativeLayout>
+
         <ScrollView
             android:id="@+id/privacy"
             android:layout_width="match_parent"
             android:layout_height="101sp"
             android:layout_below="@+id/wrapper"
-            android:scrollbarSize="3sp"
-            android:scrollbarAlwaysDrawVerticalTrack="true"
             android:layout_marginLeft="10sp"
+            android:layout_marginRight="9sp"
             android:background="@drawable/privacypolicybox"
-            android:layout_marginRight="9sp">
+            android:fadeScrollbars="false"
+            android:scrollbarAlwaysDrawVerticalTrack="true"
+            android:scrollbarSize="3sp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="91sp"
-                android:layout_marginTop="0sp"
                 android:layout_marginLeft="5sp"
-                android:textSize="12sp"
+                android:layout_marginTop="0sp"
                 android:layout_marginRight="5sp"
-                android:textColor="#624187"
                 android:layout_marginBottom="4sp"
                 android:text="PRIVACY POLICY\nEffective Date: May 2nd, 2020
 \nThank you for using the app! 
@@ -151,20 +152,21 @@ The user has to use either permission to upload an image as the app can not auto
 
 You have the ability to revoke the app’s camera and storage permission (if granted in the first place) from your device’s Settings. Once this is done, the app will not have be able to take pictures from the camera. 
 
-\nHowever, it is important to note that doing so will prevent new users from creating accounts on the same device (since a photo is required) or prevent the user from updating their picture." />
+\nHowever, it is important to note that doing so will prevent new users from creating accounts on the same device (since a photo is required) or prevent the user from updating their picture."
+                android:textColor="#624187"
+                android:textSize="12sp" />
 
         </ScrollView>
 
         <CheckBox
+            android:id="@+id/agree"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignStart="@id/privacy"
-            android:id="@+id/agree"
             android:layout_below="@+id/privacy"
-            android:buttonTint="#7BC871"
+            android:layout_alignStart="@id/privacy"
             android:layout_marginTop="6sp"
-            android:text="By selecting this checkbox you agree to the terms and conditions of the privacy policy."
-            />
+            android:buttonTint="#7BC871"
+            android:text="By selecting this checkbox you agree to the terms and conditions of the privacy policy." />
 
         <LinearLayout
             android:layout_width="match_parent"

@@ -652,11 +652,13 @@ public class MainActivity extends AppCompatActivity {
                                                 if (isNetworkAvailable()) {
                                                     makeSnackBar(3000, "An error occurred. Please try again.");
                                                     loggedIn = true;
+                                                    Log.wtf("Login ERROR", e.toString());
                                                    // error.setText("The username or password is wrong.");
                                                 } else {
                                                     loggedIn = true;
                                                     error.setText("Not connected to internet");
                                                     makeSnackBar(4400, "An error occurred. It may be because you are not connected to the internet.");
+                                                    Log.wtf("Login ERROR", e.toString());
                                                 }
                                             }
 

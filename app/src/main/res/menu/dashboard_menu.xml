@@ -3,6 +3,13 @@
     xmlns:app = "http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id = "@+id/about"
+        android:icon="@drawable/info2"
+        app:showAsAction = "always"
+        android:visible="true"
+        android:title="About"/>
+
+    <item
         android:id = "@+id/sign_out"
         app:showAsAction = "always"
         android:visible="true"

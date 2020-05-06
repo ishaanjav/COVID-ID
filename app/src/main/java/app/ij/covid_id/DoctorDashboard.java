@@ -3,35 +3,24 @@ package app.ij.covid_id;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Vibrator;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -63,12 +52,13 @@ public class DoctorDashboard extends AppCompatActivity {
     String updater;
 
     String firstDoctor = "";
+    BottomNavigationView navView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_doctor_dashboard);
-        BottomNavigationView navView = findViewById(R.id.nav_view);
+        navView = findViewById(R.id.nav_view);
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         screen = findViewById(R.id.container);
@@ -118,61 +108,6 @@ public class DoctorDashboard extends AppCompatActivity {
         }
     }
 
-    private void listenForUpdates() {
-        //showUpdate();
-        makeSnackbar(5000, updater + " ");
-        db.collection("Update").document("Update 1").addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(@Nullable DocumentSnapshot document, @Nullable FirebaseFirestoreException e) {
-                Vibrator vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                Boolean update = Boolean.parseBoolean(document.get("Update").toString());
-                if (update && updater.equals("yes")) {
-                    long[] pattern = {0, 275, 25, 275, 25, 275, 25, 275, 25, 275, 25, 275, 25, 275, 25, 275, 25, 275, 25};
-                    //vib.vibrate(3000);
-                    if (vib.hasVibrator())
-                        vib.vibrate(pattern, -1);
-                    showUpdate();
-                    writeToUpdate("no", getApplicationContext());
-                } else if (update && updater.equals("yes")) {
-                    writeToUpdate("no", getApplicationContext());
-                    makeSnackbar(5500, "COVID-ID app updates are available! Check the Play Store.");
-                    //makeSnackBar(2120, "Sorry. No updates available yet.");
-                }
-            }
-        });
-    }
-
-    private void showUpdate() {
-        final Dialog dialog = new Dialog(getApplicationContext());
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setCancelable(true);
-        dialog.setContentView(R.layout.update_dialog);
-        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-        lp.copyFrom(dialog.getWindow().getAttributes());
-        lp.width = (int) (screenW * .875);
-        dialog.getWindow().setAttributes(lp);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
-
-
-        Button btn = (Button) dialog.findViewById(R.id.btn);
-        ImageView image = (ImageView) dialog.findViewById(R.id.play);
-        View.OnClickListener listen = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                final String appPackageName = getApplicationContext().getPackageName(); // getPackageName() from Context or Activity object
-                Log.wtf("Package name", appPackageName);
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-                } catch (android.content.ActivityNotFoundException anfe) {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
-                }
-            }
-        };
-        btn.setOnClickListener(listen);
-        image.setOnClickListener(listen);
-        dialog.show();
-    }
-
     private String readUsers(Context context) {
 
         String ret = "";
@@ -202,16 +137,6 @@ public class DoctorDashboard extends AppCompatActivity {
         return ret;
     }
 
-    Snackbar mySnackbar;
-
-    private void makeSnackbar(int duration, String s) {
-        mySnackbar = Snackbar.make(screen, s, duration);
-        View snackbarView = mySnackbar.getView();
-        TextView tv = (TextView) snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
-        tv.setMaxLines(4);
-        mySnackbar.show();
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
@@ -225,8 +150,43 @@ public class DoctorDashboard extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.sign_out:
                 signOut();
+                break;
+            case R.id.about:
+                showAboutApp();
+                break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void showAboutApp() {
+        Dialog dialog = new Dialog(DoctorDashboard.this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setCancelable(true);
+        dialog.setContentView(R.layout.about_dashboard);
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+        lp.copyFrom(dialog.getWindow().getAttributes());
+        lp.width = (int) (screenW * .85);
+        dialog.getWindow().setAttributes(lp);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+
+        TextView text = dialog.findViewById(R.id.text);
+        TextView title = dialog.findViewById(R.id.title);
+
+        if (navView.getSelectedItemId() == R.id.navigation_home)
+            text.setText("The dashboard contains the last updated status for your COVID test results as released by your doctor.\nYou can show this to potential employers or coworkers as verification of your status.\nFor more info/updates contact your doctor/medical provider.");
+        else if (navView.getSelectedItemId() == R.id.navigation_patients) {
+            text.setText("In this page, you can view a list of patients, sorted by the same city as you, then state, and finally by country." +
+                    "\nSimply tap on a row to view additional details about the patient and update their status.");
+            title.setText("Patients Page");
+        } else if (navView.getSelectedItemId() == R.id.navigation_dashboard) {
+            text.setText("In this page, you will be able to view a map that displays the different COVID statuses across cities, states, and countries.\n" +
+                    "The users are kept anonymous and only the status will be displayed.");
+            title.setText("About the Map");
+        } else if (navView.getSelectedItemId() == R.id.navigation_notifications) {
+            text.setText("In this page, you will be able to update your location, take a new photo of yourself, and specify additional features for the app.");
+            title.setText("About Settings");
+        }
+        dialog.show();
     }
 
     private void signOut() {
@@ -238,19 +198,19 @@ public class DoctorDashboard extends AppCompatActivity {
 
     public void removeListeners() {
         Log.wtf("INFO", "Doctor Dashboard: Removing Listeners");
-        if(DoctorDashboardFragment.listener != null)
+        if (DoctorDashboardFragment.listener != null)
             DoctorDashboardFragment.listener.remove();
-        if(DoctorDashboardFragment.listener2 != null)
+        if (DoctorDashboardFragment.listener2 != null)
             DoctorDashboardFragment.listener2.remove();
-        if(DashboardFragment.listener != null)
+        if (DashboardFragment.listener != null)
             DashboardFragment.listener.remove();
-        if(DashboardFragment.listener2 != null)
+        if (DashboardFragment.listener2 != null)
             DashboardFragment.listener2.remove();
-        if(DoctorStatuses3.userPassListener != null)
+        if (DoctorStatuses3.userPassListener != null)
             DoctorStatuses3.userPassListener.remove();
-        if(MapFragment.listener != null)
+        if (MapFragment.listener != null)
             MapFragment.listener.remove();
-        if(SettingsFragment.listener != null)
+        if (SettingsFragment.listener != null)
             SettingsFragment.listener.remove();
     }
 

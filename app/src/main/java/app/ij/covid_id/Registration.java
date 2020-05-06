@@ -1046,8 +1046,6 @@ public class Registration extends AppCompatActivity {
         }
     }
 
-    ImageView statusHelp;
-
     private void initializeDoctor2() {
         doctorBack2 = doctorCard2.findViewById(R.id.doctorPrevious2);
         doctorFinish = doctorCard2.findViewById(R.id.doctorFinish);
@@ -1144,25 +1142,6 @@ public class Registration extends AppCompatActivity {
             }
         });
     }
-
-    private void doctor2Helpers() {
-        statusHelp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showAboutStatus();
-            }
-        });
-    }
-
-    private void patient2Helpers() {
-        statusHelp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showAboutStatus();
-            }
-        });
-    }
-
 
     private boolean uniqueUsername() {
         //TODO Write code to determine if username is unique.
@@ -1977,7 +1956,7 @@ public class Registration extends AppCompatActivity {
                     if (view.getId() == R.id.locationHelp)
                         makeSnackBar(8900, "The location is used to show your COVID status to medical professionals in your area. If you don't provide your actual location, doctors may not be able to view or update your status.");
                     if (view.getId() == R.id.photohelp)
-                        makeSnackBar(6000, "Please take a picture of only your face. Your photo is only visible to doctors and can be used as verification (if allowed).");
+                        makeSnackBar(6100, "Please take a picture of only your face. Your photo is only visible to doctors and can be used as verification where accepted.");
                 }
             }
         };
@@ -2492,50 +2471,6 @@ public class Registration extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void showAboutStatus() {
-        final Dialog dialog = new Dialog(Registration.this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setCancelable(true);
-        dialog.setContentView(R.layout.covid_status_help);
-        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-        lp.copyFrom(dialog.getWindow().getAttributes());
-        lp.width = (int) (screenW * .875);
-        dialog.getWindow().setAttributes(lp);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
-
-        TextView text1 = dialog.findViewById(R.id.text2), text2 = dialog.findViewById(R.id.text3), text3 = dialog.findViewById(R.id.text4);
-        String s1 = text1.getText().toString().trim();
-        String s2 = text2.getText().toString().trim();
-        String s3 = text3.getText().toString().trim();
-        SpannableString ss1 = new SpannableString(s1);
-        ss1.setSpan(new StyleSpan(Typeface.BOLD), 1, 20, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss1.setSpan(new ForegroundColorSpan(Color.parseColor("#505050")), 0, 22, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        text1.setText(ss1);
-        SpannableString ss2 = new SpannableString(s2);
-        ss2.setSpan(new StyleSpan(Typeface.BOLD), 1, 9, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss2.setSpan(new ForegroundColorSpan(Color.parseColor("#eb3838")), 0, 12, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        text2.setText(ss2);
-        SpannableString ss3 = new SpannableString(s3);
-        ss3.setSpan(new StyleSpan(Typeface.BOLD), 1, 10, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss3.setSpan(new ForegroundColorSpan(Color.parseColor("#35c215")), 0, 12, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        text3.setText(ss3);
-        TextView text4 = dialog.findViewById(R.id.text5);
-        SpannableString ss4 = new SpannableString(text4.getText().toString().trim());
-        ss4.setSpan(new StyleSpan(Typeface.BOLD), 1, 13, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss4.setSpan(new ForegroundColorSpan(Color.parseColor("#e6b105")), 0, 15, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        text4.setText(ss4);
-
-        Button back = (Button) dialog.findViewById(R.id.back);
-        back.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dialog.dismiss();
-                dialog.cancel();
-            }
-        });
-        dialog.show();
-    }
-
     private void writeToFirstPatient(String data) {
         try {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getApplicationContext().openFileOutput("firstPatient.txt", Context.MODE_PRIVATE));
@@ -2648,6 +2583,19 @@ public class Registration extends AppCompatActivity {
         lp.width = (int) (screenW * .85);
         dialog.getWindow().setAttributes(lp);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+
+        TextView text = dialog.findViewById(R.id.text);
+        text.setText("The app provides users with a means of checking their COVID test results." +
+                "\nUsers receive notifications from the app when their doctor has updated their COVID status.\n\nThis can help people return to jobs with digitial verification of their testing status.");
+        if (page == Page.DOCTOR1 || page == Page.DOCTOR2)
+            text.setText("As a doctor/medical provider, the app gives you the ability to update the COVID test results of other patients in your area as well as have your own status updated (in the dashboard)." +
+                    "\nThis can help people return to jobs with digital verification of their testing status.");
+
+
+        /* text.setText("The COVID-ID app notifies users of updates in their COVID test results and displays their status - (&quot;Infected&quot;, &quot;Uninfected&quot;, and &quot;Recovered&quot;) - on their dashboard.\n" +
+                "        \\nIt provides users with a digital means of monitoring their status regarding the virus while receiving updates from their doctors.\n" +
+                "        \\nBy doing so, it can help people return to their jobs and society, showing employers or others that they have recovered or are uninfected (for example).\n" +
+                "        ");*/
 
         TextView privacy = dialog.findViewById(R.id.privacy);
         privacy.setOnClickListener(new View.OnClickListener() {
