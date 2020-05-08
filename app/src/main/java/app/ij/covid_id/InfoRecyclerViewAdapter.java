@@ -34,10 +34,12 @@ import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -75,7 +77,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
     ArrayList<Boolean> bools;
     String doctorID;
     FirebaseFirestore db;
-    static HashMap<Integer, Pair<String, Integer>> notesSaved;
+    static HashMap<Integer, Pair<String, Pair<Integer, Boolean>>> notesSaved;
     public HashMap<String, Object> doctorInfo;
 
     public InfoRecyclerViewAdapter(Context context, ArrayList<HashMap<String, Object>> list, RecyclerView recyclerView, HashMap<String, Bitmap> bitmaps, String doctorID, FirebaseFirestore db, HashMap<String, Object> info) {
@@ -272,18 +274,42 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                     if (progress != null) progress.cancel();
             }
         });
+        switcher = dialog.findViewById(R.id.switcher);
 
-        TextView plasmaT = dialog.findViewById(R.id.donatedText);
+        final TextView plasmaT = dialog.findViewById(R.id.donatedText);
         TextView willingT = dialog.findViewById(R.id.willDonate);
-        String s1 = "Donated Plasma: " + (list.get(position).get("Donated").equals(true) ? "yes" : "no");
+        //  String s1 = "Donated Plasma: " + (list.get(position).get("Donated").equals(true) ? "yes" : "no");
+        String s1 = (list.get(position).get("Donated").equals(true) ? "yes" : "no");
         String s2 = "Willing to Donate: " + (list.get(position).get("Willing").equals(true) ? "yes" : "no");
-        SpannableString ss1 = new SpannableString(s1);
-        ss1.setSpan(new StyleSpan(Typeface.BOLD), s1.indexOf(": ") + 2, s1.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        // SpannableString ss1 = new SpannableString(s1);
+        //ss1.setSpan(new StyleSpan(Typeface.BOLD), s1.indexOf(": ") + 2, s1.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         SpannableString ss2 = new SpannableString(s2);
         ss2.setSpan(new StyleSpan(Typeface.BOLD), s2.indexOf(": ") + 2, s2.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
-        plasmaT.setText(ss1);
+        plasmaT.setText(s1);
         willingT.setText(ss2);
 
+        if (notesSaved.containsKey(position)) {
+            switcher.setChecked(notesSaved.get(position).second.second);
+            if (notesSaved.get(position).second.second)
+                plasmaT.setText("yes");
+            else plasmaT.setText("no");
+
+            if (MyDebug.LOG)
+                Log.wtf("*CHECKED", "checked: " + notesSaved.get(position).second.second);
+        } else {
+            if (s1.equals("yes")) {
+                switcher.setChecked(true);
+            } else {
+                switcher.setChecked(false);
+            }
+        }
+        switcher.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b) plasmaT.setText("yes");
+                else plasmaT.setText("no");
+            }
+        });
         progress = new ProgressDialog((Activity) context);
         progress.setMessage("Processing. Please wait...");
         progress.setTitle("Loading Info");
@@ -296,10 +322,20 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         db.document(userPath).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot snapshot) {
-                 if(MyDebug.LOG) Log.wtf("*Reading current users's data", snapshot.getData().toString());
+                if (MyDebug.LOG)
+                    Log.wtf("*Reading current users's data", snapshot.getData().toString());
                 if (progress != null) {
                     if (progress != null) progress.cancel();
                     progress.dismiss();
+                }
+                if (!snapshot.getData().toString().equals(map.toString())) {
+                    // HashMap<String, Object> temp = (HashMap<String, Object>) snapshot.getData();
+                    //DoctorStatuses3.setAdapterAgain();
+                    //DoctorStatuses3.setAdapterAgain();
+                    HashMap<String, Object> temp = (HashMap<String, Object>) snapshot.getData();
+                    temp = DoctorStatuses3.patientInfo.get(position);
+                    temp.putAll((HashMap<String, Object>) snapshot.getData());
+                    DoctorStatuses3.setAdapterAgain();
                 }
                 displayStuff(dialog, (HashMap<String, Object>) snapshot.getData(), position);
                 dialog.show();
@@ -315,6 +351,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
     }
 
     boolean updated;
+    Switch switcher;
 
     private void displayStuff(final Dialog dialog, final HashMap<String, Object> map, final int position) {
         TextView nameT = dialog.findViewById(R.id.nameText);
@@ -350,12 +387,15 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         }
         handleColors_Spinners(statusSelection, statusT, status);
         if (notesSaved.containsKey(position))
-            statusSelection.setSelection(notesSaved.get(position).second);
+            statusSelection.setSelection(notesSaved.get(position).second.first);
 
         final EditText notes = dialog.findViewById(R.id.noteText);
-        if (notesSaved.containsKey(position)) notes.setText(notesSaved.get(position).first);
-
         final TextView wordCount = dialog.findViewById(R.id.wordCount);
+        if (notesSaved.containsKey(position)) {
+            notes.setText(notesSaved.get(position).first);
+            int wordsLength = countWords(notes.getText().toString());// words.length;
+            wordCount.setText(String.valueOf(wordsLength) + "/" + 200 + " words");
+        }
         notes.addTextChangedListener(new TextWatcher() {
 
             @Override
@@ -389,172 +429,188 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialogInterface) {
-                Pair pair = new Pair(notes.getText().toString().trim(), statusSelection.getSelectedItemPosition());
+                Pair pair = new Pair(notes.getText().toString().trim(), new Pair(statusSelection.getSelectedItemPosition(), switcher.isChecked()));
                 if (!updated)
                     notesSaved.put(position, pair);
                 else
-                    notesSaved.put(position, new Pair<String, Integer>("", 0));
+                    notesSaved.put(position, new Pair<String, Pair<Integer, Boolean>>("", new Pair<Integer, Boolean>(0, false)));
             }
         });
         Button update = dialog.findViewById(R.id.update);
         update.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final String patientPath = map.get("Doc ID").toString();
-                final String newStatus = statusSelection.getSelectedItem().toString();
-                final String note = notes.getText().toString();
-                if (!isNetworkAvailable()) {
-                    makeToast("A WiFi connection is required to update status.");
-                }
-                if (isNetworkAvailable()) {
-                    progress = new ProgressDialog((Activity) context);
-                    progress.setMessage("Processing. Please wait...");
-                    progress.setTitle("Uploading Data");
-                    progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                    progress.setIcon(R.drawable.circle);
-                    progress.setIndeterminate(false);
-                    progress.setProgress(0);
-                    //DONE Ask dad should this loading progress be cancelable?
-                    progress.setCancelable(true);
-                    progress.show();
+                //DONE Check if there were any changes, otherwise do not write.
+                if (switcher.isChecked() == Boolean.parseBoolean(map.get("Donated").toString()) &&
+                        statusSelection.getSelectedItem().toString().equals(map.get("Status").toString()) && notes.getText().toString().length() < 1) {
+                    makeToast("You did not change anything.");
+                } else {
+                    final String patientPath = map.get("Doc ID").toString();
+                    final String newStatus = statusSelection.getSelectedItem().toString();
+                    final String note = notes.getText().toString();
+                    if (!isNetworkAvailable()) {
+                        makeToast("A WiFi connection is required to update status.");
+                    }
+                    if (isNetworkAvailable()) {
+                        progress = new ProgressDialog((Activity) context);
+                        progress.setMessage("Processing. Please wait...");
+                        progress.setTitle("Uploading Data");
+                        progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                        progress.setIcon(R.drawable.circle);
+                        progress.setIndeterminate(false);
+                        progress.setProgress(0);
+                        //DONE Ask dad should this loading progress be cancelable?
+                        progress.setCancelable(true);
+                        progress.show();
 
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            progress.setMessage("Processing. Please wait..." + "\nMake sure you have a good internet connection.");
-                        }
-                    }, 6200);
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                progress.setMessage("Processing. Please wait..." + "\nMake sure you have a good internet connection.");
+                            }
+                        }, 6200);
 
-                    final String time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-                    final String currentDate = new SimpleDateFormat("M/d/yy", Locale.getDefault()).format(new Date());
-                    HashMap<String, Object> userPassMap = new HashMap<>();
-                    userPassMap.put("Updated", currentDate + " " + time);
-                    userPassMap.put("Status", newStatus);
-                    //DONE Ask dad if city should be the doctor's city.
-                    userPassMap.put("CityU", doctorInfo.get("City"));
-                    //TODO Shouldn't plasma be something that the doctor can edit?
-                    userPassMap.put("CenterU", doctorInfo.get("Center"));
-                    userPassMap.put("DoctorU", doctorInfo.get("Doc"));
-                    db.document(patientPath).set(userPassMap, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            HashMap<String, Object> mapMap = new HashMap<>();
-                            mapMap.put("City", map.get("City"));
-                            mapMap.put("Country", map.get("Country"));
-                            mapMap.put("State", map.get("State"));
-                            mapMap.put("Status", newStatus);
-                            progress.setProgress(25);
-                            db.document("Map/" + map.get("Orig")).set(mapMap)
-                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void aVoid) {
-                                            //TODO Ask dad right now when user registers, for both patient and doctor the
-                                            //  default city is their current city. For doctors the center is their own center.
-                                            //DONE  if it is fine if Update document name is random key.
-                                            //DONE  if updates should also contain the state/country of the doctor.
-                                            progress.setProgress(50);
-                                            HashMap<String, Object> patientUpdates = new HashMap<>();
-                                            patientUpdates.put("Center", doctorInfo.get("Center"));
-                                            patientUpdates.put("City", doctorInfo.get("City"));
-                                            patientUpdates.put("State", doctorInfo.get("State"));
-                                            patientUpdates.put("Country", doctorInfo.get("Country"));
-                                            patientUpdates.put("Date", currentDate + " " + time);
-                                            patientUpdates.put("Doc", doctorInfo.get("Doc"));
-                                            patientUpdates.put("Em", doctorInfo.get("Email"));
-                                            patientUpdates.put("Note", note);
-                                            patientUpdates.put("Phone", doctorInfo.get("Phone"));
-                                            patientUpdates.put("Prev", map.get("Status"));
-                                            patientUpdates.put("Status", newStatus);
+                        final String time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+                        final String currentDate = new SimpleDateFormat("M/d/yy", Locale.getDefault()).format(new Date());
+                        HashMap<String, Object> userPassMap = new HashMap<>();
+                        userPassMap.put("Updated", currentDate + " " + time);
+                        userPassMap.put("Status", newStatus);
+                        //DONE Ask dad if city should be the doctor's city.
+                        userPassMap.put("CityU", doctorInfo.get("City"));
+                        //TODO Shouldn't plasma be something that the doctor can edit?
+                        userPassMap.put("CenterU", doctorInfo.get("Center"));
+                        userPassMap.put("DoctorU", doctorInfo.get("Doc"));
+                        userPassMap.put("Donated", switcher.isChecked());
+                        db.document(patientPath).set(userPassMap, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                HashMap<String, Object> mapMap = new HashMap<>();
+                                mapMap.put("City", map.get("City"));
+                                mapMap.put("Country", map.get("Country"));
+                                mapMap.put("State", map.get("State"));
+                                mapMap.put("Status", newStatus);
+                                progress.setProgress(25);
+                                db.document("Map/" + map.get("Orig")).set(mapMap)
+                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                            @Override
+                                            public void onSuccess(Void aVoid) {
+                                                //TODO Ask dad right now when user registers, for both patient and doctor the
+                                                //  default city is their current city. For doctors the center is their own center.
+                                                //DONE  if it is fine if Update document name is random key.
+                                                //DONE  if updates should also contain the state/country of the doctor.
+                                                progress.setProgress(50);
+                                                HashMap<String, Object> patientUpdates = new HashMap<>();
+                                                patientUpdates.put("Center", doctorInfo.get("Center"));
+                                                patientUpdates.put("City", doctorInfo.get("City"));
+                                                patientUpdates.put("State", doctorInfo.get("State"));
+                                                patientUpdates.put("Country", doctorInfo.get("Country"));
+                                                patientUpdates.put("Date", currentDate + " " + time);
+                                                patientUpdates.put("Doc", doctorInfo.get("Doc"));
+                                                patientUpdates.put("Em", doctorInfo.get("Email"));
+                                                patientUpdates.put("Note", note);
+                                                patientUpdates.put("Phone", doctorInfo.get("Phone"));
+                                                patientUpdates.put("Prev", map.get("Status"));
+                                                patientUpdates.put("Status", newStatus);
+                                                patientUpdates.put("Donated", switcher.isChecked());
 
-                                            db.collection(patientPath + "/Updates").add(patientUpdates).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                                @Override
-                                                public void onSuccess(DocumentReference documentReference) {
-                                                    //TODO Ask dad what info goes into Patients for doctor?
-                                                    // Is this sufficient?
-                                                    //TODO Ask dad if Patient is a doctor, should I also
-                                                    // be getting the patient doctor's medical center?
-                                                    // What about foreign patients. Should I get country?
-                                                    // Right now I am getting all 3. Should I?
-                                                    progress.setProgress(75);
-                                                    HashMap<String, Object> doctorPatients = new HashMap<>();
-                                                    doctorPatients.put("Doc ID", map.get("Doc ID"));
-                                                    doctorPatients.put("CenterU", doctorInfo.get("Center"));
-                                                    doctorPatients.put("CityU", doctorInfo.get("City"));
-                                                    if (map.get("Type").equals("Doctor"))
-                                                        doctorPatients.put("Center", map.get("Center"));
-                                                    doctorPatients.put("City", map.get("City"));
-                                                    doctorPatients.put("State", map.get("State"));
-                                                    doctorPatients.put("Country", map.get("Country"));
-                                                    doctorPatients.put("Phone", map.get("Phone"));
-                                                    doctorPatients.put("Email", map.get("Email"));
-                                                    doctorPatients.put("Name", map.get("Name"));
-                                                    doctorPatients.put("User", map.get("Orig"));
-                                                    doctorPatients.put("Type", map.get("Type"));
-                                                    doctorPatients.put("Prev", map.get("Status"));
-                                                    doctorPatients.put("Status", newStatus);
-                                                    doctorPatients.put("Date", currentDate + " " + time);
+                                                db.collection(patientPath + "/Updates").add(patientUpdates).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                                    @Override
+                                                    public void onSuccess(DocumentReference documentReference) {
+                                                        //TODO Ask dad what info goes into Patients for doctor?
+                                                        // Is this sufficient?
+                                                        //TODO Ask dad if Patient is a doctor, should I also
+                                                        // be getting the patient doctor's medical center?
+                                                        // What about foreign patients. Should I get country?
+                                                        // Right now I am getting all 3. Should I?
+                                                        progress.setProgress(75);
+                                                        HashMap<String, Object> doctorPatients = new HashMap<>();
+                                                        doctorPatients.put("Doc ID", map.get("Doc ID"));
+                                                        doctorPatients.put("CenterU", doctorInfo.get("Center"));
+                                                        doctorPatients.put("CityU", doctorInfo.get("City"));
+                                                        if (map.get("Type").equals("Doctor"))
+                                                            doctorPatients.put("Center", map.get("Center"));
+                                                        doctorPatients.put("City", map.get("City"));
+                                                        doctorPatients.put("State", map.get("State"));
+                                                        doctorPatients.put("Country", map.get("Country"));
+                                                        doctorPatients.put("Phone", map.get("Phone"));
+                                                        doctorPatients.put("Email", map.get("Email"));
+                                                        doctorPatients.put("Name", map.get("Name"));
+                                                        doctorPatients.put("User", map.get("Orig"));
+                                                        doctorPatients.put("Type", map.get("Type"));
+                                                        doctorPatients.put("Prev", map.get("Status"));
+                                                        doctorPatients.put("Status", newStatus);
+                                                        doctorPatients.put("Date", currentDate + " " + time);
+                                                        doctorPatients.put("Donated", switcher.isChecked());
 
-                                                    db.collection("userPass/" + doctorID + "/Patients").add(doctorPatients)
-                                                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                                                @Override
-                                                                public void onSuccess(DocumentReference documentReference) {
-                                                                    dialog.dismiss();
-                                                                    dialog.cancel();
-                                                                    //TODO Ask Dad if below message is good.
-                                                                    makeToast("Data uploaded. Thank you!");
-                                                                    //TODO Check if below works and what happens.
-                                                                    updated = true;
-                                                                    HashMap<String, Object> temp/* = list.get(position)*/;
-                                                                    if (progress != null)
-                                                                        progress.cancel();
-                                                                    temp = DoctorStatuses3.patientInfo.get(position);
-                                                                    temp.put("Status", newStatus);
-                                                                    DoctorStatuses3.setAdapterAgain();
-                                                                    //list.set(position, temp);
-                                                                    try {
-                                                                        //notifyItemChanged(position);
-                                                                        notifyDataSetChanged();
-                                                                    } catch (Exception e) {
-                                                                         if(MyDebug.LOG) Log.wtf("*-)notifyItemChanged", e.toString());
+                                                        db.collection("userPass/" + doctorID + "/Patients").add(doctorPatients)
+                                                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                                                    @Override
+                                                                    public void onSuccess(DocumentReference documentReference) {
+                                                                        dialog.dismiss();
+                                                                        dialog.cancel();
+                                                                        //TODO Ask Dad if below message is good.
+                                                                        makeToast("Data uploaded. Thank you!");
+                                                                        //TODO Check if below works and what happens.
+                                                                        updated = true;
+                                                                        //README Get Current HashMap from list and update the status.
+                                                                        // Then update adapter again.
+                                                                        HashMap<String, Object> temp/* = list.get(position)*/;
+                                                                        if (progress != null)
+                                                                            progress.cancel();
+                                                                        temp = DoctorStatuses3.patientInfo.get(position);
+                                                                        temp.put("Status", newStatus);
+                                                                        temp.put("Donated", switcher.isChecked());
+                                                                        DoctorStatuses3.setAdapterAgain();
+                                                                        //list.set(position, temp);
+                                                                        try {
+                                                                            //notifyItemChanged(position);
+                                                                            notifyDataSetChanged();
+                                                                        } catch (Exception e) {
+                                                                            if (MyDebug.LOG)
+                                                                                Log.wtf("*-)notifyItemChanged", e.toString());
+                                                                        }
+                                                                        //notifyItemChanged();
                                                                     }
-                                                                    //notifyItemChanged();
-                                                                }
-                                                            }).addOnFailureListener(new OnFailureListener() {
-                                                        @Override
-                                                        public void onFailure(@NonNull Exception e) {
-                                                            largeToast("Failed to save info. Please try again.");
-                                                            if (progress != null) progress.cancel();
-                                                             if(MyDebug.LOG) Log.wtf("*-)doctor/patients ERROR", e.toString());
-                                                        }
-                                                    });
-                                                }
-                                            }).addOnFailureListener(new OnFailureListener() {
-                                                @Override
-                                                public void onFailure(@NonNull Exception e) {
-                                                    if (progress != null) progress.cancel();
-                                                    largeToast("Failed to save info. Please try again.");
-                                                     if(MyDebug.LOG) Log.wtf("*-)patient/updates ERROR", e.toString());
-                                                }
-                                            });
+                                                                }).addOnFailureListener(new OnFailureListener() {
+                                                            @Override
+                                                            public void onFailure(@NonNull Exception e) {
+                                                                largeToast("Failed to save info. Please try again.");
+                                                                if (progress != null)
+                                                                    progress.cancel();
+                                                                if (MyDebug.LOG)
+                                                                    Log.wtf("*-)doctor/patients ERROR", e.toString());
+                                                            }
+                                                        });
+                                                    }
+                                                }).addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+                                                        if (progress != null) progress.cancel();
+                                                        largeToast("Failed to save info. Please try again.");
+                                                        if (MyDebug.LOG)
+                                                            Log.wtf("*-)patient/updates ERROR", e.toString());
+                                                    }
+                                                });
 
-                                        }
-                                    }).addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    largeToast("Failed to save info. Please try again.");
-                                    if (progress != null) progress.cancel();
-                                     if(MyDebug.LOG) Log.wtf("*-)map ERROR", e.toString());
-                                }
-                            });
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            largeToast("Failed to save info. Please try again.");
-                            if (progress != null) progress.cancel();
-                             if(MyDebug.LOG) Log.wtf("*-)userPass ERROR", e.toString());
-                        }
-                    });
+                                            }
+                                        }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        largeToast("Failed to save info. Please try again.");
+                                        if (progress != null) progress.cancel();
+                                        if (MyDebug.LOG) Log.wtf("*-)map ERROR", e.toString());
+                                    }
+                                });
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                largeToast("Failed to save info. Please try again.");
+                                if (progress != null) progress.cancel();
+                                if (MyDebug.LOG) Log.wtf("*-)userPass ERROR", e.toString());
+                            }
+                        });
+                    }
                 }
             }
         });
@@ -830,7 +886,8 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
             fileInputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
-             if(MyDebug.LOG) Log.wtf("*InfoRecyclerViewAdapter", "Loading Images failed: " + e.toString());
+            if (MyDebug.LOG)
+                Log.wtf("*InfoRecyclerViewAdapter", "Loading Images failed: " + e.toString());
             bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.usericon2);
         }
         return bitmap;

@@ -89,14 +89,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/updateStatusText"
-                android:background="#ddd"
-                android:layout_centerHorizontal="true">
+                android:layout_centerHorizontal="true"
+                android:background="#ddd">
 
                 <Spinner
                     android:id="@+id/statusSelection"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    />
+                    android:layout_height="wrap_content" />
             </RelativeLayout>
 
             <TextView
@@ -159,18 +158,40 @@
                 android:textSize="29sp" />
 
             <TextView
+                android:id="@+id/donatedTexter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/plasmaStatusText"
+                android:text="Donated Plasma:"
+                android:layout_marginLeft="11sp"
+                android:textSize="23sp" />
+
+            <TextView
                 android:id="@+id/donatedText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/plasmaStatusText"
-                android:layout_marginLeft="11sp"
-                android:textSize="23sp" />
+                android:layout_marginLeft="6sp"
+                android:layout_toRightOf="@id/donatedTexter"
+                android:textSize="23sp"
+                android:textStyle="bold" />
+
+            <Switch
+                android:id="@+id/switcher"
+                android:layout_width="72sp"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/plasmaStatusText"
+                android:layout_marginLeft="46sp"
+                android:layout_marginTop="6sp"
+                android:theme="@style/SwitchTheme"
+                android:layout_toRightOf="@id/donatedTexter"
+                android:switchMinWidth="72sp" />
 
             <TextView
                 android:id="@+id/willDonate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/donatedText"
+                android:layout_below="@id/donatedTexter"
                 android:layout_marginLeft="11sp"
                 android:textSize="23sp" />
 

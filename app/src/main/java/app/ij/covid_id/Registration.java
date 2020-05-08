@@ -593,6 +593,7 @@ public class Registration extends AppCompatActivity {
                                                                                 updateMap.put("Doc", (doctor) ? "You" : "n/a");
                                                                                 updateMap.put("Center", "n/a");
                                                                                 updateMap.put("Ph", (doctor) ? phone.getText().toString().trim() : "n/a");
+                                                                                updateMap.put("Donated", (haveDonatedPlasma));
                                                                                 String em = email.getText().toString();
                                                                                 if (em.isEmpty())
                                                                                     em = "";

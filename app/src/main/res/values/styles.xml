@@ -24,6 +24,14 @@
         <item name="colorPrimaryDark">#DCBEFF</item>
     </style>
 
+    <style name="SwitchTheme" parent="Theme.AppCompat.Light">
+        <item name="android:colorControlActivated">#148E13</item>
+        <item name="android:colorControlNormal">#f00</item>
+        <item name="android:colorControlHighlight">#C9F8ABAB</item>
+        <item name="android:colorForeground">#f00</item>
+        <item name="android:colorButtonNormal">#f00</item>
+    </style>
+
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
