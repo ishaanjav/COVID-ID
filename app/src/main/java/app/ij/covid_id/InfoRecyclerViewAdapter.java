@@ -110,7 +110,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
             statusBox = itemView.findViewById(R.id.statusBox);
             bools = new ArrayList<>();
             notesSaved = new HashMap<>();
-            //Log.wtf("*CALLED", "VIEWHOLDER");
+            // if(MyDebug.LOG) Log.wtf("*CALLED", "VIEWHOLDER");
             for (int i = 0; i < list.size() / 2; i++) {
                 bools.add(false);
                 bools.add(false);
@@ -151,7 +151,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         boolean bool = bools.get(pos);
         bools.set(pos, !bool);
         //v.findViewById(R.id.details).setVisibility(View.VISIBLE);
-        //Log.wtf("*toggleText", "pos: " + pos + " - Previous: " + bool + " Now: " + bools.get(pos));
+        // if(MyDebug.LOG) Log.wtf("*toggleText", "pos: " + pos + " - Previous: " + bool + " Now: " + bools.get(pos));
   /*items[layoutPosition] = items[layoutPosition].let {
             it.first to !it.second
         }*/
@@ -164,7 +164,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         view = LayoutInflater.from(parent.getContext()).inflate(R.layout.info_list_item, parent, false);
-        //Log.wtf("*onCreateViewHolder", "Size: " + list.size() + "  Counter: " + counter);
+        // if(MyDebug.LOG) Log.wtf("*onCreateViewHolder", "Size: " + list.size() + "  Counter: " + counter);
         ViewHolder holder = new ViewHolder(view, counter);
         details = LayoutInflater.from(context).inflate(R.layout.extended_list_item, parent, false);
         counter++;
@@ -181,9 +181,9 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
-        //Log.wtf(TAG, "onBindViewHolder --  called");
+        // if(MyDebug.LOG) Log.wtf(TAG, "onBindViewHolder --  called");
         map = list.get(position);
-        //Log.wtf(TAG, "onBindViewHolder List - " + list.toString() + " \n\t\t\\t\t\t\t\\t\tt\t\t\t\t\t" + map.toString());
+        // if(MyDebug.LOG) Log.wtf(TAG, "onBindViewHolder List - " + list.toString() + " \n\t\t\\t\t\t\t\\t\tt\t\t\t\t\t" + map.toString());
 
         documentPath = map.get("Doc ID").toString();
         username = map.get("User").toString();
@@ -221,25 +221,25 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         // 3 images = 1457
         if (bitmapList.containsKey(username)) {
             holder.image.setImageBitmap(bitmapList.get(username));
-            //Log.wtf("*-& Using Bitmap List", username);
+            // if(MyDebug.LOG) Log.wtf("*-& Using Bitmap List", username);
         } else {
             holder.image.setImageBitmap(loadImageBitmap(context, map.get("Orig").toString(), "jpg"));
-            //Log.wtf("*-& Getting from Storage", username);
+            // if(MyDebug.LOG) Log.wtf("*-& Getting from Storage", username);
         }
         if (DoctorStatuses3.loadingResults != null && position == (Math.min(list.size() - 1, 12))
                 && DoctorStatuses3.loadingResults.isShowing()) {
-            //Log.wtf("*CANCELLED", "From inside Adapter");
+            // if(MyDebug.LOG) Log.wtf("*CANCELLED", "From inside Adapter");
             DoctorStatuses3.loadingResults.cancel();
         }
 
          /*   if (bools.get(position)) {
             makeToast("ACTIVATED!");
             holder.details.setVisibility(View.VISIBLE);
-            Log.wtf("onBindViewHolder", "pos: " + position + " ==> activated");
+             if(MyDebug.LOG) Log.wtf("onBindViewHolder", "pos: " + position + " ==> activated");
         } else {
             makeToast("Not Activated!");
             holder.details.setVisibility(View.GONE);
-            Log.wtf("onBindViewHolder", "pos: " + position + " ==> not activated");
+             if(MyDebug.LOG) Log.wtf("onBindViewHolder", "pos: " + position + " ==> not activated");
         }*/
         setAnimation(holder.itemView, position);
     }
@@ -296,7 +296,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         db.document(userPath).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot snapshot) {
-                Log.wtf("*Reading current users's data", snapshot.getData().toString());
+                 if(MyDebug.LOG) Log.wtf("*Reading current users's data", snapshot.getData().toString());
                 if (progress != null) {
                     if (progress != null) progress.cancel();
                     progress.dismiss();
@@ -515,7 +515,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                                                                         //notifyItemChanged(position);
                                                                         notifyDataSetChanged();
                                                                     } catch (Exception e) {
-                                                                        Log.wtf("*-)notifyItemChanged", e.toString());
+                                                                         if(MyDebug.LOG) Log.wtf("*-)notifyItemChanged", e.toString());
                                                                     }
                                                                     //notifyItemChanged();
                                                                 }
@@ -524,7 +524,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                                                         public void onFailure(@NonNull Exception e) {
                                                             largeToast("Failed to save info. Please try again.");
                                                             if (progress != null) progress.cancel();
-                                                            Log.wtf("*-)doctor/patients ERROR", e.toString());
+                                                             if(MyDebug.LOG) Log.wtf("*-)doctor/patients ERROR", e.toString());
                                                         }
                                                     });
                                                 }
@@ -533,7 +533,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                                                 public void onFailure(@NonNull Exception e) {
                                                     if (progress != null) progress.cancel();
                                                     largeToast("Failed to save info. Please try again.");
-                                                    Log.wtf("*-)patient/updates ERROR", e.toString());
+                                                     if(MyDebug.LOG) Log.wtf("*-)patient/updates ERROR", e.toString());
                                                 }
                                             });
 
@@ -543,7 +543,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                                 public void onFailure(@NonNull Exception e) {
                                     largeToast("Failed to save info. Please try again.");
                                     if (progress != null) progress.cancel();
-                                    Log.wtf("*-)map ERROR", e.toString());
+                                     if(MyDebug.LOG) Log.wtf("*-)map ERROR", e.toString());
                                 }
                             });
                         }
@@ -552,7 +552,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                         public void onFailure(@NonNull Exception e) {
                             largeToast("Failed to save info. Please try again.");
                             if (progress != null) progress.cancel();
-                            Log.wtf("*-)userPass ERROR", e.toString());
+                             if(MyDebug.LOG) Log.wtf("*-)userPass ERROR", e.toString());
                         }
                     });
                 }
@@ -705,7 +705,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
         viewToAnimate.setVisibility(View.INVISIBLE);
 
         if (position > lastPosition) {
-            //Log.wtf("*setAnimation", position + " " + lastPosition);
+            // if(MyDebug.LOG) Log.wtf("*setAnimation", position + " " + lastPosition);
             final Animation animation = AnimationUtils.loadAnimation(context, R.anim.list_item_animation1);
             new Handler().postDelayed(new Runnable() {
                 @Override
@@ -746,9 +746,9 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
        /* final Animation animation = AnimationUtils.loadAnimation(context, R.anim.list_item_animation1);
         Handler h = new Handler();
         //if(Math.abs(DoctorStatuses3.position - position) < 2) {
-        Log.wtf("*-&* setAnimation", position + " " + lastPosition);
+         if(MyDebug.LOG) Log.wtf("*-&* setAnimation", position + " " + lastPosition);
         if (position >= lastPosition) {
-            Log.wtf("*-&* Animating", position + " " + lastPosition);
+             if(MyDebug.LOG) Log.wtf("*-&* Animating", position + " " + lastPosition);
             h.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -772,7 +772,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
                 super.onScrollStateChanged(recyclerView, newState);
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                     position = getCurrentItem();
-                    //Log.wtf("*-&* POsition", position + " " + lastPosition);
+                    // if(MyDebug.LOG) Log.wtf("*-&* POsition", position + " " + lastPosition);
                     View row = recyclerView.getLayoutManager().findViewByPosition(position);
                     //setAnimation(row, position);
                 }
@@ -830,7 +830,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
             fileInputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
-            Log.wtf("*InfoRecyclerViewAdapter", "Loading Images failed: " + e.toString());
+             if(MyDebug.LOG) Log.wtf("*InfoRecyclerViewAdapter", "Loading Images failed: " + e.toString());
             bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.usericon2);
         }
         return bitmap;

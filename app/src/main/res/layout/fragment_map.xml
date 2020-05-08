@@ -42,7 +42,7 @@
         android:layout_marginLeft="20sp"
         android:layout_marginRight="20sp"
         android:textSize="20sp"
-        android:text="Make sure to check the Google Play Store for COVID-ID app updates and the latest features!"
+        android:text="Make sure to check the Galaxy Store for COVID-ID app updates and the latest features!"
         />
 
     <Button

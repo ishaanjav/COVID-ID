@@ -500,7 +500,7 @@ public class Registration extends AppCompatActivity {
             }
         }, 27460);
         final long start = System.currentTimeMillis();
-        Log.wtf("-_--START", "" + start);
+         if(MyDebug.LOG) Log.wtf("-_--START", "" + start);
         final Map<String, Object> userPass = new HashMap<>();
         userPass.put("User", user.getText().toString().trim());
         userPass.put("Orig", user.getText().toString().trim());
@@ -544,7 +544,7 @@ public class Registration extends AppCompatActivity {
                                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
                                 final byte[] data2 = baos.toByteArray();
-                                Log.wtf("TIMES", "" + System.currentTimeMillis());
+                                 if(MyDebug.LOG) Log.wtf("TIMES", "" + System.currentTimeMillis());
                                 dialog.setProgress(60);
                                 UploadTask uploadTask = storageReference2.putBytes(data2);
                                 uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -561,7 +561,7 @@ public class Registration extends AppCompatActivity {
                                                         hashMap.put("City", city.getText().toString().trim());
                                                         hashMap.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
                                                         hashMap.put("Country", (country.getSelectedItem().toString()));
-                                                        Log.wtf("TIMES", "" + System.currentTimeMillis());
+                                                         if(MyDebug.LOG) Log.wtf("TIMES", "" + System.currentTimeMillis());
                                                         dialog.setProgress(70);
                                                         final String userPassDocumentID = documentReference.getPath();
                                                         map.put("userPass", userPassDocumentID);
@@ -574,7 +574,7 @@ public class Registration extends AppCompatActivity {
                                                                         Map<String, Object> data = new HashMap<>();
                                                                         //data.put("Doc ID", mainDocumentID);
                                                                         //IMPORTANT Change it to below because Patient/Doctor will not be used anymore.
-                                                                        Log.wtf("TIMES", "" + System.currentTimeMillis());
+                                                                         if(MyDebug.LOG) Log.wtf("TIMES", "" + System.currentTimeMillis());
                                                                         dialog.setProgress(80);
                                                                         data.put("Doc ID", userPassDocumentID);
                                                                         //IMPORTANT After adding the main info, get the ID and go back to userPass to add it there.
@@ -582,7 +582,7 @@ public class Registration extends AppCompatActivity {
                                                                             @Override
                                                                             public void onSuccess(Void aVoid) {
                                                                                 //INFO Write to "Updates" and put in stuff.
-                                                                                Log.wtf("TIMES", "" + System.currentTimeMillis());
+                                                                                 if(MyDebug.LOG) Log.wtf("TIMES", "" + System.currentTimeMillis());
                                                                                 HashMap<String, Object> updateMap = new HashMap<>();
                                                                                 updateMap.put("Status", status);
                                                                                 updateMap.put("Prev", "n/a");
@@ -607,7 +607,7 @@ public class Registration extends AppCompatActivity {
                                                                                                 makeToast("Account created");
                                                                                                 dialog.setProgress(100);
                                                                                                 dialog.cancel();
-                                                                                                Log.wtf("TIMES", "" + System.currentTimeMillis());
+                                                                                                 if(MyDebug.LOG) Log.wtf("TIMES", "" + System.currentTimeMillis());
                                                                                                 writeToFile(doctor ? "Doctor" : "Patient", getApplicationContext());
                                                                                                 String update = readFromFile("statusUpdate.txt", getApplicationContext());
                                                                                                 writeToUpdate(user.getText().toString() + "-----Unknown-----"  + update, getApplicationContext());
@@ -615,22 +615,22 @@ public class Registration extends AppCompatActivity {
                                                                                                 Intent finish = new Intent(Registration.this, MainActivity.class);
                                                                                                 finish.putExtra("Type", doctor ? "Doctor" : "Patient");
                                                                                                 long end = System.currentTimeMillis();
-                                                                                                Log.wtf("-_--END", "" + end);
-                                                                                                Log.wtf("-_--Upload Time", "" + (end - start));
+                                                                                                 if(MyDebug.LOG) Log.wtf("-_--END", "" + end);
+                                                                                                 if(MyDebug.LOG) Log.wtf("-_--Upload Time", "" + (end - start));
                                                                                                 //DONE Uncomment if you want TourGuide each time doctor account is created.
                                                                                                 if (reference.contains("Doc"))
                                                                                                     writeToFirstDoctor("yes");
                                                                                                 else
                                                                                                     writeToFirstPatient("yes");
                                                                                                 startActivity(finish);
-                                                                                                Log.wtf("TESTING", "DocumentSnapshot added with ID: " + userPassDocumentID);
+                                                                                                 if(MyDebug.LOG) Log.wtf("TESTING", "DocumentSnapshot added with ID: " + userPassDocumentID);
                                                                                             }
                                                                                         }).addOnFailureListener(new OnFailureListener() {
                                                                                     @Override
                                                                                     public void onFailure(@NonNull Exception e) {
                                                                                         dialog.cancel();
                                                                                         makeToast(e.getMessage());
-                                                                                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                                                         if(MyDebug.LOG) Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
                                                                                         makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
                                                                                     }
                                                                                 });
@@ -639,7 +639,7 @@ public class Registration extends AppCompatActivity {
                                                                             @Override
                                                                             public void onFailure(@NonNull Exception e) {
                                                                                 dialog.cancel();
-                                                                                Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                                                 if(MyDebug.LOG) Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
                                                                                 makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
                                                                             }
                                                                         });
@@ -648,7 +648,7 @@ public class Registration extends AppCompatActivity {
                                                             @Override
                                                             public void onFailure(@NonNull Exception e) {
                                                                 dialog.cancel();
-                                                                Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                                 if(MyDebug.LOG) Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
                                                                 makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
                                                             }
                                                         });
@@ -657,7 +657,7 @@ public class Registration extends AppCompatActivity {
                                             @Override
                                             public void onFailure(@NonNull Exception e) {
                                                 dialog.cancel();
-                                                Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                 if(MyDebug.LOG) Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
                                                 makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
                                             }
                                         });
@@ -666,7 +666,7 @@ public class Registration extends AppCompatActivity {
                                     @Override
                                     public void onFailure(@NonNull Exception exception) {
                                         dialog.cancel();
-                                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document" + exception.toString());
+                                         if(MyDebug.LOG) Log.wtf("FAILED FAILED FAILED_____", "Error adding document" + exception.toString());
                                         makeSnackBar(5000, "Failed to upload information. Make sure you have a stable internet connection and try again.");
                                     }
                                 });
@@ -680,7 +680,7 @@ public class Registration extends AppCompatActivity {
                         } else {
                             dialog.cancel();
                             makeSnackBar(6000, "Could not process whether your username is unique. Please have a stable internet connection.");
-                            Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                             if(MyDebug.LOG) Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
                         }
                     }
                 })
@@ -720,9 +720,9 @@ public class Registration extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-            Log.wtf("login activity", "File not found: " + e.toString());
+             if(MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
         } catch (IOException e) {
-            Log.wtf("login activity", "Can not read file: " + e.toString());
+             if(MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
         }
 
         return ret;
@@ -846,7 +846,7 @@ public class Registration extends AppCompatActivity {
                             String curUser = user.getText().toString().trim();
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 String r = document.get("User").toString();
-                                Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("User").toString());
+                                 if(MyDebug.LOG) Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("User").toString());
                                 if (r.equals(curUser)) {
                                     makeSnackBar(3700, "Your username was just taken. Please choose another username.");
                                     unique = false;
@@ -866,7 +866,7 @@ public class Registration extends AppCompatActivity {
                                 }
                             } else {
                                 dialog.cancel();
-                                Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                                 if(MyDebug.LOG) Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
                                 makeSnackBar(7000, "Could not process whether your username is unique. Please have a stable internet connection and try again.");
                             }
                         }
@@ -891,7 +891,7 @@ public class Registration extends AppCompatActivity {
         int count = 0;
         for (char c : phone.toCharArray()) {
             if (Character.isDigit(c)) count++;
-            Log.wtf("***", "" + c);
+             if(MyDebug.LOG) Log.wtf("***", "" + c);
         }
         return count;
     }
@@ -973,7 +973,7 @@ public class Registration extends AppCompatActivity {
                             String curUser = user.getText().toString().trim();
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 String r = document.get("User").toString();
-                                Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("User").toString());
+                                 if(MyDebug.LOG) Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("User").toString());
                                 if (r.equals(curUser)) {
                                     makeSnackBar(3700, "Your username was just taken. Please choose another username.");
                                     unique = false;
@@ -993,7 +993,7 @@ public class Registration extends AppCompatActivity {
                                 }
                             } else {
                                 dialog.cancel();
-                                Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                                 if(MyDebug.LOG) Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
                                 makeSnackBar(7000, "Could not process whether your username is unique. Please have a stable internet connection and try again.");
                             }
                         }
@@ -1118,10 +1118,10 @@ public class Registration extends AppCompatActivity {
                                 String r = (String) document.get("Username");
                                 if(r.equals(curUser))
                                     return false;
-                                //Log.wtf("SUCCESSS", document.getId() + " => " + document.getData());
+                                // if(MyDebug.LOG) Log.wtf("SUCCESSS", document.getId() + " => " + document.getData());
                             }
                         } else {
-                            Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                             if(MyDebug.LOG) Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
                         }
                     }
                 });*/
@@ -1162,63 +1162,6 @@ public class Registration extends AppCompatActivity {
             }
         };
         user.addTextChangedListener(user1);
-    }
-
-    private void test2() {
-        ArrayList<String> name = new ArrayList<>();
-        name.add("1");
-        name.add("2");
-        name.add("3");
-        name.add("4");
-        name.add("5");
-        name.add("6");
-        name.add("7");
-        name.add("8");
-        name.add("9");
-        name.add("10");
-        name.add("11");
-        name.add("12");
-        name.add("13");
-        name.add("14");
-        name.add("15");
-        name.add("16");
-        name.add("17");
-        name.add("18");
-        for (int i = 1; i <= 18; i++) {
-            final StorageReference mImageRef = FirebaseStorage.getInstance().getReference("Patients/" + i + ".jpg");
-            final long ONE_MEGABYTE = 1024 * 1024;
-
-            final int finalI = i;
-            mImageRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                @Override
-                public void onSuccess(byte[] bytes) {
-                    Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-
-                    saveImage(getApplicationContext(), bm, "" + finalI, "jpg");
-                    Log.wtf("**SAVED IMAGE", "IMAGE " + finalI + " SAVED");
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    Toast.makeText(getApplicationContext(), "FAILED", Toast.LENGTH_LONG).show();
-                }
-            });
-        }
-        TestAdapter adapter = new TestAdapter(getApplicationContext(), R.layout.test_list_view_layout, name);
-        ListView list = findViewById(R.id.list);
-        list.setAdapter(adapter);
-    }
-
-    public void saveImage(Context context, Bitmap bitmap, String name, String extension) {
-        name = name + "." + extension;
-        FileOutputStream fileOutputStream;
-        try {
-            fileOutputStream = context.openFileOutput(name, Context.MODE_PRIVATE);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fileOutputStream);
-            fileOutputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     boolean pictureGood;
@@ -1423,7 +1366,7 @@ public class Registration extends AppCompatActivity {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
             byte[] imageInByte = stream.toByteArray();
             lengthbmp = imageInByte.length;
-            Log.wtf("-_- BEFORE IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
+             if(MyDebug.LOG) Log.wtf("-_- BEFORE IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
 
             stream = new ByteArrayOutputStream();
             if (lengthbmp > 1000000) {
@@ -1445,7 +1388,7 @@ public class Registration extends AppCompatActivity {
                 bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(stream.toByteArray()));
                 imageInByte = stream.toByteArray();
                 lengthbmp = imageInByte.length;
-                Log.wtf("-_- AFTER IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
+                 if(MyDebug.LOG) Log.wtf("-_- AFTER IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
                 photo.setImageBitmap(bitmap);
             }
             toCompress = false;
@@ -1466,7 +1409,7 @@ public class Registration extends AppCompatActivity {
                     makeToast("Double tap or long press the image to rotate it.");
                     ;
                 } catch (IOException e) {
-                    Log.wtf("Error", e.toString());
+                     if(MyDebug.LOG) Log.wtf("Error", e.toString());
                     makeToast("Error. Try again or use the camera.");
                 }
 
@@ -1649,13 +1592,13 @@ public class Registration extends AppCompatActivity {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                 byte[] imageInByte = stream.toByteArray();
                 lengthbmp = imageInByte.length;
-                Log.wtf("-_- BEFORE IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
+                 if(MyDebug.LOG) Log.wtf("-_- BEFORE IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
 
                 stream = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream);
                 imageInByte = stream.toByteArray();
                 lengthbmp = imageInByte.length;
-                Log.wtf("-_- AFTER IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
+                 if(MyDebug.LOG) Log.wtf("-_- AFTER IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
 
                 photo.setImageBitmap(bitmap);
                 takenPicture = true;
@@ -2318,7 +2261,7 @@ public class Registration extends AppCompatActivity {
             case MotionEvent.ACTION_UP:
                 x2 = event.getX();
                 float deltaX = x2 - x1;
-                Log.wtf("**POSITIONS: ", x1 + " " + x2 + "---- " + deltaX + "   . MIN: " + MIN_DISTANCE);
+                 if(MyDebug.LOG) Log.wtf("**POSITIONS: ", x1 + " " + x2 + "---- " + deltaX + "   . MIN: " + MIN_DISTANCE);
                 if (deltaX > MIN_DISTANCE) {
                     //makeToast("Left");
                     handleSwipe(true);
@@ -2334,7 +2277,7 @@ public class Registration extends AppCompatActivity {
 
     private void handleSwipe(boolean b) {
         //If b is true --> They want to see left page (previous).
-        Log.wtf("**CurrentPage", page + " " + b);
+         if(MyDebug.LOG) Log.wtf("**CurrentPage", page + " " + b);
         if (b) {
             //Current Page Direction A
             if (page == Page.PATIENT1) {

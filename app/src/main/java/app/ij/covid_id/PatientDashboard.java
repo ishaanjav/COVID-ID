@@ -99,9 +99,9 @@ public class PatientDashboard extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-            Log.wtf("login activity", "File not found: " + e.toString());
+             if(MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
         } catch (IOException e) {
-            Log.wtf("login activity", "Can not read file: " + e.toString());
+             if(MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
         }
 
         return ret;
@@ -130,7 +130,7 @@ public class PatientDashboard extends AppCompatActivity {
         }
         //contents = (String[]) al.toArray();
         contents = al.toArray(new String[al.size()]);
-        Log.wtf("*Logger", logger);
+         if(MyDebug.LOG) Log.wtf("*Logger", logger);
         for (int i = 0; i < contents.length - 1; i += 2) {
             if (contents[i].equals(username)) {
                 match = true;
@@ -144,7 +144,7 @@ public class PatientDashboard extends AppCompatActivity {
                 before += contents[i] + "-----" + contents[i + 1] + "-----";
             }
         }
-        Log.wtf("*readUpdate()", username + " " + match + ": " + matchingStatus + ", " + status + "--" + info + "  b4:--" + before + "--af: " + after);
+         if(MyDebug.LOG) Log.wtf("*readUpdate()", username + " " + match + ": " + matchingStatus + ", " + status + "--" + info + "  b4:--" + before + "--af: " + after);
         if (match) {
             //README Status right now (updated when they hit the login button)
             // is different from status from last sign in.
@@ -157,7 +157,7 @@ public class PatientDashboard extends AppCompatActivity {
                 largeToast("Your COVID Status was updated!");
 
                 String replaceCurrentUser = before + username + "-----" + status + "-----" + after;
-                Log.wtf("*replaceCurrentUser", replaceCurrentUser);
+                 if(MyDebug.LOG) Log.wtf("*replaceCurrentUser", replaceCurrentUser);
                 //writeToInfo("statusUpdate.txt", replaceCurrentUser);
                 writeToStatusUpdate(replaceCurrentUser);
                 
@@ -189,7 +189,7 @@ public class PatientDashboard extends AppCompatActivity {
             outputStreamWriter.write(data);
             outputStreamWriter.close();
         } catch (IOException e) {
-            Log.wtf("*Exception", "File write failed: " + e.toString());
+             if(MyDebug.LOG) Log.wtf("*Exception", "File write failed: " + e.toString());
         }
 
     }
@@ -201,7 +201,7 @@ public class PatientDashboard extends AppCompatActivity {
     }
 
     public void removeListeners() {
-        Log.wtf("INFO", "Patient Dashboard: Removing Listeners");
+         if(MyDebug.LOG) Log.wtf("INFO", "Patient Dashboard: Removing Listeners");
         if (DoctorDashboardFragment.listener != null)
             DoctorDashboardFragment.listener.remove();
         if (DoctorDashboardFragment.listener2 != null)

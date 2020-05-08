@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
+import app.ij.covid_id.MyDebug;
 import app.ij.covid_id.PatientDashboard;
 import app.ij.covid_id.R;
 
@@ -53,7 +54,7 @@ public class DashboardViewModel extends ViewModel {
     }
 
     public LiveData<Pair<HashMap<String, Object>, ArrayList<HashMap<String, Object>>>> getInformation() {
-        Log.wtf("*-*-- LOCATION: ", "getInformation() called");
+         if(MyDebug.LOG) Log.wtf("*-*-- LOCATION: ", "getInformation() called");
         contents = new MutableLiveData<>();
         loadInformation();
         contents.setValue(pair);
@@ -65,14 +66,14 @@ public class DashboardViewModel extends ViewModel {
     public LiveData<Pair<HashMap<String, Object>, ArrayList<HashMap<String, Object>>>> loadInformation() {
         generalInfo = new HashMap<>();
         statusUpdates = new ArrayList<>();
-        Log.wtf("*-*-- LOCATION: ", "loadInformation() called");
+         if(MyDebug.LOG) Log.wtf("*-*-- LOCATION: ", "loadInformation() called");
         final DocumentReference docRef = db.collection("Patients").document(documentId);
         docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot snapshot,
                                 @Nullable FirebaseFirestoreException e) {
                 if (e != null) {
-                    Log.wtf("ERROR", "Listen failed.", e);
+                     if(MyDebug.LOG) Log.wtf("ERROR", "Listen failed.", e);
                     generalInfo.put("ERROR STATE", "Fail");
                     pair = new Pair<>(generalInfo, statusUpdates);
                     return;
@@ -85,7 +86,7 @@ public class DashboardViewModel extends ViewModel {
                         statusUpdates = new ArrayList<>();
                         for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots.getDocuments()) {
                             if (e != null) {
-                                Log.wtf("ERROR", "Listen failed.", e);
+                                 if(MyDebug.LOG) Log.wtf("ERROR", "Listen failed.", e);
                                 return;
                             }
 
@@ -93,9 +94,9 @@ public class DashboardViewModel extends ViewModel {
                                     ? "Local" : "Server";
                             if (documentSnapshot != null && documentSnapshot.exists() && source.equals("Server")) {
                                 statusUpdates.add((HashMap) documentSnapshot.getData());
-                                Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + documentSnapshot.getData());
+                                 if(MyDebug.LOG) Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + documentSnapshot.getData());
                             } else {
-                                Log.wtf("ERROR", source + " data: null");
+                                 if(MyDebug.LOG) Log.wtf("ERROR", source + " data: null");
                             }
                         }
                         pair = new Pair<>(generalInfo, statusUpdates);
@@ -107,11 +108,11 @@ public class DashboardViewModel extends ViewModel {
                 if (snapshot != null && snapshot.exists() && source.equals("Server")) {
                     generalInfo = (HashMap) snapshot.getData();
                     pair = new Pair<>(generalInfo, statusUpdates);
-                    Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + snapshot.getData());
+                     if(MyDebug.LOG) Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + snapshot.getData());
                 } else {
                     generalInfo.put("ERROR STATE", "Fail");
                     pair = new Pair<>(generalInfo, statusUpdates);
-                    Log.wtf("ERROR", source + " data: null");
+                     if(MyDebug.LOG) Log.wtf("ERROR", source + " data: null");
                 }
             }
         });

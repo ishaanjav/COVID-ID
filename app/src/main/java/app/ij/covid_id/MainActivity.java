@@ -123,14 +123,14 @@ public class MainActivity extends AppCompatActivity {
         if (!logged_in.contains("fal") && !logged_in.isEmpty()) {
             //String info = readFromFile("info.txt", getApplicationContext());
             //String[] contents = info.split("___________");
-            Log.wtf("MAINACTVITY", "Logging in");
+            if (MyDebug.LOG) Log.wtf("MAINACTVITY", "Logging in");
             Intent next;
             if (logged_in.contains("Pat"))
                 next = new Intent(MainActivity.this, PatientDashboard.class);
             else
                 next = new Intent(MainActivity.this, DoctorDashboard.class);
             //writeToUpdate("yes", getApplicationContext());
-            /*Log.wtf("Username", contents[2]);
+            /* if(MyDebug.LOG) Log.wtf("Username", contents[2]);
             next.putExtra("Type", contents[0]);
             next.putExtra("Document ID", contents[1]);
             next.putExtra("Username", contents[2]);
@@ -261,12 +261,12 @@ public class MainActivity extends AppCompatActivity {
                         //vib.vibrate(3000);
                         if (vib.hasVibrator())
                             vib.vibrate(pattern, -1);
-                        else longToast("COVID-ID app updates are available! Check the Play Store.");
+                        longToast("COVID-ID app updates are available! Check the Galaxy Store.");
 
                         writeToUpdate("no", getApplicationContext());
                         showUpdate();
                     } else {
-                        longToast("COVID-ID app updates are available! Check the Play Store.");
+                        longToast("COVID-ID app updates are available! Check the Galaxy Store.");
                     }
                 } else if (update && !sx.equals("Doctor") && !sx.equals("Patient") && !reader.isEmpty()) {
                     if (readUpdate == null || !readUpdate.contains("no")) {
@@ -274,14 +274,14 @@ public class MainActivity extends AppCompatActivity {
                         //vib.vibrate(3000);
                         if (vib.hasVibrator())
                             vib.vibrate(pattern, -1);
-                        else longToast("COVID-ID app updates are available! Check the Play Store.");
+                        longToast("COVID-ID app updates are available! Check the Galaxy Store.");
                         writeToUpdate("no", getApplicationContext());
                         showUpdate();
                     } else {
-                        longToast("UCOVID-ID app updates are available! Check the Play Store.");
+                        longToast("UCOVID-ID app updates are available! Check the Galaxy Store.");
                     }
                 } else if (update) {
-                    longToast("COVID-ID app updates are available! Check the Play Store.");
+                    longToast("COVID-ID app updates are available! Check the Galaxy Store.");
                     //makeSnackBar(2120, "Sorry. No updates available yet.");
                 }
             }
@@ -306,11 +306,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 final String appPackageName = getApplicationContext().getPackageName(); // getPackageName() from Context or Activity object
-                Log.wtf("Package name", appPackageName);
+                if (MyDebug.LOG) Log.wtf("Package name", appPackageName);
                 try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("samsungapps://ProductDetail/" + appPackageName)));
                 } catch (android.content.ActivityNotFoundException anfe) {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://galaxy.store/covidi" + appPackageName)));
                 }
             }
         };
@@ -340,9 +340,9 @@ public class MainActivity extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-            Log.wtf("login activity", "File not found: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
         } catch (IOException e) {
-            Log.wtf("login activity", "Can not read file: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
         }
 
         return ret;
@@ -503,9 +503,9 @@ public class MainActivity extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-            Log.wtf("login activity", "File not found: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
         } catch (IOException e) {
-            Log.wtf("login activity", "Can not read file: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
         }
 
         return ret;
@@ -560,7 +560,7 @@ public class MainActivity extends AppCompatActivity {
                     }, 1100);
 
                     final long start = System.currentTimeMillis();
-                    Log.wtf("-_--START", "" + start);
+                    if (MyDebug.LOG) Log.wtf("-_--START", "" + start);
                     db.collection("userPass")
                             .whereEqualTo("User", u)
                             .whereEqualTo("Pass", p)
@@ -586,7 +586,8 @@ public class MainActivity extends AppCompatActivity {
                                             try {
                                                 for (QueryDocumentSnapshot document : task.getResult()) {
                                                     String userType = document.get("Type").toString();
-                                                    Log.wtf("Login SUCCESSFUL- ", user + " " + pass);
+                                                    if (MyDebug.LOG)
+                                                        Log.wtf("Login SUCCESSFUL- ", user + " " + pass);
                                                     boolean match = true;
                                                     boolean verified = Boolean.parseBoolean(document.get("Verified").toString());
                                                     String documentId = document.getId();
@@ -649,17 +650,19 @@ public class MainActivity extends AppCompatActivity {
                                                     }
 
                                                 }
-                                            } catch (Exception e){
+                                            } catch (Exception e) {
                                                 if (isNetworkAvailable()) {
                                                     makeSnackBar(3000, "An error occurred. Please try again.");
                                                     loggedIn = true;
-                                                    Log.wtf("Login ERROR", e.toString());
-                                                   // error.setText("The username or password is wrong.");
+                                                    if (MyDebug.LOG)
+                                                        Log.wtf("Login ERROR", e.toString());
+                                                    // error.setText("The username or password is wrong.");
                                                 } else {
                                                     loggedIn = true;
                                                     error.setText("Not connected to internet");
                                                     makeSnackBar(4400, "An error occurred. It may be because you are not connected to the internet.");
-                                                    Log.wtf("Login ERROR", e.toString());
+                                                    if (MyDebug.LOG)
+                                                        Log.wtf("Login ERROR", e.toString());
                                                 }
                                             }
 
@@ -668,11 +671,13 @@ public class MainActivity extends AppCompatActivity {
                                         makeSnackBar(5000, "Could not verify your username and password. Please have a stable internet connection.");
                                         loggedIn = true;
                                         if (dialog != null) dialog.dismiss();
-                                        Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                                        if (MyDebug.LOG)
+                                            Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
                                     }
                                     long end = System.currentTimeMillis();
-                                    Log.wtf("-_--END", "" + end);
-                                    Log.wtf("-_--Reading Time", "" + (end - start));
+                                    if (MyDebug.LOG) Log.wtf("-_--END", "" + end);
+                                    if (MyDebug.LOG)
+                                        Log.wtf("-_--Reading Time", "" + (end - start));
                                 }
                             }).addOnFailureListener(new OnFailureListener() {
                         @Override
@@ -698,10 +703,10 @@ public class MainActivity extends AppCompatActivity {
                                 for (QueryDocumentSnapshot document : task.getResult()) {
                                     String user = document.get("User").toString();
                                     String pass = document.get("Pass").toString();
-                                    Log.wtf("Login - ", user + " " + pass);
+                                     if(MyDebug.LOG) Log.wtf("Login - ", user + " " + pass);
                                     if (user.equals(curUser) && curPass.equals(pass)) {
                                         userType = document.get("Type").toString();
-                                        Log.wtf("Login SUCCESSFUL- ", user + " " + pass);
+                                         if(MyDebug.LOG) Log.wtf("Login SUCCESSFUL- ", user + " " + pass);
                                         match = true;
                                         verified = Boolean.parseBoolean(document.get("Verified").toString());
                                         documentId = document.getId();
@@ -784,7 +789,7 @@ public class MainActivity extends AppCompatActivity {
                                 makeSnackBar(5000, "Could not verify your username and password. Please have a stable internet connection.");
                                 loggedIn = true;
                                 if (dialog != null) dialog.dismiss();
-                                Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                                 if(MyDebug.LOG) Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
                             }
                         }
                     }).addOnFailureListener(new OnFailureListener() {

@@ -124,9 +124,9 @@ public class DoctorDashboard extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-            Log.wtf("login activity", "File not found: " + e.toString());
+             if(MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
         } catch (IOException e) {
-            Log.wtf("login activity", "Can not read file: " + e.toString());
+             if(MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
         }
 
         return ret;
@@ -154,7 +154,7 @@ public class DoctorDashboard extends AppCompatActivity {
             }
         }
         contents = al.toArray(new String[al.size()]);
-        Log.wtf("*Logger", logger);
+         if(MyDebug.LOG) Log.wtf("*Logger", logger);
         for (int i = 0; i < contents.length - 1; i += 2) {
             if (contents[i].equals(username)) {
                 match = true;
@@ -168,7 +168,7 @@ public class DoctorDashboard extends AppCompatActivity {
                 before += contents[i] + "-----" + contents[i + 1] + "-----";
             }
         }
-        Log.wtf("*readUpdate()", username + " " + match + ": " + matchingStatus + ", " + status + "--" + info + "  b4:--" + before + "--af: " + after);
+         if(MyDebug.LOG) Log.wtf("*readUpdate()", username + " " + match + ": " + matchingStatus + ", " + status + "--" + info + "  b4:--" + before + "--af: " + after);
         if (match) {
             //README Status right now (updated when they hit the login button)
             // is different from status from last sign in.
@@ -181,7 +181,7 @@ public class DoctorDashboard extends AppCompatActivity {
                 largeToast("Your COVID Status was updated!");
 
                 String replaceCurrentUser = before + username + "-----" + status + "-----" + after;
-                Log.wtf("*replaceCurrentUser", replaceCurrentUser);
+                 if(MyDebug.LOG) Log.wtf("*replaceCurrentUser", replaceCurrentUser);
                 //writeToInfo("statusUpdate.txt", replaceCurrentUser);
                 writeToStatusUpdate(replaceCurrentUser);
                 
@@ -201,7 +201,7 @@ public class DoctorDashboard extends AppCompatActivity {
             outputStreamWriter.write(data);
             outputStreamWriter.close();
         } catch (IOException e) {
-            Log.wtf("*Exception", "File write failed: " + e.toString());
+             if(MyDebug.LOG) Log.wtf("*Exception", "File write failed: " + e.toString());
         }
 
     }
@@ -255,9 +255,9 @@ public class DoctorDashboard extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-            Log.wtf("login activity", "File not found: " + e.toString());
+             if(MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
         } catch (IOException e) {
-            Log.wtf("login activity", "Can not read file: " + e.toString());
+             if(MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
         }
 
         return ret;
@@ -323,7 +323,7 @@ public class DoctorDashboard extends AppCompatActivity {
     }
 
     public void removeListeners() {
-        Log.wtf("INFO", "Doctor Dashboard: Removing Listeners");
+         if(MyDebug.LOG) Log.wtf("INFO", "Doctor Dashboard: Removing Listeners");
         if (DoctorDashboardFragment.listener != null)
             DoctorDashboardFragment.listener.remove();
         if (DoctorDashboardFragment.listener2 != null)
@@ -372,9 +372,9 @@ public class DoctorDashboard extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-            Log.wtf("login activity", "File not found: " + e.toString());
+             if(MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
         } catch (IOException e) {
-            Log.wtf("login activity", "Can not read file: " + e.toString());
+             if(MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
         }
 
         return ret;
@@ -413,7 +413,7 @@ public class DoctorDashboard extends AppCompatActivity {
         String readUsers = readUsers(getApplicationContext());
         List<String> users = Arrays.asList(readUsers.split("-------"));
 
-        Log.wtf("*-* Users List:", "SIZE: " + users.size() + " " + users.toString());
+         if(MyDebug.LOG) Log.wtf("*-* Users List:", "SIZE: " + users.size() + " " + users.toString());
         File location = new File(directory);
         File[] files = location.listFiles();
         ArrayList<String> locations = new ArrayList<>();
@@ -425,7 +425,7 @@ public class DoctorDashboard extends AppCompatActivity {
                 count++;
                 if (!users.contains(name.substring(0, name.length() - 4))) {
                     files[i].delete();
-                    Log.wtf("*-* Deleting", users.contains(name.substring(0, name.length() - 4)) + " " + name);
+                     if(MyDebug.LOG) Log.wtf("*-* Deleting", users.contains(name.substring(0, name.length() - 4)) + " " + name);
                     count--;
                 }
                 //locations.add(name);
@@ -433,12 +433,12 @@ public class DoctorDashboard extends AppCompatActivity {
         }
         for (String s : locations) {
             File temp = new File(directory + "/" + s);
-            Log.wtf("*-* REMOVING", s);
+             if(MyDebug.LOG) Log.wtf("*-* REMOVING", s);
             temp.delete();
         }
-        //TODO Remove Below 2 lines and basically all Log.wtf() that are not needed for deployment.
+        //TODO Remove Below 2 lines and basically all  if(MyDebug.LOG) Log.wtf() that are not needed for deployment.
         files = location.listFiles();
-        Log.wtf("*-* Files", "Path: " + directory + "  # of files: " + files.length + "   # of images: " + count);
+         if(MyDebug.LOG) Log.wtf("*-* Files", "Path: " + directory + "  # of files: " + files.length + "   # of images: " + count);
         return true;
     }
 

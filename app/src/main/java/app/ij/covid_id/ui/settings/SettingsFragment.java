@@ -24,6 +24,7 @@ import androidx.lifecycle.ViewModelProviders;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.DocumentReference;
@@ -40,6 +41,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import app.ij.covid_id.DoctorDashboard;
+import app.ij.covid_id.MyDebug;
 import app.ij.covid_id.PatientDashboard;
 import app.ij.covid_id.ui.doctor_dashboard.DoctorDashboardFragment;
 
@@ -58,12 +60,10 @@ import app.ij.covid_id.DoctorDashboard;
 import app.ij.covid_id.PatientDashboard;
 import app.ij.covid_id.R;
 import app.ij.covid_id.ui.doctor_dashboard.DoctorDashboardFragment;
-import app.ij.covid_id.ui.map.MapViewModel;
 
 public class SettingsFragment extends Fragment {
     View root;
     RelativeLayout screen;
-    private SettingsViewModel settingsViewModel;
     Button update;
 
     public View findViewById(int id) {
@@ -97,7 +97,7 @@ public class SettingsFragment extends Fragment {
         }
         //contents = (String[]) al.toArray();
         contents = al.toArray(new String[al.size()]);
-        Log.wtf("*Logger", logger);
+        if (MyDebug.LOG) Log.wtf("*Logger", logger);
         for (int i = 0; i < contents.length - 1; i += 2) {
             if (contents[i].equals(username)) {
                 match = true;
@@ -111,14 +111,15 @@ public class SettingsFragment extends Fragment {
                 before += contents[i] + "-----" + contents[i + 1] + "-----";
             }
         }
-        Log.wtf("*readUpdate()", username + " " + match + ": " + matchingStatus + ", " + stat + "--" + info + "  b4:--" + before + "--af: " + after);
+        if (MyDebug.LOG)
+            Log.wtf("*readUpdate()", username + " " + match + ": " + matchingStatus + ", " + stat + "--" + info + "  b4:--" + before + "--af: " + after);
         if (match) {
             //README Status right now (updated when they hit the login button)
             // is different from status from last sign in.
             if (!matchingStatus.equals(stat)) {
                 //DONE Make notification
                 String replaceCurrentUser = before + username + "-----" + stat + "-----" + after;
-                Log.wtf("*replaceCurrentUser", replaceCurrentUser);
+                if (MyDebug.LOG) Log.wtf("*replaceCurrentUser", replaceCurrentUser);
                 //writeToInfo("statusUpdate.txt", replaceCurrentUser);
                 writeToStatusUpdate(replaceCurrentUser);
 
@@ -139,15 +140,14 @@ public class SettingsFragment extends Fragment {
             outputStreamWriter.write(data);
             outputStreamWriter.close();
         } catch (IOException e) {
-            Log.wtf("*Exception", "File write failed: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("*Exception", "File write failed: " + e.toString());
         }
 
     }
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        settingsViewModel =
-                ViewModelProviders.of(this).get(SettingsViewModel.class);
+
         root = inflater.inflate(R.layout.fragment_map, container, false);
         update = (Button) findViewById(R.id.update);
         screen = (RelativeLayout) findViewById(R.id.screen);
@@ -163,7 +163,7 @@ public class SettingsFragment extends Fragment {
     public void onStart() {
         super.onStart();
         updateInfoTxt();
-        Log.wtf("*-((( onStart", "CAlled");
+        if (MyDebug.LOG) Log.wtf("*-((( onStart", "CAlled");
     }
 
     protected boolean isSafe() {
@@ -193,7 +193,7 @@ public class SettingsFragment extends Fragment {
             public void onEvent(@Nullable DocumentSnapshot snapshot, @Nullable FirebaseFirestoreException e) {
                 if (isSafe()) {
                     if (e != null) {
-                        Log.wtf("USERPATH ERROR", "Listen failed.", e);
+                        if (MyDebug.LOG) Log.wtf("USERPATH ERROR", "Listen failed.", e);
                         makeSnackBar(3000, "Could not load your data. Are you connected to the internet?");
                         return;
                     }
@@ -216,14 +216,15 @@ public class SettingsFragment extends Fragment {
                             updateStatustxt(snapshot.getString("Status").toString());
                         }
                         //writeNewInfo(snapshot.getData());
-                        Log.wtf("*------ INFO RETRIEVED (Settings) -----", source + " data: " + snapshot.getData());
+                        if (MyDebug.LOG)
+                            Log.wtf("*------ INFO RETRIEVED (Settings) -----", source + " data: " + snapshot.getData());
                     } else if (source2.contains("cach")) {
                         makeSnackBar(4000, "Loaded offline data. Connect to the internet for updated information.");
                         //writeNewInfo(snapshot.getData());
                     } else if (snapshot == null) {
-                        Log.wtf("ERROR", source + " data: null");
+                        if (MyDebug.LOG) Log.wtf("ERROR", source + " data: null");
                     } else {
-                        Log.wtf("ERROR", source + " data: null");
+                        if (MyDebug.LOG) Log.wtf("ERROR", source + " data: null");
                     }
                 }
                 // IMPORTANT -- Logic for notification
@@ -250,7 +251,7 @@ public class SettingsFragment extends Fragment {
     private void readStorage() {
         String info = readFromFile("info.txt", getContext());
         String[] contents = info.split("___________");
-        Log.wtf("Read Status-", contents[8]);
+        if (MyDebug.LOG) Log.wtf("Read Status-", contents[8]);
         userPassID = (contents[9]);
         username = (contents[2]);
         status = (contents[8]);
@@ -276,9 +277,9 @@ public class SettingsFragment extends Fragment {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-            Log.wtf("login activity", "File not found: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
         } catch (IOException e) {
-            Log.wtf("login activity", "Can not read file: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
         }
 
         return ret;
@@ -302,33 +303,31 @@ public class SettingsFragment extends Fragment {
                 if (!isNetworkAvailable()) {
                     //https://play.google.com/store/apps/details?id=app.anany.faceanalyzer
                     final String appPackageName = getContext().getPackageName(); // getPackageName() from Context or Activity object
-                    Log.wtf("Package name", appPackageName);
+                    if (MyDebug.LOG) Log.wtf("Package name", appPackageName);
                     makeToast("Connect to the internet first.");
                     try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("samsungapps://ProductDetail/" + appPackageName)));
                     } catch (android.content.ActivityNotFoundException anfe) {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://galaxy.store/covidi")));
                     }
                 } else {
-                    db.collection("Update")
-                            .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    db.collection("Update").document("Update 1").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                         @Override
-                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Boolean update = Boolean.parseBoolean(document.get("Update").toString());
-                                if (update) {
-                                    final String appPackageName = getContext().getPackageName(); // getPackageName() from Context or Activity object
-                                    Log.wtf("Package name", appPackageName);
-                                    try {
-                                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-                                    } catch (android.content.ActivityNotFoundException anfe) {
-                                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
-                                    }
-                                    previous = true;
-                                } else {
-                                    previous = false;
-                                    makeSnackBar(2125, "Sorry. No updates available yet.");
+                        public void onSuccess(DocumentSnapshot snapshot) {
+                            Boolean update = Boolean.parseBoolean(snapshot.get("Update").toString());
+                            if (update) {
+                                final String appPackageName = getContext().getPackageName(); // getPackageName() from Context or Activity object
+                                if (MyDebug.LOG) Log.wtf("Package name", appPackageName);
+                                makeToast("Updates available!.");
+                                try {
+                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("samsungapps://ProductDetail/" + appPackageName)));
+                                } catch (android.content.ActivityNotFoundException anfe) {
+                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://galaxy.store/covidi")));
                                 }
+                                previous = true;
+                            } else {
+                                previous = false;
+                                makeSnackBar(2125, "Sorry. No updates available yet.");
                             }
                         }
                     }).addOnFailureListener(new OnFailureListener() {
