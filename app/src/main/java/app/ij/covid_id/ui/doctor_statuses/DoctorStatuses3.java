@@ -278,12 +278,84 @@ public class DoctorStatuses3 extends Fragment {
             makeSnackBar(6000, "You are not connected to the internet. Therefore, you will not receive updates unless you connect.");
 
     }
+
+    public void updateStatustxt(String stat) {
+        String info = readFromFile("statusUpdate.txt", getContext());
+        String[] contents = info.split("-----|\\W+|\\n|\\r");
+        boolean match = false;
+        String matchingStatus = "";
+        //Bob-----Unknown-----
+        int position = 0;
+        String before = "";
+        String after = "";
+        String logger = "";
+        //for (String s : contents) logger += "-" + s + "-\n";
+        //before = contents[0] + "-----";
+        ArrayList<String> al = new ArrayList<>();
+        for (String s : contents) {
+            if (s.isEmpty() || s.length() < 5) {
+
+            } else {
+                al.add(s);
+                logger += "-" + s + "-\n";
+            }
+        }
+        //contents = (String[]) al.toArray();
+        contents = al.toArray(new String[al.size()]);
+        Log.wtf("*Logger", logger);
+        for (int i = 0; i < contents.length - 1; i += 2) {
+            if (contents[i].equals(username)) {
+                match = true;
+                position = i;
+                if (i + 1 < contents.length)
+                    matchingStatus = contents[i + 1];
+                //break;
+            } else if (match) {
+                after += contents[i] + "-----" + contents[i + 1] + "-----";
+            } else {
+                before += contents[i] + "-----" + contents[i + 1] + "-----";
+            }
+        }
+        Log.wtf("*readUpdate()", username + " " + match + ": " + matchingStatus + ", " + stat + "--" + info + "  b4:--" + before + "--af: " + after);
+        if (match) {
+            //README Status right now (updated when they hit the login button)
+            // is different from status from last sign in.
+            if (!matchingStatus.equals(stat)) {
+                //DONE Make notification
+                String replaceCurrentUser = before + username + "-----" + stat + "-----" + after;
+                Log.wtf("*replaceCurrentUser", replaceCurrentUser);
+                //writeToInfo("statusUpdate.txt", replaceCurrentUser);
+                writeToStatusUpdate(replaceCurrentUser);
+
+
+            }
+        } else {
+            //DONE Write whatever their current username and status is.
+            //README They are a new user and their info is not in statusUpdate.txt
+            String writeNewUser = username + "-----" + stat + "-----" + before;
+            writeToStatusUpdate(writeNewUser);
+
+        }
+    }
+
+    private void writeToStatusUpdate(String data) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getContext().openFileOutput("statusUpdate.txt", Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            Log.wtf("*Exception", "File write failed: " + e.toString());
+        }
+
+    }
+
     @Override
     public void onStart() {
         super.onStart();
         updateInfoTxt();
         Log.wtf("*-((( onStart", "CAlled");
     }
+
     Query patientQuery;
     public static ProgressDialog loadingResults;
     int size0, size1, size2, size3, size4;
@@ -1192,7 +1264,7 @@ new Handler().postDelayed(new Runnable() {
                 patientRecycler.setAdapter(adapter);
                 for (int i = 0; i < patientInfo.size(); i++) {
                     //final String username = patientUsernames.get(i);
-                    final String username = patientInfo.get(i).get("User").toString();
+                    final String username = patientInfo.get(i).get("Orig").toString();
                     userString += "-------" + username;
                 }
             } else if (!haveAllFiles && !isNetworkAvailable()) {
@@ -1202,7 +1274,7 @@ new Handler().postDelayed(new Runnable() {
                 patientRecycler.setAdapter(adapter);
                 for (int i = 0; i < patientInfo.size(); i++) {
                     //final String username = patientUsernames.get(i);
-                    final String username = patientInfo.get(i).get("User").toString();
+                    final String username = patientInfo.get(i).get("Orig").toString();
                     userString += "-------" + username;
                 }
             } else if (haveAllFiles) {
@@ -1211,20 +1283,20 @@ new Handler().postDelayed(new Runnable() {
                 patientRecycler.setAdapter(adapter);
                 for (int i = 0; i < patientInfo.size(); i++) {
                     //final String username = patientUsernames.get(i);
-                    final String username = patientInfo.get(i).get("User").toString();
+                    final String username = patientInfo.get(i).get("Orig").toString();
                     userString += "-------" + username;
                 }
             } else {
                 count = 0;
                 for (int i = 0; i < patientInfo.size(); i++) {
                     //final String username = patientUsernames.get(i);
-                    final String username = patientInfo.get(i).get("User").toString();
+                    final String username = patientInfo.get(i).get("Orig").toString();
                     userString += "-------" + username;
                     Log.wtf("*-*Progress:", "" + progress);
 
                     try {
                         final StorageReference mImageRef = FirebaseStorage.getInstance().getReference(username + ".jpg");
-                        final long ONE_MEGABYTE = 1000 * 1000;
+                        final long ONE_MEGABYTE = 3000 * 1000;
                         boolean entered = false;
                         if (fileList.isEmpty() || !fileList.contains(username)) {
                             //TODO Take a look into getBytes and whether it can be used to get smaller images.
@@ -1362,7 +1434,7 @@ new Handler().postDelayed(new Runnable() {
     public boolean haveAllfiles() {
         for (int i = 0; i < patientInfo.size(); i++) {
             //final String username = patientUsernames.get(i);
-            String username = patientInfo.get(i).get("User").toString();
+            String username = patientInfo.get(i).get("Orig").toString();
             if (!fileList.contains(username))
                 return false;
         }
@@ -1439,6 +1511,7 @@ new Handler().postDelayed(new Runnable() {
                             if (vib.hasVibrator())
                                 vib.vibrate(pattern, -1);
                             largeToast("Your COVID Status was updated! Check the dashboard.");
+                            updateStatustxt(snapshot.getString("Status").toString());
                         }
                         //writeNewInfo(snapshot.getData());
                         Log.wtf("*------ INFO RETRIEVED (DoctorStatuses) -----", source + " data: " + snapshot.getData());
@@ -1489,7 +1562,7 @@ new Handler().postDelayed(new Runnable() {
         ArrayList<String> locations = new ArrayList<>();
         patientUsernames = new ArrayList<>();
         for (HashMap<String, Object> map : patientInfo) {
-            patientUsernames.add(map.get("User").toString());
+            patientUsernames.add(map.get("Orig").toString());
         }
         Log.wtf("*-* Files", "Path: " + directory + "  # of files: " + files.length + " " + patientUsernames);
         //TODO See if below code works.
@@ -1524,7 +1597,7 @@ new Handler().postDelayed(new Runnable() {
 
         } catch (IOException e) {
             //makeSnackBar(4000, "Could not load info. Try logging out and logging back in.");
-            Log.e("Exception", "File write failed: " + e.toString());
+            Log.wtf("Exception", "File write failed: " + e.toString());
         }
     }
 
@@ -1605,7 +1678,7 @@ new Handler().postDelayed(new Runnable() {
 
         } catch (IOException e) {
             makeSnackBar(4000, "Could not load info. Try logging out and logging back in.");
-            Log.e("Exception", "File write failed: " + e.toString());
+            Log.wtf("Exception", "File write failed: " + e.toString());
         }
     }
 

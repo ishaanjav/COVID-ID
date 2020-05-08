@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
@@ -53,6 +55,7 @@ public class DoctorDashboard extends AppCompatActivity {
 
     String firstDoctor = "";
     BottomNavigationView navView;
+    String status, username;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +93,129 @@ public class DoctorDashboard extends AppCompatActivity {
             //TODO Uncomment below when done testing TourGuide
             //writeToFirstDoctor("Doctor Finished");
         }
+        readStorage();
+        readUpdate();
+    }
+
+    private void readStorage() {
+        String info = readFromFile("info.txt", getApplicationContext());
+        String[] contents = info.split("___________");
+        username = (contents[2]);
+        status = (contents[8]);
+    }
+
+    private String readFromFile(String file, Context context) {
+        String ret = "";
+
+        try {
+            InputStream inputStream = context.openFileInput(file);
+
+            if (inputStream != null) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ((receiveString = bufferedReader.readLine()) != null) {
+                    stringBuilder.append("\n").append(receiveString);
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+            }
+        } catch (FileNotFoundException e) {
+            Log.wtf("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.wtf("login activity", "Can not read file: " + e.toString());
+        }
+
+        return ret;
+    }
+
+    private void readUpdate() {
+        String info = readFromFile("statusUpdate.txt", getApplicationContext());
+        String[] contents = info.split("-----|\\W+|\\n|\\r");
+        boolean match = false;
+        String matchingStatus = "";
+        //Bob-----Unknown-----
+        int position = 0;
+        String before = "";
+        String after = "";
+        String logger = "";
+        //for (String s : contents) logger += "-" + s + "-\n";
+        //before = contents[0] + "-----";
+        ArrayList<String> al = new ArrayList<>();
+        for(String s: contents){
+            if(s.isEmpty() || s.length()< 5){
+
+            }else{
+                al.add(s);
+                logger += "-" + s + "-\n";
+            }
+        }
+        contents = al.toArray(new String[al.size()]);
+        Log.wtf("*Logger", logger);
+        for (int i = 0; i < contents.length - 1; i += 2) {
+            if (contents[i].equals(username)) {
+                match = true;
+                position = i;
+                if (i + 1 < contents.length)
+                    matchingStatus = contents[i + 1];
+                //break;
+            } else if (match) {
+                after += contents[i] + "-----" + contents[i + 1] + "-----";
+            } else {
+                before += contents[i] + "-----" + contents[i + 1] + "-----";
+            }
+        }
+        Log.wtf("*readUpdate()", username + " " + match + ": " + matchingStatus + ", " + status + "--" + info + "  b4:--" + before + "--af: " + after);
+        if (match) {
+            //README Status right now (updated when they hit the login button)
+            // is different from status from last sign in.
+            if (!matchingStatus.equals(status)) {
+                //DONE Make notification
+                Vibrator vib = (Vibrator) getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
+                long[] pattern = {0, 800, 250, 800, 250, 800, 250, 800, 250};
+                if (vib.hasVibrator())
+                    vib.vibrate(pattern, -1);
+                largeToast("Your COVID Status was updated!");
+
+                String replaceCurrentUser = before + username + "-----" + status + "-----" + after;
+                Log.wtf("*replaceCurrentUser", replaceCurrentUser);
+                //writeToInfo("statusUpdate.txt", replaceCurrentUser);
+                writeToStatusUpdate(replaceCurrentUser);
+                
+            }
+        } else {
+            //DONE Write whatever their current username and status is.
+            //README They are a new user and their info is not in statusUpdate.txt
+            String writeNewUser = username + "-----" + status + "-----" + info;
+            writeToStatusUpdate(writeNewUser);
+            
+        }
+    }
+
+    private void writeToStatusUpdate(String data) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getApplicationContext().openFileOutput("statusUpdate.txt", Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            Log.wtf("*Exception", "File write failed: " + e.toString());
+        }
+
+    }
+
+    Toast toast;
+
+    private void largeToast(String s) {
+        if (toast != null) toast.cancel();
+        toast = Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG);
+        ViewGroup group = (ViewGroup) toast.getView();
+        TextView messageTextView = (TextView) group.getChildAt(0);
+        messageTextView.setTextSize(25);
+        toast.show();
+
     }
 
     @Override
@@ -224,8 +350,6 @@ public class DoctorDashboard extends AppCompatActivity {
             signOut();
         else makeToast("Press back " + variable + time + "to sign out.");
     }
-
-    Toast toast;
 
     private String readFirstDoctor(Context context) {
 

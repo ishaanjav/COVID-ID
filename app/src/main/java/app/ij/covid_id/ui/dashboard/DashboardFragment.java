@@ -11,10 +11,8 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Vibrator;
-import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
-import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
@@ -38,7 +36,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -64,6 +61,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import app.ij.covid_id.MyDebug;
 import app.ij.covid_id.PatientDashboard;
 import app.ij.covid_id.R;
 
@@ -98,7 +96,8 @@ public class DashboardFragment extends Fragment {
         /*dashboardViewModel =
                 ViewModelProviders.of(this).get(DashboardViewModel.class);*/
         //dashboardViewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
-        Log.wtf("HI", "HIiiiiiiioioiioioioiioipodfi asidf oisd foi ");
+        if (MyDebug.LOG) Log.wtf
+                ("HI", "HIiiiiiiioioiioioioiioipodfi asidf oisd foi ");
         db = FirebaseFirestore.getInstance();
         root = inflater.inflate(R.layout.fragment_dashboard, container, false);
         screen = root.findViewById(R.id.screen);
@@ -114,6 +113,7 @@ public class DashboardFragment extends Fragment {
         update = (Button) findViewById(R.id.update);
         status = "";
         readStorage();
+        //readUpdate();
         PatientDashboard.variable = 3;
         //dashboardViewModel = ViewModelProviders.of(this, new DashboardViewModelFactory(getActivity(), username, documentID, db, root)).get(DashboardViewModel.class);
         return root;
@@ -123,9 +123,9 @@ public class DashboardFragment extends Fragment {
     public void onStart() {
         super.onStart();
         updateInfoTxt();
-        Log.wtf("*-((( onStart", "CAlled");
+        if (MyDebug.LOG) Log.wtf
+                ("*-((( onStart", "CAlled");
     }
-
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -161,6 +161,7 @@ public class DashboardFragment extends Fragment {
         }
     }
 
+    //README Not in use
     private void listenForUpdates() {
         //showUpdate();
         db.collection("Update").document("Update 1").addSnapshotListener(new EventListener<DocumentSnapshot>() {
@@ -201,7 +202,8 @@ public class DashboardFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 final String appPackageName = getContext().getPackageName(); // getPackageName() from Context or Activity object
-                Log.wtf("Package name", appPackageName);
+                if (MyDebug.LOG) Log.wtf
+                        ("Package name", appPackageName);
                 try {
                     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
                 } catch (android.content.ActivityNotFoundException anfe) {
@@ -235,9 +237,11 @@ public class DashboardFragment extends Fragment {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-            Log.wtf("login activity", "File not found: " + e.toString());
+            if (MyDebug.LOG) Log.wtf
+                    ("login activity", "File not found: " + e.toString());
         } catch (IOException e) {
-            Log.wtf("login activity", "Can not read file: " + e.toString());
+            if (MyDebug.LOG) Log.wtf
+                    ("login activity", "Can not read file: " + e.toString());
         }
 
         return ret;
@@ -256,7 +260,8 @@ public class DashboardFragment extends Fragment {
                 //counter++;
                 for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots.getDocuments()) {
                     if (e != null) {
-                        Log.wtf("ERROR", "Listen failed.", e);
+                        if (MyDebug.LOG) Log.wtf
+                                ("ERROR", "Listen failed.", e);
                         return;
                     }
                     counter++;
@@ -268,22 +273,26 @@ public class DashboardFragment extends Fragment {
                     if (documentSnapshot != null && documentSnapshot.exists() && source.equals("Server")) {
                         statusUpdates.add((HashMap) documentSnapshot.getData());
                         //textView.setText("TEST: " + counter);
-                        Log.wtf("*------ UPDATE INFO RETRIEVED -----", source + " data: " + documentSnapshot.getData());
+                        if (MyDebug.LOG) Log.wtf
+                                ("*------ UPDATE INFO RETRIEVED -----", source + " data: " + documentSnapshot.getData());
                     } else if (source2.contains("cach")) {
                         makeSnackBar(4000, "Loaded offline data. Connect to the internet for updated information.");
                         statusUpdates.add((HashMap) documentSnapshot.getData());
                     } else {
-                        Log.wtf("ERROR", source + " data: null");
+                        if (MyDebug.LOG) Log.wtf
+                                ("ERROR", source + " data: null");
                         makeSnackBar(3000, "No data could be found. Are you connected to the internet?");
                     }
                 }
                 updateList();
-                Log.wtf("COUNTER VALUE", "-------------------- " + counter);
+                if (MyDebug.LOG) Log.wtf
+                        ("COUNTER VALUE", "-------------------- " + counter);
             }
         });
     }
 
     String currentCity;
+
     public void updateLayout() {
         //README Uncomment below for quick testing
         //status = "Unknown";
@@ -310,14 +319,16 @@ public class DashboardFragment extends Fragment {
     //  and update UI for local changes to say Hello "new name" or whatever.
     // For things like status, don't need to worry since they can't change it in settings
     public void updateInfoTxt() {
-        Log.wtf("Update Info Txt CAlled", "CALLED");
+        if (MyDebug.LOG) Log.wtf
+                ("Update Info Txt CAlled", "CALLED");
         final DocumentReference docRef = db.collection("userPass").document(userPassID);
         listener = docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot snapshot, @Nullable FirebaseFirestoreException e) {
                 if (statusTextView != null && isSafe()) {
                     if (e != null) {
-                        Log.wtf("USERPATH ERROR", "Listen failed.", e);
+                        if (MyDebug.LOG) Log.wtf
+                                ("USERPATH ERROR", "Listen failed.", e);
                         makeSnackBar(3000, "Could not load your data. Are you connected to the internet?");
                         return;
                     }
@@ -335,24 +346,102 @@ public class DashboardFragment extends Fragment {
                             if (vib.hasVibrator())
                                 vib.vibrate(pattern, -1);
                             largeToast("Your COVID Status was updated!");
+                            updateStatustxt(snapshot.getString("Status").toString());
                         }
                         writeNewInfo(snapshot.getData());
                         updateLayout();
-                        Log.wtf("*------ INFO RETRIEVED (Patient) -----", source + " data: " + snapshot.getData());
+                        if (MyDebug.LOG) Log.wtf
+                                ("*------ INFO RETRIEVED (Patient) -----", source + " data: " + snapshot.getData());
                     } else if (source2.contains("cach")) {
                         makeSnackBar(4000, "Loaded offline data. Connect to the internet for updated information.");
                         writeNewInfo(snapshot.getData());
                         updateLayout();
                     } else if (snapshot == null) {
                         makeSnackBar(2000, "Could not load new data.");
-                        Log.wtf("ERROR", source + " data: null");
+                        if (MyDebug.LOG) Log.wtf
+                                ("ERROR", source + " data: null");
                     } else {
-                        Log.wtf("ERROR", source + " data: null");
+                        if (MyDebug.LOG) Log.wtf
+                                ("ERROR", source + " data: null");
                     }
                 }
 
             }
         });
+
+    }
+
+    public void updateStatustxt(String stat) {
+        String info = readFromFile("statusUpdate.txt", getContext());
+        String[] contents = info.split("-----|\\W+|\\n|\\r");
+        boolean match = false;
+        String matchingStatus = "";
+        //Bob-----Unknown-----
+        int position = 0;
+        String before = "";
+        String after = "";
+        String logger = "";
+        //for (String s : contents) logger += "-" + s + "-\n";
+        //before = contents[0] + "-----";
+        ArrayList<String> al = new ArrayList<>();
+        for (String s : contents) {
+            if (s.isEmpty() || s.length() < 5) {
+
+            } else {
+                al.add(s);
+                logger += "-" + s + "-\n";
+            }
+        }
+        //contents = (String[]) al.toArray();
+        contents = al.toArray(new String[al.size()]);
+        if (MyDebug.LOG) Log.wtf
+                ("*Logger", logger);
+        for (int i = 0; i < contents.length - 1; i += 2) {
+            if (contents[i].equals(username)) {
+                match = true;
+                position = i;
+                if (i + 1 < contents.length)
+                    matchingStatus = contents[i + 1];
+                //break;
+            } else if (match) {
+                after += contents[i] + "-----" + contents[i + 1] + "-----";
+            } else {
+                before += contents[i] + "-----" + contents[i + 1] + "-----";
+            }
+        }
+        if (MyDebug.LOG) Log.wtf
+                ("*readUpdate()", username + " " + match + ": " + matchingStatus + ", " + stat + "--" + info + "  b4:--" + before + "--af: " + after);
+        if (match) {
+            //README Status right now (updated when they hit the login button)
+            // is different from status from last sign in.
+            if (!matchingStatus.equals(stat)) {
+                //DONE Make notification
+                String replaceCurrentUser = before + username + "-----" + stat + "-----" + after;
+                if (MyDebug.LOG) Log.wtf
+                        ("*replaceCurrentUser", replaceCurrentUser);
+                //writeToInfo("statusUpdate.txt", replaceCurrentUser);
+                writeToStatusUpdate(replaceCurrentUser);
+
+
+            }
+        } else {
+            //DONE Write whatever their current username and status is.
+            //README They are a new user and their info is not in statusUpdate.txt
+            String writeNewUser = username + "-----" + stat + "-----" + before;
+            writeToStatusUpdate(writeNewUser);
+
+        }
+    }
+
+    private void writeToStatusUpdate(String data) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getContext().openFileOutput("statusUpdate.txt", Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            if (MyDebug.LOG) Log.wtf
+                    ("*Exception", "File write failed: " + e.toString());
+        }
 
     }
 
@@ -441,7 +530,7 @@ public class DashboardFragment extends Fragment {
         cityLast = data.get("CityU").toString();
         centerLast = data.get("CenterU").toString();
         status = tempStatus;
-        writeToInfo(toWrite);
+        writeToFile("info.txt", toWrite);
     }
 
     public String cleanStatus() {
@@ -487,7 +576,7 @@ public class DashboardFragment extends Fragment {
             statusTextView.setTextSize(37);
             statusTextView.setTextColor(Color.parseColor("#000000"));
             message.setText("Unfortunately, the patient has passed away from COVID. We send our regards.");
-        }*/else if (status.equals("Recovered")) {
+        }*/ else if (status.equals("Recovered")) {
             statusColor1.setBackgroundResource(R.drawable.gradient_border_green);
             statusTextView.setTextSize(37);
             statusTextView.setTextColor(Color.parseColor("#000000"));
@@ -537,24 +626,24 @@ public class DashboardFragment extends Fragment {
         return " " + a + s.substring(s.indexOf(":"), secondIdex) + " " + end;
     }
 
-
-    private void writeToInfo(String data) {
+    private void writeToFile(String file, String data) {
         if (isSafe()) {
             try {
-                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getContext().openFileOutput("info.txt", Context.MODE_PRIVATE));
+                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getContext().openFileOutput(file, Context.MODE_PRIVATE));
                 outputStreamWriter.write(data);
                 outputStreamWriter.close();
             } catch (IOException e) {
-                Log.e("Exception", "File write failed: " + e.toString());
+                if (MyDebug.LOG) Log.wtf
+                        ("*Exception", "File write failed: " + e.toString());
             }
         }
     }
 
-
     private void readStorage() {
         String info = readFromFile("info.txt", getContext());
         String[] contents = info.split("___________");
-        Log.wtf("Read Status-", contents[8]);
+        if (MyDebug.LOG) Log.wtf
+                ("Read Status-", contents[8]);
         type = (contents[0]);
         documentID = (contents[1]);
         username = (contents[2]);
@@ -592,9 +681,11 @@ public class DashboardFragment extends Fragment {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-            Log.wtf("login activity", "File not found: " + e.toString());
+            if (MyDebug.LOG) Log.wtf
+                    ("login activity", "File not found: " + e.toString());
         } catch (IOException e) {
-            Log.wtf("login activity", "Can not read file: " + e.toString());
+            if (MyDebug.LOG) Log.wtf
+                    ("login activity", "Can not read file: " + e.toString());
         }
 
         return ret;
@@ -603,7 +694,8 @@ public class DashboardFragment extends Fragment {
     public void loadInformationOld() {
         generalInfo = new HashMap<>();
         statusUpdates = new ArrayList<>();
-        Log.wtf("*-*-- LOCATION: ", "loadInformation() called");
+        if (MyDebug.LOG) Log.wtf
+                ("*-*-- LOCATION: ", "loadInformation() called");
         //TODO Make notification onEvent
         final DocumentReference docRef = db.collection(patientsPath).document(documentID);
         final CollectionReference updatesRef = db.collection(patientsPath + "/" + documentID + "/" + "Updates");
@@ -612,7 +704,8 @@ public class DashboardFragment extends Fragment {
             public void onEvent(@Nullable DocumentSnapshot snapshot,
                                 @Nullable FirebaseFirestoreException e) {
                 if (e != null) {
-                    Log.wtf("ERROR", "Listen failed.", e);
+                    if (MyDebug.LOG) Log.wtf
+                            ("ERROR", "Listen failed.", e);
                     makeSnackBar(3000, "Could not load your data. Are you connected to the internet?");
                     return;
                 }
@@ -625,7 +718,8 @@ public class DashboardFragment extends Fragment {
                         //counter++;
                         for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots.getDocuments()) {
                             if (e != null) {
-                                Log.wtf("ERROR", "Listen failed.", e);
+                                if (MyDebug.LOG) Log.wtf
+                                        ("ERROR", "Listen failed.", e);
                                 return;
                             }
                             counter++;
@@ -637,16 +731,19 @@ public class DashboardFragment extends Fragment {
                             if (documentSnapshot != null && documentSnapshot.exists() && source.equals("Server")) {
                                 statusUpdates.add((HashMap) documentSnapshot.getData());
                                 //textView.setText("TEST: " + counter);
-                                Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + documentSnapshot.getData());
+                                if (MyDebug.LOG) Log.wtf
+                                        ("*------ INFO RETRIEVED -----", source + " data: " + documentSnapshot.getData());
                             } else if (source2.contains("cac")) {
                                 makeSnackBar(4000, "Loaded offline data. Connect to the internet for updated information.");
                                 statusUpdates.add((HashMap) documentSnapshot.getData());
                             } else {
-                                Log.wtf("ERROR", source + " data: null");
+                                if (MyDebug.LOG) Log.wtf
+                                        ("ERROR", source + " data: null");
                                 makeSnackBar(3000, "No data could be found. Are you connected to the internet?");
                             }
                         }
-                        Log.wtf("COUNTER VALUE", "-------------------- " + counter);
+                        if (MyDebug.LOG) Log.wtf
+                                ("COUNTER VALUE", "-------------------- " + counter);
                         pair = new Pair<>(generalInfo, statusUpdates);
                         //updateLayout();
                     }
@@ -659,13 +756,16 @@ public class DashboardFragment extends Fragment {
                     pair = new Pair<>(generalInfo, statusUpdates);
                     //updateLayout();
                     //textView.setText("TEST: " + counter);
-                    Log.wtf("*------ INFO RETRIEVED -----", source + " data: " + snapshot.getData());
+                    if (MyDebug.LOG) Log.wtf
+                            ("*------ INFO RETRIEVED -----", source + " data: " + snapshot.getData());
                 } else if (snapshot == null) {
                     //generalInfo.put("ERROR STATE", "Fail");
                     makeSnackBar(2000, "Could not load new data.");
-                    Log.wtf("ERROR", source + " data: null");
+                    if (MyDebug.LOG) Log.wtf
+                            ("ERROR", source + " data: null");
                 } else {
-                    Log.wtf("ERROR", source + " data: null");
+                    if (MyDebug.LOG) Log.wtf
+                            ("ERROR", source + " data: null");
                 }
             }
         });

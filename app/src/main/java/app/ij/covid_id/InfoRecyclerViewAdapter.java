@@ -223,7 +223,7 @@ public class InfoRecyclerViewAdapter extends RecyclerView.Adapter<InfoRecyclerVi
             holder.image.setImageBitmap(bitmapList.get(username));
             //Log.wtf("*-& Using Bitmap List", username);
         } else {
-            holder.image.setImageBitmap(loadImageBitmap(context, map.get("User").toString(), "jpg"));
+            holder.image.setImageBitmap(loadImageBitmap(context, map.get("Orig").toString(), "jpg"));
             //Log.wtf("*-& Getting from Storage", username);
         }
         if (DoctorStatuses3.loadingResults != null && position == (Math.min(list.size() - 1, 12))

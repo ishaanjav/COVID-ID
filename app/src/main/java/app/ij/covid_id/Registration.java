@@ -92,12 +92,15 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -533,24 +536,9 @@ public class Registration extends AppCompatActivity {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             boolean unique = task.getResult().size() == 0;
-                            /*true;
-                            String curUser = user.getText().toString().trim();
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                String r = document.get("User").toString();
-                                Log.wtf("DOCUMENT READ: ", curUser + " =>  " + document.get("User").toString());
-                                if (r.equals(curUser)) {
-                                    makeSnackBar(3700, "Your username was just taken. Please choose another username.");
-                                    unique = false;
-                                    break;
-                                }
-                            }*/
                             if (unique) {
                                 //INFO Username is unique.
-                                /*db.collection("userPass")
-                                        .add(userPass)
-                                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                            @Override
-                                            public void onSuccess(DocumentReference documentReference) {*/
+
                                 String s = user.getText().toString().trim().trim() + ".jpg";
                                 StorageReference storageReference2 = FirebaseStorage.getInstance().getReference(s);
                                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -621,6 +609,8 @@ public class Registration extends AppCompatActivity {
                                                                                                 dialog.cancel();
                                                                                                 Log.wtf("TIMES", "" + System.currentTimeMillis());
                                                                                                 writeToFile(doctor ? "Doctor" : "Patient", getApplicationContext());
+                                                                                                String update = readFromFile("statusUpdate.txt", getApplicationContext());
+                                                                                                writeToUpdate(user.getText().toString() + "-----Unknown-----"  + update, getApplicationContext());
                                                                                                 //IMPORTANT Account has successfully been created.
                                                                                                 Intent finish = new Intent(Registration.this, MainActivity.class);
                                                                                                 finish.putExtra("Type", doctor ? "Doctor" : "Patient");
@@ -687,15 +677,6 @@ public class Registration extends AppCompatActivity {
                                 unique = false;
                                 dialog.cancel();
                             }
-                                      /*  })
-                                        .addOnFailureListener(new OnFailureListener() {
-                                            @Override
-                                            public void onFailure(@NonNull Exception e) {
-                                                dialog.cancel();
-                                                Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
-                                            }
-                                        });*/
                         } else {
                             dialog.cancel();
                             makeSnackBar(6000, "Could not process whether your username is unique. Please have a stable internet connection.");
@@ -717,68 +698,44 @@ public class Registration extends AppCompatActivity {
         // First ask dad if someone deletes account or changes account whether new users can use their username or not.
         // IF they can't use (that is easier a lot).
 
-       /* db.collection("Patients").document("Patient1")
-                .set(user)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.wtf("TESTING", "DocumentSnapshot added with ID: ");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                    }
-                });
+    }
 
-        db.collection("Patients")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.wtf("READING: READING:  ", document.getId() + " => " + document.getData());
-                                makeToast("Document ID: " + document.getId() + " =>  " + document.getData());
-                            }
-                        } else {
-                            Log.w("FAILED TO READ ---", "Error getting documents.", task.getException());
-                        }
-                    }
-                });*/
-// Add a new document with a generated ID
-        /*db.collection("Patients")
-                .add(user)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Log.wtf("TESTING", "DocumentSnapshot added with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                    }
-                });
+    private String readFromFile(String file, Context context) {
+        String ret = "";
 
-        db.collection("Patients")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.wtf("READING: READING:  ", document.getId() + " => " + document.getData());
-                                makeToast("Document ID: " + document.getId() + " =>  " + document.getData());
-                            }
-                        } else {
-                            Log.w("FAILED TO READ ---", "Error getting documents.", task.getException());
-                        }
-                    }
-                });*/
+        try {
+            InputStream inputStream = context.openFileInput(file);
 
+            if (inputStream != null) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ((receiveString = bufferedReader.readLine()) != null) {
+                    stringBuilder.append("\n").append(receiveString);
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+            }
+        } catch (FileNotFoundException e) {
+            Log.wtf("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.wtf("login activity", "Can not read file: " + e.toString());
+        }
+
+        return ret;
+    }
+
+    private void writeToUpdate(String data, Context context) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("statusUpdate.txt", Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
     }
 
     private void writeToFile(String data, Context context) {
@@ -849,6 +806,8 @@ public class Registration extends AppCompatActivity {
             pictureGood = true;
         if (sUser.length() < 6)
             makeSnackBar(2000, "Please make your username longer.");
+        else if (sUser.contains(" "))
+            makeSnackBar(2000, "No spaces allowed in the username.");
         else if (!uniqueUsername())
             makeSnackBar(2600, "This username already exists. Please choose another.");
         else if (sPass.length() < 6)
@@ -978,6 +937,8 @@ public class Registration extends AppCompatActivity {
 
         if (sUser.length() < 6)
             makeSnackBar(2000, "Please make your username longer.");
+        else if (sUser.contains(" "))
+            makeSnackBar(2000, "No spaces allowed in the username.");
         else if (!uniqueUsername())
             makeSnackBar(2600, "This username already exists. Please choose another.");
         else if (sPass.length() < 6)
@@ -1975,7 +1936,7 @@ public class Registration extends AppCompatActivity {
                     bitmap = RotateBitmap(bitmap, 270f);
                     photo.setImageBitmap(bitmap);
                     Vibrator vibrator = (Vibrator) Registration.this.getSystemService(Context.VIBRATOR_SERVICE);
-                    vibrator.vibrate(250);
+                    vibrator.vibrate(200);
                 }
                 return false;
             }
@@ -1988,7 +1949,7 @@ public class Registration extends AppCompatActivity {
                         bitmap = RotateBitmap(bitmap, 90f);
                         photo.setImageBitmap(bitmap);
                         Vibrator vibrator = (Vibrator) Registration.this.getSystemService(Context.VIBRATOR_SERVICE);
-                        vibrator.vibrate(250);
+                        vibrator.vibrate(200);
                     }
                     return super.onDoubleTap(e);
                 }

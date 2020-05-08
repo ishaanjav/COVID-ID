@@ -150,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
                 .setCacheSizeBytes(300000000)
                 .build();
         db = FirebaseFirestore.getInstance();
-        db.setFirestoreSettings(settings);
+        //db.setFirestoreSettings(settings);
         title = findViewById(R.id.title);
         username = findViewById(R.id.user);
         password = findViewById(R.id.pass);
@@ -229,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
                 writeToFile("Done", getApplicationContext());
             }
         }
+        //patientContinue();
 
     }
 
