@@ -199,7 +199,7 @@ public class Registration extends AppCompatActivity {
         //patientCard1.setVisibility(View.INVISIBLE);
 
         //textWatcher();
-
+        checkVisible = false;
         RadioGroup.OnCheckedChangeListener changeListener = new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int i) {
@@ -283,28 +283,9 @@ public class Registration extends AppCompatActivity {
         pass = patientCard1.findViewById(R.id.pass);
         name = patientCard1.findViewById(R.id.name);
         phone = patientCard1.findViewById(R.id.phone);
-        phone.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
-        phone.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-                phoneChanged = true;
-                sPhone = editable.toString().trim();
-                /*if (sPhone.length() > 0 && firstDigit(sPhone) == '1' && sPhone.contains("(") && (sPhone.indexOf("(") > sPhone.indexOf("1")) && digitLength(sPhone) >= 9 && digitLength(sPhone) != 11)
-                        shortToast("You only have " + (digitLength(sPhone) - 1) + " digits following the country code 1.");
-                if (sPhone.length() > 0 && firstDigit(sPhone) == '1' && sPhone.contains("(") && (sPhone.indexOf("(") > sPhone.indexOf("1")) && digitLength(sPhone) == 11)
-                    toast.cancel();*/
-            }
-        });
+        confirmPass = patientCard1.findViewById(R.id.confirmpass);
+        check = patientCard1.findViewById(R.id.check);
+        textWatcher();
         email = patientCard1.findViewById(R.id.email);
         city = patientCard1.findViewById(R.id.city);
         state = patientCard1.findViewById(R.id.state);
@@ -320,7 +301,6 @@ public class Registration extends AppCompatActivity {
         patientContinue = patientCard1.findViewById(R.id.patientContinue);
         patientBack1 = patientCard1.findViewById(R.id.patientPrevious1);
         confirmPassToggle = patientCard1.findViewById(R.id.passtoggle2);
-        confirmPass = patientCard1.findViewById(R.id.confirmpass);
         passToggle = patientCard1.findViewById(R.id.passtoggle);
         spinners();
         helpers();
@@ -338,32 +318,15 @@ public class Registration extends AppCompatActivity {
         pass = doctorCard1.findViewById(R.id.pass);
         name = doctorCard1.findViewById(R.id.name);
         phone = doctorCard1.findViewById(R.id.phone);
+        confirmPass = doctorCard1.findViewById(R.id.confirmpass);
+        check = doctorCard1.findViewById(R.id.check);
+        textWatcher();
         medicalLicense = doctorCard1.findViewById(R.id.doctorLicense);
-        phone.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
-        phone.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-                phoneChanged = true;
-                sPhone = editable.toString().trim();
-
-            }
-        });
         email = doctorCard1.findViewById(R.id.email);
         city = doctorCard1.findViewById(R.id.city);
         medicalCenter = doctorCard1.findViewById(R.id.medicalCenterName);
         medicalCenterHelp = doctorCard1.findViewById(R.id.medicalCenterHelp);
         state = doctorCard1.findViewById(R.id.state);
-        confirmPass = doctorCard1.findViewById(R.id.confirmpass);
         country = doctorCard1.findViewById(R.id.country);
         phoneHelp = doctorCard1.findViewById(R.id.phoneHelp);
         medicalHelp = doctorCard1.findViewById(R.id.medicalLicenseHelp);
@@ -500,7 +463,7 @@ public class Registration extends AppCompatActivity {
             }
         }, 27460);
         final long start = System.currentTimeMillis();
-         if(MyDebug.LOG) Log.wtf("-_--START", "" + start);
+        if (MyDebug.LOG) Log.wtf("-_--START", "" + start);
         final Map<String, Object> userPass = new HashMap<>();
         userPass.put("User", user.getText().toString().trim());
         userPass.put("Orig", user.getText().toString().trim());
@@ -528,8 +491,8 @@ public class Registration extends AppCompatActivity {
         userPass.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
         userPass.put("Country", (country.getSelectedItem().toString()));
         userPass.put("Email", email.getText().toString().trim());
-        db.collection("userPass")
-                .whereEqualTo("User", user.getText().toString())
+        db.collection("u")
+                .whereEqualTo("u", user.getText().toString())
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -538,137 +501,167 @@ public class Registration extends AppCompatActivity {
                             boolean unique = task.getResult().size() == 0;
                             if (unique) {
                                 //INFO Username is unique.
-
-                                String s = user.getText().toString().trim().trim() + ".jpg";
-                                StorageReference storageReference2 = FirebaseStorage.getInstance().getReference(s);
-                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                                final byte[] data2 = baos.toByteArray();
-                                 if(MyDebug.LOG) Log.wtf("TIMES", "" + System.currentTimeMillis());
-                                dialog.setProgress(60);
-                                UploadTask uploadTask = storageReference2.putBytes(data2);
-                                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                final HashMap<String, String> uMap = new HashMap<>();
+                                uMap.put("u", user.getText().toString().trim());
+                                uMap.put("n", name.getText().toString().trim());
+                                uMap.put("t", reference);
+                                db.collection("u").document(user.getText().toString().trim())
+                                        .set(uMap).addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
-                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                        //INFO Adding the maint content
-                                        db.collection("userPass")
-                                                .add(userPass)
-                                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                                    @Override
-                                                    public void onSuccess(DocumentReference documentReference) {
-                                                        HashMap<String, String> hashMap = new HashMap<>();
-                                                        hashMap.put("Status", status);
-                                                        hashMap.put("City", city.getText().toString().trim());
-                                                        hashMap.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
-                                                        hashMap.put("Country", (country.getSelectedItem().toString()));
-                                                         if(MyDebug.LOG) Log.wtf("TIMES", "" + System.currentTimeMillis());
-                                                        dialog.setProgress(70);
-                                                        final String userPassDocumentID = documentReference.getPath();
-                                                        map.put("userPass", userPassDocumentID);
-                                                        db.collection("Map").document(user.getText().toString().trim())
-                                                                .set(hashMap)
-                                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                                    @Override
-                                                                    public void onSuccess(Void aVoid) {
-                                                                        DocumentReference doc = db.document(userPassDocumentID);
-                                                                        Map<String, Object> data = new HashMap<>();
-                                                                        //data.put("Doc ID", mainDocumentID);
-                                                                        //IMPORTANT Change it to below because Patient/Doctor will not be used anymore.
-                                                                         if(MyDebug.LOG) Log.wtf("TIMES", "" + System.currentTimeMillis());
-                                                                        dialog.setProgress(80);
-                                                                        data.put("Doc ID", userPassDocumentID);
-                                                                        //IMPORTANT After adding the main info, get the ID and go back to userPass to add it there.
-                                                                        doc.set(data, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    public void onSuccess(Void aVoid) {
+                                        String s = user.getText().toString().trim().trim() + ".jpg";
+                                        StorageReference storageReference2 = FirebaseStorage.getInstance().getReference(s);
+                                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                                        final byte[] data2 = baos.toByteArray();
+                                        if (MyDebug.LOG)
+                                            Log.wtf("TIMES", "" + System.currentTimeMillis());
+                                        dialog.setProgress(60);
+                                        final HashMap<String, String> hashMap = new HashMap<>();
+                                        hashMap.put("Status", status);
+                                        hashMap.put("City", city.getText().toString().trim());
+                                        hashMap.put("State", (country.getSelectedItem().toString().contains("United States")) ? state.getSelectedItem().toString() : "");
+                                        hashMap.put("Country", (country.getSelectedItem().toString()));
+                                        UploadTask uploadTask = storageReference2.putBytes(data2);
+                                        uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                            @Override
+                                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                                //INFO Adding the maint content
+                                                db.collection("Map").document(user.getText().toString().trim())
+                                                        .set(hashMap)
+                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                            @Override
+                                                            public void onSuccess(Void aVoid) {
+                                                                if (MyDebug.LOG)
+                                                                    Log.wtf("TIMES", "" + System.currentTimeMillis());
+                                                                dialog.setProgress(70);
+                                                                db.collection("userPass")
+                                                                        .add(userPass)
+                                                                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                                                                             @Override
-                                                                            public void onSuccess(Void aVoid) {
-                                                                                //INFO Write to "Updates" and put in stuff.
-                                                                                 if(MyDebug.LOG) Log.wtf("TIMES", "" + System.currentTimeMillis());
-                                                                                HashMap<String, Object> updateMap = new HashMap<>();
-                                                                                updateMap.put("Status", status);
-                                                                                updateMap.put("Prev", "n/a");
-                                                                                updateMap.put("City", city.getText().toString().trim());
-                                                                                updateMap.put("State", state.getSelectedItem().toString());
-                                                                                updateMap.put("Country", country.getSelectedItem().toString());
-                                                                                updateMap.put("Date", currentDate + " " + time);
-                                                                                updateMap.put("Doc", (doctor) ? "You" : "n/a");
-                                                                                updateMap.put("Center", "n/a");
-                                                                                updateMap.put("Ph", (doctor) ? phone.getText().toString().trim() : "n/a");
-                                                                                updateMap.put("Donated", (haveDonatedPlasma));
-                                                                                String em = email.getText().toString();
-                                                                                if (em.isEmpty())
-                                                                                    em = "";
-                                                                                dialog.setProgress(90);
-                                                                                updateMap.put("Em", (doctor) ? em : "n/a");
-                                                                                updateMap.put("Note", "n/a");
-                                                                                db.collection(userPassDocumentID + "/Updates")
-                                                                                        .document("Update 1").set(updateMap)
-                                                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                            public void onSuccess(DocumentReference documentReference) {
+                                                                                final String userPassDocumentID = documentReference.getPath();
+                                                                                DocumentReference doc = db.document(userPassDocumentID);
+                                                                                map.put("userPass", userPassDocumentID);
+                                                                                Map<String, Object> data = new HashMap<>();
+                                                                                //data.put("Doc ID", mainDocumentID);
+                                                                                //IMPORTANT Change it to below because Patient/Doctor will not be used anymore.
+                                                                                if (MyDebug.LOG)
+                                                                                    Log.wtf("TIMES", "" + System.currentTimeMillis());
+                                                                                dialog.setProgress(80);
+                                                                                data.put("Doc ID", userPassDocumentID);
+                                                                                //IMPORTANT After adding the main info, get the ID and go back to userPass to add it there.
+                                                                                doc.set(data, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                                    @Override
+                                                                                    public void onSuccess(Void aVoid) {
+                                                                                        //INFO Write to "Updates" and put in stuff.
+                                                                                        if (MyDebug.LOG)
+                                                                                            Log.wtf("TIMES", "" + System.currentTimeMillis());
+                                                                                        HashMap<String, Object> updateMap = new HashMap<>();
+                                                                                        updateMap.put("Status", status);
+                                                                                        updateMap.put("Prev", "n/a");
+                                                                                        updateMap.put("City", city.getText().toString().trim());
+                                                                                        updateMap.put("State", state.getSelectedItem().toString());
+                                                                                        updateMap.put("Country", country.getSelectedItem().toString());
+                                                                                        updateMap.put("Date", currentDate + " " + time);
+                                                                                        updateMap.put("Doc", (doctor) ? "You" : "n/a");
+                                                                                        updateMap.put("Center", "n/a");
+                                                                                        updateMap.put("Ph", (doctor) ? phone.getText().toString().trim() : "n/a");
+                                                                                        updateMap.put("Donated", (haveDonatedPlasma));
+                                                                                        String em = email.getText().toString();
+                                                                                        if (em.isEmpty())
+                                                                                            em = "";
+                                                                                        dialog.setProgress(90);
+                                                                                        updateMap.put("Em", (doctor) ? em : "n/a");
+                                                                                        updateMap.put("Note", "n/a");
+                                                                                        db.collection(userPassDocumentID + "/Updates")
+                                                                                                .document("Update 1").set(updateMap)
+                                                                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                                                    @Override
+                                                                                                    public void onSuccess(Void aVoid) {
+                                                                                                        makeToast("Account created");
+                                                                                                        dialog.setProgress(100);
+                                                                                                        dialog.cancel();
+                                                                                                        if (MyDebug.LOG)
+                                                                                                            Log.wtf("TIMES", "" + System.currentTimeMillis());
+                                                                                                        writeToFile(doctor ? "Doctor" : "Patient", getApplicationContext());
+                                                                                                        String update = readFromFile("statusUpdate.txt", getApplicationContext());
+                                                                                                        writeToUpdate(user.getText().toString() + "-----Unknown-----" + update, getApplicationContext());
+                                                                                                        //IMPORTANT Account has successfully been created.
+                                                                                                        Intent finish = new Intent(Registration.this, MainActivity.class);
+                                                                                                        finish.putExtra("Type", doctor ? "Doctor" : "Patient");
+                                                                                                        long end = System.currentTimeMillis();
+                                                                                                        if (MyDebug.LOG)
+                                                                                                            Log.wtf("-_--END", "" + end);
+                                                                                                        if (MyDebug.LOG)
+                                                                                                            Log.wtf("-_--Upload Time", "" + (end - start));
+                                                                                                        //DONE Uncomment if you want TourGuide each time doctor account is created.
+                                                                                                        if (reference.contains("Doc"))
+                                                                                                            writeToFirstDoctor("yes");
+                                                                                                        else
+                                                                                                            writeToFirstPatient("yes");
+                                                                                                        startActivity(finish);
+                                                                                                        if (MyDebug.LOG)
+                                                                                                            Log.wtf("TESTING", "DocumentSnapshot added with ID: " + userPassDocumentID);
+                                                                                                    }
+                                                                                                }).addOnFailureListener(new OnFailureListener() {
                                                                                             @Override
-                                                                                            public void onSuccess(Void aVoid) {
-                                                                                                makeToast("Account created");
-                                                                                                dialog.setProgress(100);
+                                                                                            public void onFailure(@NonNull Exception e) {
                                                                                                 dialog.cancel();
-                                                                                                 if(MyDebug.LOG) Log.wtf("TIMES", "" + System.currentTimeMillis());
-                                                                                                writeToFile(doctor ? "Doctor" : "Patient", getApplicationContext());
-                                                                                                String update = readFromFile("statusUpdate.txt", getApplicationContext());
-                                                                                                writeToUpdate(user.getText().toString() + "-----Unknown-----"  + update, getApplicationContext());
-                                                                                                //IMPORTANT Account has successfully been created.
-                                                                                                Intent finish = new Intent(Registration.this, MainActivity.class);
-                                                                                                finish.putExtra("Type", doctor ? "Doctor" : "Patient");
-                                                                                                long end = System.currentTimeMillis();
-                                                                                                 if(MyDebug.LOG) Log.wtf("-_--END", "" + end);
-                                                                                                 if(MyDebug.LOG) Log.wtf("-_--Upload Time", "" + (end - start));
-                                                                                                //DONE Uncomment if you want TourGuide each time doctor account is created.
-                                                                                                if (reference.contains("Doc"))
-                                                                                                    writeToFirstDoctor("yes");
-                                                                                                else
-                                                                                                    writeToFirstPatient("yes");
-                                                                                                startActivity(finish);
-                                                                                                 if(MyDebug.LOG) Log.wtf("TESTING", "DocumentSnapshot added with ID: " + userPassDocumentID);
+                                                                                                makeToast(e.getMessage());
+                                                                                                if (MyDebug.LOG)
+                                                                                                    Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
                                                                                             }
-                                                                                        }).addOnFailureListener(new OnFailureListener() {
+                                                                                        });
+                                                                                    }
+                                                                                }).addOnFailureListener(new OnFailureListener() {
                                                                                     @Override
                                                                                     public void onFailure(@NonNull Exception e) {
                                                                                         dialog.cancel();
-                                                                                        makeToast(e.getMessage());
-                                                                                         if(MyDebug.LOG) Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                                                        if (MyDebug.LOG)
+                                                                                            Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
                                                                                         makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
                                                                                     }
                                                                                 });
                                                                             }
                                                                         }).addOnFailureListener(new OnFailureListener() {
-                                                                            @Override
-                                                                            public void onFailure(@NonNull Exception e) {
-                                                                                dialog.cancel();
-                                                                                 if(MyDebug.LOG) Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                                                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
-                                                                            }
-                                                                        });
+                                                                    @Override
+                                                                    public void onFailure(@NonNull Exception e) {
+                                                                        dialog.cancel();
+                                                                        if (MyDebug.LOG)
+                                                                            Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                                        makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
                                                                     }
-                                                                }).addOnFailureListener(new OnFailureListener() {
-                                                            @Override
-                                                            public void onFailure(@NonNull Exception e) {
-                                                                dialog.cancel();
-                                                                 if(MyDebug.LOG) Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
+                                                                });
                                                             }
-                                                        });
+                                                        }).addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+                                                        dialog.cancel();
+                                                        if (MyDebug.LOG)
+                                                            Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
+                                                        makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
                                                     }
-                                                }).addOnFailureListener(new OnFailureListener() {
+                                                });
+                                            }
+                                        }).addOnFailureListener(new OnFailureListener() {
                                             @Override
-                                            public void onFailure(@NonNull Exception e) {
+                                            public void onFailure(@NonNull Exception exception) {
                                                 dialog.cancel();
-                                                 if(MyDebug.LOG) Log.wtf("FAILED FAILED FAILED_____", "Error adding document", e);
-                                                makeSnackBar(5000, "Failed to save information. Make sure you have a stable internet connection and try again.");
+                                                if (MyDebug.LOG)
+                                                    Log.wtf("FAILED FAILED FAILED_____", "Error adding document" + exception.toString());
+                                                makeSnackBar(5000, "Failed to upload information. Make sure you have a stable internet connection and try again.");
                                             }
                                         });
                                     }
                                 }).addOnFailureListener(new OnFailureListener() {
                                     @Override
-                                    public void onFailure(@NonNull Exception exception) {
+                                    public void onFailure(@NonNull Exception e) {
                                         dialog.cancel();
-                                         if(MyDebug.LOG) Log.wtf("FAILED FAILED FAILED_____", "Error adding document" + exception.toString());
-                                        makeSnackBar(5000, "Failed to upload information. Make sure you have a stable internet connection and try again.");
+                                        makeSnackBar(6000, "Could not process whether your username is unique. Please have a stable internet connection.");
+                                        if (MyDebug.LOG)
+                                            Log.wtf("SUCCESS", "Error getting documents: " + e.toString());
                                     }
                                 });
 
@@ -681,7 +674,8 @@ public class Registration extends AppCompatActivity {
                         } else {
                             dialog.cancel();
                             makeSnackBar(6000, "Could not process whether your username is unique. Please have a stable internet connection.");
-                             if(MyDebug.LOG) Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                            if (MyDebug.LOG)
+                                Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
                         }
                     }
                 })
@@ -721,9 +715,9 @@ public class Registration extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-             if(MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
         } catch (IOException e) {
-             if(MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
         }
 
         return ret;
@@ -835,8 +829,8 @@ public class Registration extends AppCompatActivity {
             final ProgressDialog dialog = ProgressDialog.show(Registration.this, null,
                     "Checking username uniqueness...", true);
             dialog.setCancelable(true);
-            db.collection("userPass")
-                    .whereEqualTo("User", user.getText().toString())
+            db.collection("u")
+                    .whereEqualTo("u", user.getText().toString())
                     .get()
                     .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                         @Override
@@ -867,7 +861,8 @@ public class Registration extends AppCompatActivity {
                                 }
                             } else {
                                 dialog.cancel();
-                                 if(MyDebug.LOG) Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                                if (MyDebug.LOG)
+                                    Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
                                 makeSnackBar(7000, "Could not process whether your username is unique. Please have a stable internet connection and try again.");
                             }
                         }
@@ -892,7 +887,7 @@ public class Registration extends AppCompatActivity {
         int count = 0;
         for (char c : phone.toCharArray()) {
             if (Character.isDigit(c)) count++;
-             if(MyDebug.LOG) Log.wtf("***", "" + c);
+            if (MyDebug.LOG) Log.wtf("***", "" + c);
         }
         return count;
     }
@@ -962,8 +957,8 @@ public class Registration extends AppCompatActivity {
             final ProgressDialog dialog = ProgressDialog.show(Registration.this, null,
                     "Checking username uniqueness...", true);
             dialog.setCancelable(true);
-            db.collection("userPass")
-                    .whereEqualTo("User", user.getText().toString())
+            db.collection("u")
+                    .whereEqualTo("u", user.getText().toString())
                     .get()
                     .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                         @Override
@@ -994,7 +989,8 @@ public class Registration extends AppCompatActivity {
                                 }
                             } else {
                                 dialog.cancel();
-                                 if(MyDebug.LOG) Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
+                                if (MyDebug.LOG)
+                                    Log.wtf("SUCCESS", "Error getting documents: ", task.getException());
                                 makeSnackBar(7000, "Could not process whether your username is unique. Please have a stable internet connection and try again.");
                             }
                         }
@@ -1007,6 +1003,8 @@ public class Registration extends AppCompatActivity {
             });
         }
     }
+
+    ImageView check;
 
     private void initializeDoctor2() {
         doctorBack2 = doctorCard2.findViewById(R.id.doctorPrevious2);
@@ -1141,10 +1139,12 @@ public class Registration extends AppCompatActivity {
         return pat.matcher(email).matches();
     }
 
+    boolean checkVisible;
+    String confirmPrev, curPrev;
 
     private void textWatcher() {
         //FUTURE If you want to then make this where it makes the button green from grey if they can continue.
-        TextWatcher user1 = new TextWatcher() {
+        name.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -1157,12 +1157,146 @@ public class Registration extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                String s = user.getText().toString().trim();
-                //if(s.length()> 4)
+                String s = editable.toString().trim();
+                if (s.length() > 40) {
+                    shortToast("Your name is too long.");
+                    name.setText(s.substring(0, 35));
+                    name.setSelection(40);
+                }
+            }
+        });
+        confirmPass.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                confirmPrev = charSequence.toString();
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
             }
-        };
-        user.addTextChangedListener(user1);
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                String s = editable.toString().trim();
+                check.setVisibility(View.INVISIBLE);
+                if (!confirmPrev.equals(s)) {
+                    if (s != null && !s.isEmpty()) {
+                        if (s.equals(pass.getText().toString())) {
+                            Animation slide = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom_in_50);
+                            check.startAnimation(slide);
+
+                            check.setVisibility(View.VISIBLE);
+                            checkVisible = true;
+                        } else {
+                            if (checkVisible) {
+                                Animation slide = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom_out_50);
+                                check.startAnimation(slide);
+                            }
+                            checkVisible = false;
+                            check.setVisibility(View.INVISIBLE);
+                        }
+                    } else {
+                        if (checkVisible) {
+                            Animation slide = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom_out_50);
+                            check.startAnimation(slide);
+                        }
+                        checkVisible = false;
+                        check.setVisibility(View.INVISIBLE);
+                    }
+                }
+            }
+        });
+        pass.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                curPrev = charSequence.toString();
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                String s = editable.toString().trim();
+                if (s.length() > 30) {
+                    shortToast("Your password is too long.");
+                    pass.setText(s.substring(0, 30));
+                    pass.setSelection(30);
+                }
+                if (!curPrev.equals(s)) {
+                    check.setVisibility(View.INVISIBLE);
+                    if (s != null && !s.isEmpty()) {
+                        if (s.equals(confirmPass.getText().toString())) {
+                            Animation slide = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom_in_50);
+                            check.startAnimation(slide);
+
+                            check.setVisibility(View.VISIBLE);
+                            checkVisible = true;
+                        } else {
+                            if (checkVisible) {
+                                Animation slide = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom_out_50);
+                                check.startAnimation(slide);
+                            }
+                            checkVisible = false;
+                            check.setVisibility(View.INVISIBLE);
+                        }
+                    } else {
+                        if (checkVisible) {
+                            Animation slide = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.zoom_out_50);
+                            check.startAnimation(slide);
+                        }
+                        checkVisible = false;
+                        check.setVisibility(View.INVISIBLE);
+                    }
+                }
+            }
+        });
+        user.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                String s = editable.toString().trim();
+                if (s.length() > 30) {
+                    shortToast("Your username is too long.");
+                    user.setText(s.substring(0, 30));
+                    user.setSelection(30);
+                }
+            }
+        });
+        phone.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
+        phone.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                phoneChanged = true;
+                sPhone = editable.toString().trim();
+                /*if (sPhone.length() > 0 && firstDigit(sPhone) == '1' && sPhone.contains("(") && (sPhone.indexOf("(") > sPhone.indexOf("1")) && digitLength(sPhone) >= 9 && digitLength(sPhone) != 11)
+                        shortToast("You only have " + (digitLength(sPhone) - 1) + " digits following the country code 1.");
+                if (sPhone.length() > 0 && firstDigit(sPhone) == '1' && sPhone.contains("(") && (sPhone.indexOf("(") > sPhone.indexOf("1")) && digitLength(sPhone) == 11)
+                    toast.cancel();*/
+            }
+        });
     }
 
     boolean pictureGood;
@@ -1410,7 +1544,7 @@ public class Registration extends AppCompatActivity {
                     makeToast("Double tap or long press the image to rotate it.");
                     ;
                 } catch (IOException e) {
-                     if(MyDebug.LOG) Log.wtf("Error", e.toString());
+                    if (MyDebug.LOG) Log.wtf("Error", e.toString());
                     makeToast("Error. Try again or use the camera.");
                 }
 
@@ -1593,13 +1727,15 @@ public class Registration extends AppCompatActivity {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                 byte[] imageInByte = stream.toByteArray();
                 lengthbmp = imageInByte.length;
-                 if(MyDebug.LOG) Log.wtf("-_- BEFORE IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
+                if (MyDebug.LOG)
+                    Log.wtf("-_- BEFORE IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
 
                 stream = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream);
                 imageInByte = stream.toByteArray();
                 lengthbmp = imageInByte.length;
-                 if(MyDebug.LOG) Log.wtf("-_- AFTER IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
+                if (MyDebug.LOG)
+                    Log.wtf("-_- AFTER IMAGE SIZE: ", "" + lengthbmp + " " + bitmap.getWidth() + " " + bitmap.getHeight());
 
                 photo.setImageBitmap(bitmap);
                 takenPicture = true;
@@ -2262,7 +2398,8 @@ public class Registration extends AppCompatActivity {
             case MotionEvent.ACTION_UP:
                 x2 = event.getX();
                 float deltaX = x2 - x1;
-                 if(MyDebug.LOG) Log.wtf("**POSITIONS: ", x1 + " " + x2 + "---- " + deltaX + "   . MIN: " + MIN_DISTANCE);
+                if (MyDebug.LOG)
+                    Log.wtf("**POSITIONS: ", x1 + " " + x2 + "---- " + deltaX + "   . MIN: " + MIN_DISTANCE);
                 if (deltaX > MIN_DISTANCE) {
                     //makeToast("Left");
                     handleSwipe(true);
@@ -2278,7 +2415,7 @@ public class Registration extends AppCompatActivity {
 
     private void handleSwipe(boolean b) {
         //If b is true --> They want to see left page (previous).
-         if(MyDebug.LOG) Log.wtf("**CurrentPage", page + " " + b);
+        if (MyDebug.LOG) Log.wtf("**CurrentPage", page + " " + b);
         if (b) {
             //Current Page Direction A
             if (page == Page.PATIENT1) {

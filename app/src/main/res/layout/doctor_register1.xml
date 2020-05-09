@@ -79,6 +79,16 @@
                 android:textCursorDrawable="@null"
                 android:textSize="20sp" />
 
+            <ImageView
+                android:id="@+id/check"
+                android:layout_width="28sp"
+                android:layout_height="28sp"
+                android:layout_below="@id/pass"
+                android:layout_marginLeft="8sp"
+                android:visibility="invisible"
+                android:layout_marginTop="11sp"
+                android:src="@drawable/check" />
+
             <EditText
                 android:id="@+id/confirmpass"
                 android:layout_width="wrap_content"
@@ -353,10 +363,10 @@
                 android:id="@+id/cardholder"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
                 android:layout_alignTop="@+id/photo"
-                android:layout_marginRight="16sp"
+                android:layout_alignParentRight="true"
                 android:layout_marginTop="16sp"
+                android:layout_marginRight="16sp"
                 app:cardCornerRadius="14sp"
                 app:cardElevation="7sp">
 
@@ -391,10 +401,10 @@
                 android:id="@+id/removeholder"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
                 android:layout_alignBottom="@+id/photo"
-                android:layout_marginBottom="6sp"
+                android:layout_alignParentRight="true"
                 android:layout_marginRight="16sp"
+                android:layout_marginBottom="6sp"
                 app:cardCornerRadius="13sp"
                 app:cardElevation="7sp">
 

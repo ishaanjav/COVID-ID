@@ -115,6 +115,16 @@
                     android:src="@drawable/hidepassword" />
             </RelativeLayout>
 
+            <ImageView
+                android:id="@+id/check"
+                android:layout_width="28sp"
+                android:layout_height="28sp"
+                android:layout_below="@id/pass"
+                android:layout_marginLeft="8sp"
+                android:visibility="invisible"
+                android:layout_marginTop="11sp"
+                android:src="@drawable/check" />
+
             <EditText
                 android:id="@+id/confirmpass"
                 android:layout_width="wrap_content"
