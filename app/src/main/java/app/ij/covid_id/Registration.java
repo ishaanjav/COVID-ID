@@ -1160,7 +1160,7 @@ public class Registration extends AppCompatActivity {
                 String s = editable.toString().trim();
                 if (s.length() > 40) {
                     shortToast("Your name is too long.");
-                    name.setText(s.substring(0, 35));
+                    name.setText(s.substring(0, 40));
                     name.setSelection(40);
                 }
             }
