@@ -117,7 +117,6 @@ public class MainActivity extends AppCompatActivity {
         //startActivity(new Intent(MainActivity.this, DoctorDashboard.class));
 
         overridePendingTransition(R.anim.fast_fade_in, R.anim.fast_fade_out);
-
         //makeToast("REMOVED: " + removeFile("update"));
         String logged_in = readFromFile("login.txt", getApplicationContext());
         if (!logged_in.contains("fal") && !logged_in.isEmpty()) {

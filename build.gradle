@@ -3,9 +3,9 @@ buildscript {
     repositories {
         google()
         jcenter()
-        maven() {
+        /*maven() {
             url "https://oss.sonatype.org/content/repositories/snapshots"
-        }
+        }*/
     }
     dependencies {
         classpath "com.android.tools.build:gradle:4.0.0-beta04"
@@ -14,6 +14,8 @@ buildscript {
         // in the individual module build.gradle files
         classpath 'com.google.gms:google-services:4.3.3'
 
+        //Crashlytics Gradle plugin
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.1.0'
     }
 }
 
