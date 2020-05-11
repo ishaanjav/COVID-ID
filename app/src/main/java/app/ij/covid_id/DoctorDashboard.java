@@ -20,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import androidx.annotation.NonNull;
@@ -64,6 +65,8 @@ public class DoctorDashboard extends AppCompatActivity {
         navView = findViewById(R.id.nav_view);
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
+        FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();
+
         screen = findViewById(R.id.container);
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.navigation_home, R.id.navigation_patients, R.id.navigation_dashboard, R.id.navigation_notifications)
@@ -124,9 +127,11 @@ public class DoctorDashboard extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-             if(MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         } catch (IOException e) {
-             if(MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
 
         return ret;
@@ -145,16 +150,16 @@ public class DoctorDashboard extends AppCompatActivity {
         //for (String s : contents) logger += "-" + s + "-\n";
         //before = contents[0] + "-----";
         ArrayList<String> al = new ArrayList<>();
-        for(String s: contents){
-            if(s.isEmpty() || s.length()< 5){
+        for (String s : contents) {
+            if (s.isEmpty() || s.length() < 5) {
 
-            }else{
+            } else {
                 al.add(s);
                 logger += "-" + s + "-\n";
             }
         }
         contents = al.toArray(new String[al.size()]);
-         if(MyDebug.LOG) Log.wtf("*Logger", logger);
+        if (MyDebug.LOG) Log.wtf("*Logger", logger);
         for (int i = 0; i < contents.length - 1; i += 2) {
             if (contents[i].equals(username)) {
                 match = true;
@@ -168,7 +173,8 @@ public class DoctorDashboard extends AppCompatActivity {
                 before += contents[i] + "-----" + contents[i + 1] + "-----";
             }
         }
-         if(MyDebug.LOG) Log.wtf("*readUpdate()", username + " " + match + ": " + matchingStatus + ", " + status + "--" + info + "  b4:--" + before + "--af: " + after);
+        if (MyDebug.LOG)
+            Log.wtf("*readUpdate()", username + " " + match + ": " + matchingStatus + ", " + status + "--" + info + "  b4:--" + before + "--af: " + after);
         if (match) {
             //README Status right now (updated when they hit the login button)
             // is different from status from last sign in.
@@ -181,17 +187,17 @@ public class DoctorDashboard extends AppCompatActivity {
                 largeToast("Your COVID Status was updated!");
 
                 String replaceCurrentUser = before + username + "-----" + status + "-----" + after;
-                 if(MyDebug.LOG) Log.wtf("*replaceCurrentUser", replaceCurrentUser);
+                if (MyDebug.LOG) Log.wtf("*replaceCurrentUser", replaceCurrentUser);
                 //writeToInfo("statusUpdate.txt", replaceCurrentUser);
                 writeToStatusUpdate(replaceCurrentUser);
-                
+
             }
         } else {
             //DONE Write whatever their current username and status is.
             //README They are a new user and their info is not in statusUpdate.txt
             String writeNewUser = username + "-----" + status + "-----" + info;
             writeToStatusUpdate(writeNewUser);
-            
+
         }
     }
 
@@ -201,7 +207,8 @@ public class DoctorDashboard extends AppCompatActivity {
             outputStreamWriter.write(data);
             outputStreamWriter.close();
         } catch (IOException e) {
-             if(MyDebug.LOG) Log.wtf("*Exception", "File write failed: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("*Exception", "File write failed: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
 
     }
@@ -231,6 +238,7 @@ public class DoctorDashboard extends AppCompatActivity {
             outputStreamWriter.close();
         } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
     }
 
@@ -255,9 +263,11 @@ public class DoctorDashboard extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-             if(MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         } catch (IOException e) {
-             if(MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
 
         return ret;
@@ -323,7 +333,7 @@ public class DoctorDashboard extends AppCompatActivity {
     }
 
     public void removeListeners() {
-         if(MyDebug.LOG) Log.wtf("INFO", "Doctor Dashboard: Removing Listeners");
+        if (MyDebug.LOG) Log.wtf("INFO", "Doctor Dashboard: Removing Listeners");
         if (DoctorDashboardFragment.listener != null)
             DoctorDashboardFragment.listener.remove();
         if (DoctorDashboardFragment.listener2 != null)
@@ -372,9 +382,11 @@ public class DoctorDashboard extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-             if(MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         } catch (IOException e) {
-             if(MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
+            if (MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
 
         return ret;
@@ -391,6 +403,7 @@ public class DoctorDashboard extends AppCompatActivity {
         } catch (IOException e) {
             //makeSnackBar(4000, "Could not load info. Try logging out and logging back in.");
             Log.e("Exception", "File write failed: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
     }
 
@@ -413,7 +426,8 @@ public class DoctorDashboard extends AppCompatActivity {
         String readUsers = readUsers(getApplicationContext());
         List<String> users = Arrays.asList(readUsers.split("-------"));
 
-         if(MyDebug.LOG) Log.wtf("*-* Users List:", "SIZE: " + users.size() + " " + users.toString());
+        if (MyDebug.LOG)
+            Log.wtf("*-* Users List:", "SIZE: " + users.size() + " " + users.toString());
         File location = new File(directory);
         File[] files = location.listFiles();
         ArrayList<String> locations = new ArrayList<>();
@@ -425,7 +439,8 @@ public class DoctorDashboard extends AppCompatActivity {
                 count++;
                 if (!users.contains(name.substring(0, name.length() - 4))) {
                     files[i].delete();
-                     if(MyDebug.LOG) Log.wtf("*-* Deleting", users.contains(name.substring(0, name.length() - 4)) + " " + name);
+                    if (MyDebug.LOG)
+                        Log.wtf("*-* Deleting", users.contains(name.substring(0, name.length() - 4)) + " " + name);
                     count--;
                 }
                 //locations.add(name);
@@ -433,12 +448,13 @@ public class DoctorDashboard extends AppCompatActivity {
         }
         for (String s : locations) {
             File temp = new File(directory + "/" + s);
-             if(MyDebug.LOG) Log.wtf("*-* REMOVING", s);
+            if (MyDebug.LOG) Log.wtf("*-* REMOVING", s);
             temp.delete();
         }
         //TODO Remove Below 2 lines and basically all  if(MyDebug.LOG) Log.wtf() that are not needed for deployment.
         files = location.listFiles();
-         if(MyDebug.LOG) Log.wtf("*-* Files", "Path: " + directory + "  # of files: " + files.length + "   # of images: " + count);
+        if (MyDebug.LOG)
+            Log.wtf("*-* Files", "Path: " + directory + "  # of files: " + files.length + "   # of images: " + count);
         return true;
     }
 
@@ -449,6 +465,7 @@ public class DoctorDashboard extends AppCompatActivity {
             outputStreamWriter.close();
         } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
     }
 }

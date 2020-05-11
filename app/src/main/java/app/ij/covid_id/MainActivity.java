@@ -61,6 +61,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
@@ -112,9 +113,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         //writeLogin("false", getApplicationContext());
-        //startActivity(new Intent(MainActivity.this, DoctorDashboard.class));
+
+        FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();
+        startActivity(new Intent(MainActivity.this, DoctorDashboard.class));
 
         overridePendingTransition(R.anim.fast_fade_in, R.anim.fast_fade_out);
         //makeToast("REMOVED: " + removeFile("update"));
@@ -340,8 +342,10 @@ public class MainActivity extends AppCompatActivity {
             }
         } catch (FileNotFoundException e) {
             if (MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
+            //FirebaseCrashlytics.getInstance().recordException(e);
         } catch (IOException e) {
             if (MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
+            //FirebaseCrashlytics.getInstance().recordException(e);
         }
 
         return ret;
@@ -354,6 +358,7 @@ public class MainActivity extends AppCompatActivity {
             outputStreamWriter.close();
         } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
     }
 
@@ -364,6 +369,7 @@ public class MainActivity extends AppCompatActivity {
             outputStreamWriter.close();
         } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
     }
 
@@ -374,6 +380,7 @@ public class MainActivity extends AppCompatActivity {
             outputStreamWriter.close();
         } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
     }
 
@@ -384,6 +391,7 @@ public class MainActivity extends AppCompatActivity {
             outputStreamWriter.close();
         } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
     }
 
@@ -502,8 +510,10 @@ public class MainActivity extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
+            //FirebaseCrashlytics.getInstance().recordException(e);
             if (MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
         } catch (IOException e) {
+            //FirebaseCrashlytics.getInstance().recordException(e);
             if (MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
         }
 
@@ -650,6 +660,7 @@ public class MainActivity extends AppCompatActivity {
 
                                                 }
                                             } catch (Exception e) {
+                                                FirebaseCrashlytics.getInstance().recordException(e);
                                                 if (isNetworkAvailable()) {
                                                     makeSnackBar(3000, "An error occurred. Please try again.");
                                                     loggedIn = true;
@@ -932,7 +943,7 @@ public class MainActivity extends AppCompatActivity {
                 email.putExtra(Intent.EXTRA_EMAIL, new String[]{"covid.ijapps@gmail.com"});
                 email.putExtra(Intent.EXTRA_SUBJECT, "Forgot COVID-ID Login");
                 email.putExtra(Intent.EXTRA_TEXT, "Hello,\n\tI forgot my login credentials for COVID-ID."
-                        + "\n\tMy name is ______, my phone # is _______, and my username is ______.\n\tI am a (doctor, patient)\n\nThank you");
+                        + "\n\tMy name is ___, my phone # is ___, and my username is ___.\n\tI am a (doctor, patient)\n\nThank you");
 
 //need this to prompts email client only
                 email.setType("message/rfc822");

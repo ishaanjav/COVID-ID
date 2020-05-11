@@ -80,6 +80,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
@@ -150,6 +151,7 @@ public class Registration extends AppCompatActivity {
         patient = findViewById(R.id.patient);
         radioGroup = findViewById(R.id.userType);
         next = findViewById(R.id.next);
+        FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();
 
         firstCard = findViewById(R.id.card1);
         patientCard1 = findViewById(R.id.card2);
@@ -715,8 +717,10 @@ public class Registration extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
+            //FirebaseCrashlytics.getInstance().recordException(e);
             if (MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
-        } catch (IOException e) {
+        } catch (IOException e) {//FirebaseCrashlytics.getInstance().recordException(e);
+            //
             if (MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
         }
 
@@ -729,6 +733,7 @@ public class Registration extends AppCompatActivity {
             outputStreamWriter.write(data);
             outputStreamWriter.close();
         } catch (IOException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
             Log.e("Exception", "File write failed: " + e.toString());
         }
     }
@@ -739,6 +744,7 @@ public class Registration extends AppCompatActivity {
             outputStreamWriter.write(data);
             outputStreamWriter.close();
         } catch (IOException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
             Log.e("Exception", "File write failed: " + e.toString());
         }
     }
@@ -1361,6 +1367,7 @@ public class Registration extends AppCompatActivity {
                         ;
                         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                         intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                        makeToast("Take a picture of your face.");
                         startActivityForResult(intent, 100);
                        /* Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, extra);
@@ -1370,7 +1377,7 @@ public class Registration extends AppCompatActivity {
                     //display an error message
                     String errorMessage = "Whoops - your device doesn't support capturing images!";
                     makeToast(errorMessage);
-
+                    FirebaseCrashlytics.getInstance().recordException(anfe);
                 }
             }
         };
@@ -1443,6 +1450,7 @@ public class Registration extends AppCompatActivity {
         Window window = dialog.getWindow();
 
         WindowManager.LayoutParams wlp = window.getAttributes();
+        makeToast("Take a picture of your face.");
 
         /*wlp.gravity = Gravity.BOTTOM;
         wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
@@ -1544,6 +1552,7 @@ public class Registration extends AppCompatActivity {
                     makeToast("Double tap or long press the image to rotate it.");
                     ;
                 } catch (IOException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
                     if (MyDebug.LOG) Log.wtf("Error", e.toString());
                     makeToast("Error. Try again or use the camera.");
                 }
@@ -1659,6 +1668,7 @@ public class Registration extends AppCompatActivity {
                     bitmap = MediaStore.Images.Media.getBitmap(
                             getContentResolver(), imageUri);
                 } catch (IOException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
                     bitmap = (Bitmap) data.getExtras().get("data");
                     e.printStackTrace();
                 }
@@ -1873,12 +1883,13 @@ public class Registration extends AppCompatActivity {
             bmp = BitmapFactory.decodeFile(filePath, options);
         } catch (OutOfMemoryError exception) {
             exception.printStackTrace();
-
+            FirebaseCrashlytics.getInstance().recordException(exception);
         }
         try {
             scaledBitmap = Bitmap.createBitmap(actualWidth, actualHeight, Bitmap.Config.ARGB_8888);
         } catch (OutOfMemoryError exception) {
             exception.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(exception);
         }
 
         float ratioX = actualWidth / (float) options.outWidth;
@@ -1917,6 +1928,7 @@ public class Registration extends AppCompatActivity {
                     true);
         } catch (IOException e) {
             e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
 
         FileOutputStream out = null;
@@ -1929,6 +1941,7 @@ public class Registration extends AppCompatActivity {
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
 
         return filename;
@@ -2522,6 +2535,7 @@ public class Registration extends AppCompatActivity {
         } catch (IOException e) {
             //makeSnackBar(4000, "Could not load info. Try logging out and logging back in.");
             Log.e("Exception", "File write failed: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
     }
 
@@ -2534,6 +2548,7 @@ public class Registration extends AppCompatActivity {
         } catch (IOException e) {
             //makeSnackBar(4000, "Could not load info. Try logging out and logging back in.");
             Log.e("Exception", "File write failed: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
     }
 

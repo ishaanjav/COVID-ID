@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -61,6 +62,7 @@ public class PatientDashboard extends AppCompatActivity {
         NavigationUI.setupWithNavController(navView, navController);
         overridePendingTransition(R.anim.medium_fade_in, R.anim.fast_fade_out);
         variable = 3;
+        FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();
 
         WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
@@ -99,9 +101,11 @@ public class PatientDashboard extends AppCompatActivity {
                 ret = stringBuilder.toString();
             }
         } catch (FileNotFoundException e) {
-             if(MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
+            if(MyDebug.LOG) Log.wtf("login activity", "File not found: " + e.toString());
         } catch (IOException e) {
-             if(MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
+            if(MyDebug.LOG) Log.wtf("login activity", "Can not read file: " + e.toString());
         }
 
         return ret;
@@ -190,6 +194,7 @@ public class PatientDashboard extends AppCompatActivity {
             outputStreamWriter.close();
         } catch (IOException e) {
              if(MyDebug.LOG) Log.wtf("*Exception", "File write failed: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
 
     }
@@ -297,6 +302,7 @@ public class PatientDashboard extends AppCompatActivity {
             outputStreamWriter.close();
         } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
     }
 }
