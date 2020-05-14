@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
         //writeLogin("false", getApplicationContext());
 
         FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();
-        startActivity(new Intent(MainActivity.this, DoctorDashboard.class));
+        //startActivity(new Intent(MainActivity.this, DoctorDashboard.class));
 
         overridePendingTransition(R.anim.fast_fade_in, R.anim.fast_fade_out);
         //makeToast("REMOVED: " + removeFile("update"));

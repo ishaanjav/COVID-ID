@@ -11,8 +11,8 @@ android {
         applicationId "app.ij.covid_id"
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode 5
-        versionName "1.4.2"
+        versionCode 6
+        versionName "1.5.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
