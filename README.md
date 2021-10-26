@@ -5,3 +5,5 @@ Patients receive instant notifications when their doctors update their COVID tes
 The app is intended for both doctors and patients.
 
 ## [Video Demo](https://www.youtube.com/watch?v=VlZ5EuwT1cI)
+
+## [Screenshots](https://ishaanjavali.me/covid-id.pdf)
